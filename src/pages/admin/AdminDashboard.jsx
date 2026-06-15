@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
+import { useAppData } from "../../context/AppDataContext";
 import AdminLayout from "../../layouts/AdminLayout";
 import { Users, Building2, Shield, MapPin, UserPlus, Activity, Clock } from "lucide-react";
 
 export default function AdminDashboard() {
   const nav = useNavigate();
+  const { officers, stations, regions } = useAppData();
 
   return (
     <AdminLayout pageTitle="Dashboard" pageTitle2="Dashibodi ya Usimamizi">
@@ -35,9 +37,9 @@ export default function AdminDashboard() {
       {/* KPIs — all zero until real data */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:14, marginBottom:22 }}>
         {[
-          { label:"Total Officers",    sw:"Maafisa Wote",       color:"#0D3477", icon:Users },
-          { label:"Police Stations",   sw:"Vituo vya Polisi",   color:"#0D3477", icon:Building2 },
-          { label:"Regions",           sw:"Mikoa",              color:"#059669", icon:MapPin },
+          { label:"Total Officers",    sw:"Maafisa Wote",       color:"#0D3477", icon:Users,    v:officers.length },
+          { label:"Police Stations",   sw:"Vituo vya Polisi",   color:"#0D3477", icon:Building2, v:stations.length },
+          { label:"Regions",           sw:"Mikoa",              color:"#059669", icon:MapPin,    v:regions.length },
           { label:"Active Roles",      sw:"Majukumu",           color:"#D97706", icon:Shield },
           { label:"Pending Accounts",  sw:"Akaunti Zinasubiri", color:"#DC2626", icon:Activity },
         ].map(k => {
@@ -45,7 +47,7 @@ export default function AdminDashboard() {
           return (
             <div key={k.label} style={{ background:"white", borderRadius:16, padding:"18px 16px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.color}`, textAlign:"center" }}>
               <Icon size={22} color={k.color} style={{ marginBottom:8 }} />
-              <div style={{ fontSize:34, fontWeight:900, color:k.color, lineHeight:1, marginBottom:5 }}>0</div>
+              <div style={{ fontSize:34, fontWeight:900, color:k.color, lineHeight:1, marginBottom:5 }}>{k.v ?? 0}</div>
               <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
               <div style={{ fontSize:10, color:"#94A3B8", marginTop:2 }}>{k.sw}</div>
             </div>
