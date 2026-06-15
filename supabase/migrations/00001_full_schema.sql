@@ -78,7 +78,8 @@ insert into public.roles (name, label_sw, label_en, scope, permissions) values
   ('inspector',       'Inspekta',                     'Inspector',                 'station',  '["citations","arrests","incidents","cases","persons","vehicles"]'),
   ('cid_officer',     'Afisa wa CID',                 'CID Officer',               'unit',     '["cases","evidence","warrants","forensics","persons","vehicles","arrests"]'),
   ('regular_officer', 'Afisa wa Kawaida',             'Regular Officer',            'station',  '["citations","arrests","incidents","patrol","persons","vehicles"]'),
-  ('traffic_officer', 'Afisa wa Barabara',            'Traffic Officer',            'station',  '["citations","accidents","vehicles","persons","patrol"]');
+  ('traffic_officer', 'Afisa wa Barabara',            'Traffic Officer',            'station',  '["citations","accidents","vehicles","persons","patrol"]'),
+  ('admin_officer',   'Msimamizi wa Mfumo',           'Admin Officer',              'national', '["all","manage_users","create_accounts","system_settings","roles_management","audit_logs"]');
 
 -- ══════════════════════════════════════════════════════════
 -- PROFILES (Officers)
