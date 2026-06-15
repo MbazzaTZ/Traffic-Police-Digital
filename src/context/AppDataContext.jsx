@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
-// ── Tanzania: 31 regions + districts (local reference only) ──
+// ── Tanzania: 31 regions + districts (local reference) ──
 export const TZ_REGIONS = {
   "Arusha":         ["Arusha Urban","Meru","Ngorongoro","Monduli","Karatu","Longido","Arusha Rural"],
   "Dar es Salaam":  ["Ilala","Kinondoni","Temeke","Ubungo","Kigamboni"],
@@ -45,7 +45,6 @@ export const TZ_ZONES = {
 };
 
 export const RANKS = ["Constable","Corporal","Sergeant","Staff Sergeant","Inspector","ASP","SP","SSP","ACP","DCP","SCP","Commissioner of Police","RPC","DIGP","IGP"];
-
 export const ROLES = [
   { v:"regular_officer",  l:"Regular Officer" },
   { v:"traffic_officer",  l:"Traffic Officer" },
@@ -57,7 +56,6 @@ export const ROLES = [
   { v:"igp",              l:"IGP – Inspector General" },
   { v:"admin_officer",    l:"Admin Officer" },
 ];
-
 export const ROLE_PERMS = {
   regular_officer:  ["Person Search","Incident Reports","Arrests","Detentions","Patrol","Evidence Upload","Communications"],
   traffic_officer:  ["Vehicle Search","Driver Licenses","Traffic Citations","Accident Reports","Insurance Verification"],
@@ -69,54 +67,43 @@ export const ROLE_PERMS = {
   igp:              ["Full System Access — All Modules"],
   admin_officer:    ["Manage Users","Create Accounts","All Admin Activities","System Settings","Roles Management"],
 };
-
 export const DEPARTMENTS = ["Operations","CID","Traffic","Intelligence","Forensics","Community Policing","Anti-Narcotics","Cyber Crime","Human Resources","Administration","ICT","Internal Affairs","Training","Procurement","Legal Services"];
+export const STATION_TYPES = ["Police Station","Police Post","Police HQ","Division HQ","Outpost","Marine Post","Railway Post","Airport Post"];
 
 const Ctx = createContext(null);
 
 export function AppDataProvider({ children }) {
   const [regions,   setRegions]   = useState([]);
   const [districts, setDistricts] = useState([]);
+  const [wards,     setWards]     = useState([]);
   const [stations,  setStations]  = useState([]);
   const [officers,  setOfficers]  = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
 
-  // ── Load all data on mount ──
   const loadAll = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
-      // Load each table independently so one failure doesn't block others
-      const rRes = await supabase.from("regions").select("*").order("name");
-      const dRes = await supabase.from("districts").select("*, region_id, regions(id, name)").order("name");
-      const sRes = await supabase.from("stations").select("*, regions(name), districts(name)").order("name");
-      const oRes = await supabase
-        .from("profiles")
-        .select("*, regions(name), districts(name), stations!profiles_station_id_fkey(name, type)")
-        .order("created_at", { ascending: false });
-
-      // Log errors but don't throw — show what we can
-      if (rRes.error) console.error("regions error:", rRes.error.code, rRes.error.message);
-      if (dRes.error) console.error("districts error:", dRes.error.code, dRes.error.message);
-      if (sRes.error) console.error("stations error:", sRes.error.code, sRes.error.message);
-      if (oRes.error) console.error("profiles error:", oRes.error.code, oRes.error.message);
-
-      // If ALL fail, likely an RLS or connectivity issue
-      if (rRes.error && dRes.error && sRes.error && oRes.error) {
-        const msg = rRes.error.message || "Cannot connect to Supabase. Check RLS policies.";
-        setError(msg);
-        console.error("TPDOP: All queries failed.", msg);
-      }
-
-      setRegions(rRes.data || []);
-      setDistricts(dRes.data || []);
-      setStations(sRes.data || []);
-      setOfficers(oRes.data || []);
-    } catch (e) {
-      const msg = e?.message || JSON.stringify(e);
-      setError(msg);
-      console.error("TPDOP load error:", msg);
+      const [rR, dR, wR, sR, oR] = await Promise.all([
+        supabase.from("regions").select("*").order("name"),
+        supabase.from("districts").select("*").order("name"),
+        supabase.from("wards").select("*").order("name"),
+        supabase.from("stations").select("*").order("name"),
+        supabase.from("profiles").select("*, stations!profiles_station_id_fkey(name,type)").order("created_at", { ascending:false }),
+      ]);
+      if (rR.error) console.error("regions:", rR.error.code, rR.error.message);
+      if (dR.error) console.error("districts:", dR.error.code, dR.error.message);
+      if (wR.error) console.error("wards:", wR.error.code, wR.error.message);
+      if (sR.error) console.error("stations:", sR.error.code, sR.error.message);
+      if (oR.error) console.error("profiles:", oR.error.code, oR.error.message);
+      if (rR.error && dR.error && sR.error) setError(rR.error.message);
+      setRegions(rR.data   || []);
+      setDistricts(dR.data || []);
+      setWards(wR.data     || []);
+      setStations(sR.data  || []);
+      setOfficers(oR.data  || []);
+    } catch(e) {
+      setError(e?.message || String(e));
     } finally {
       setLoading(false);
     }
@@ -124,151 +111,117 @@ export function AppDataProvider({ children }) {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  // ── Regions ──
+  // ── Helpers ──
+  const byRegion    = id  => districts.filter(d => d.region_id   === id);
+  const byDistrict  = id  => wards.filter(w    => w.district_id  === id);
+  const stByRegion  = id  => stations.filter(s  => s.region_id   === id);
+  const stByDistr   = id  => stations.filter(s  => s.district_id === id);
+  const stByWard    = id  => stations.filter(s  => s.ward_id     === id);
+
+  function regionName(id)   { return regions.find(r=>r.id===id)?.name   || ""; }
+  function districtName(id) { return districts.find(d=>d.id===id)?.name || ""; }
+  function wardName(id)     { return wards.find(w=>w.id===id)?.name     || ""; }
+
+  function districtsForRegion(regionName) {
+    const r = regions.find(x=>x.name===regionName);
+    return r ? districts.filter(d=>d.region_id===r.id) : [];
+  }
+  function wardsForDistrict(districtName, regionName) {
+    const r = regions.find(x=>x.name===regionName);
+    const d = districts.find(x=>x.name===districtName && x.region_id===r?.id);
+    return d ? wards.filter(w=>w.district_id===d.id) : [];
+  }
+  function stationsForLocation(regionName, districtName, wardName) {
+    let list = stations;
+    if (regionName) {
+      const r = regions.find(x=>x.name===regionName);
+      if (r) list = list.filter(s=>s.region_id===r.id);
+    }
+    if (districtName) {
+      const d = districts.find(x=>x.name===districtName);
+      if (d) list = list.filter(s=>s.district_id===d.id);
+    }
+    if (wardName) {
+      const w = wards.find(x=>x.name===wardName);
+      if (w) list = list.filter(s=>s.ward_id===w.id);
+    }
+    return list;
+  }
+
+  // ── Mutations ──
   async function addRegion({ name, code, zone }) {
-    // 1. Insert or get zone
     let zone_id = null;
     if (zone) {
-      const { data: zd } = await supabase.from("zones").upsert({ name: zone }, { onConflict: "name" }).select("id").single();
-      zone_id = zd?.id;
+      const { data:z } = await supabase.from("zones").upsert({ name:zone },{ onConflict:"name" }).select("id").single();
+      zone_id = z?.id;
       if (!zone_id) {
-        const { data: ze } = await supabase.from("zones").select("id").eq("name", zone).single();
-        zone_id = ze?.id;
+        const { data:z2 } = await supabase.from("zones").select("id").eq("name",zone).single();
+        zone_id = z2?.id;
       }
     }
-
-    // 2. Insert region
-    const { data: region, error: rErr } = await supabase
-      .from("regions")
-      .insert({ name, code: code || null, zone_id })
-      .select()
-      .single();
-    if (rErr) throw rErr;
-
-    // 3. Auto-insert all districts for this region
+    const { data:region, error } = await supabase.from("regions").insert({ name, code:code||null, zone_id }).select().single();
+    if (error) throw error;
     const districtNames = TZ_REGIONS[name] || [];
-    if (districtNames.length > 0) {
-      const rows = districtNames.map(d => ({ name: d, region_id: region.id }));
-      await supabase.from("districts").insert(rows);
+    if (districtNames.length) {
+      await supabase.from("districts").insert(districtNames.map(d=>({ name:d, region_id:region.id })));
     }
-
-    await loadAll();
-    return region;
+    await loadAll(); return region;
   }
 
-  // ── Stations ──
-  async function addStation({ name, code, type, region, district, phone, address, ocs_name }) {
-    // Resolve region_id
-    const rRow = regions.find(r => r.name === region);
-    const region_id = rRow?.id || null;
-
-    // Resolve district_id
-    const dRow = districts.find(d => d.name === district && d.region_id === region_id);
-    const district_id = dRow?.id || null;
-
-    const { data, error: sErr } = await supabase
-      .from("stations")
-      .insert({
-        name,
-        code: code || null,
-        type: type || "police_station",
-        region_id,
-        district_id,
-        phone: phone || null,
-        address: address || null,
-        status: "active",
-      })
-      .select()
-      .single();
-    if (sErr) throw sErr;
-    await loadAll();
-    return data;
+  async function addDistrict({ name, code, region_id }) {
+    const { data, error } = await supabase.from("districts").insert({ name, code:code||null, region_id }).select().single();
+    if (error) throw error;
+    await loadAll(); return data;
   }
 
-  // ── Officers (profiles) ──
-  async function addOfficer({ full_name, badge, nida, phone, email, rank, role, department, region, district, station_id, password, notes }) {
-    // 1. Create auth user
-    const { data: authData, error: authErr } = await supabase.auth.admin
-      ? await supabase.auth.signUp({ email, password, options: { data: { role, badge, full_name } } })
-      : await supabase.auth.signUp({ email, password, options: { data: { role, badge, full_name } } });
+  async function addWard({ name, code, district_id, region_id }) {
+    const { data, error } = await supabase.from("wards").insert({ name, code:code||null, district_id, region_id:region_id||null }).select().single();
+    if (error) throw error;
+    await loadAll(); return data;
+  }
 
+  async function addStation({ name, code, type, region, district, ward, phone, address, ocs_name }) {
+    const r  = regions.find(x=>x.name===region);
+    const d  = districts.find(x=>x.name===district && x.region_id===r?.id);
+    const w  = wards.find(x=>x.name===ward && x.district_id===d?.id);
+    const { data, error } = await supabase.from("stations").insert({
+      name, code:code||null, type:type||"police_station",
+      region_id:r?.id||null, district_id:d?.id||null, ward_id:w?.id||null,
+      phone:phone||null, address:address||null, status:"active",
+    }).select().single();
+    if (error) throw error;
+    await loadAll(); return data;
+  }
+
+  async function addOfficer({ full_name, badge, nida, phone, email, rank, role, department, region, district, station_id, password }) {
+    const { data:authData, error:authErr } = await supabase.auth.signUp({ email, password, options:{ data:{ role, badge, full_name } } });
     if (authErr) throw authErr;
-    const user_id = authData?.user?.id;
-    if (!user_id) throw new Error("Failed to create auth user");
-
-    // 2. Resolve IDs
-    const rRow = regions.find(r => r.name === region);
-    const region_id = rRow?.id || null;
-    const dRow = districts.find(d => d.name === district && d.region_id === region_id);
-    const district_id = dRow?.id || null;
-
-    // 3. Insert profile
-    const { data: profile, error: pErr } = await supabase
-      .from("profiles")
-      .insert({
-        id: user_id,
-        badge,
-        full_name,
-        rank,
-        role,
-        department: department || null,
-        region_id,
-        district_id,
-        station_id: station_id || null,
-        phone: phone || null,
-        email: email || null,
-        nida: nida || null,
-        status: "active",
-      })
-      .select()
-      .single();
+    const uid = authData?.user?.id;
+    if (!uid) throw new Error("Failed to create auth user");
+    const r = regions.find(x=>x.name===region);
+    const d = districts.find(x=>x.name===district && x.region_id===r?.id);
+    const { data:profile, error:pErr } = await supabase.from("profiles").insert({
+      id:uid, badge, full_name, rank, role,
+      department:department||null, region_id:r?.id||null,
+      district_id:d?.id||null, station_id:station_id||null,
+      phone:phone||null, email:email||null, nida:nida||null, status:"active",
+    }).select().single();
     if (pErr) throw pErr;
-
-    await loadAll();
-    return profile;
+    await loadAll(); return profile;
   }
 
-  async function deleteStation(id) {
-    await supabase.from("stations").delete().eq("id", id);
-    await loadAll();
-  }
-
-  async function deleteOfficer(id) {
-    await supabase.from("profiles").delete().eq("id", id);
-    await loadAll();
-  }
-
-  async function deleteRegion(id) {
-    await supabase.from("regions").delete().eq("id", id);
-    await loadAll();
-  }
-
-  // ── Helpers ──
-  function districtsForRegion(regionName) {
-    const r = regions.find(x => x.name === regionName);
-    if (!r) return [];
-    return districts.filter(d => d.region_id === r.id);
-  }
-
-  function stationsForRegion(regionName, districtName) {
-    const r = regions.find(x => x.name === regionName);
-    if (!r) return [];
-    return stations.filter(s => {
-      const regionMatch = s.region_id === r.id;
-      if (!districtName) return regionMatch;
-      const d = districts.find(x => x.name === districtName && x.region_id === r.id);
-      return regionMatch && (!d || s.district_id === d.id);
-    });
-  }
+  async function deleteStation(id) { await supabase.from("stations").delete().eq("id",id); await loadAll(); }
+  async function deleteOfficer(id) { await supabase.from("profiles").delete().eq("id",id); await loadAll(); }
 
   return (
     <Ctx.Provider value={{
-      regions, districts, stations, officers,
-      loading, error,
-      addRegion, addStation, addOfficer,
-      deleteRegion, deleteStation, deleteOfficer,
-      districtsForRegion, stationsForRegion,
-      refresh: loadAll,
+      regions, districts, wards, stations, officers,
+      loading, error, refresh:loadAll,
+      byRegion, byDistrict, stByRegion, stByDistr, stByWard,
+      regionName, districtName, wardName,
+      districtsForRegion, wardsForDistrict, stationsForLocation,
+      addRegion, addDistrict, addWard, addStation, addOfficer,
+      deleteStation, deleteOfficer,
     }}>
       {children}
     </Ctx.Provider>
