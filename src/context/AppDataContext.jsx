@@ -87,23 +87,33 @@ export function AppDataProvider({ children }) {
     setLoading(true);
     setError(null);
     try {
-      const [rRes, dRes, sRes, oRes] = await Promise.all([
-        supabase.from("regions").select("*").order("name"),
-        supabase.from("districts").select("*, regions(name)").order("name"),
-        supabase.from("stations").select("*, regions(name), districts(name)").order("name"),
-        supabase.from("profiles").select("*, regions(name), districts(name), stations(name)").order("created_at", { ascending: false }),
-      ]);
-      if (rRes.error) throw rRes.error;
-      if (dRes.error) throw dRes.error;
-      if (sRes.error) throw sRes.error;
-      if (oRes.error) throw oRes.error;
+      // Load each table independently so one failure doesn't block others
+      const rRes = await supabase.from("regions").select("*").order("name");
+      const dRes = await supabase.from("districts").select("*").order("name");
+      const sRes = await supabase.from("stations").select("*").order("name");
+      const oRes = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+
+      // Log errors but don't throw — show what we can
+      if (rRes.error) console.error("regions error:", rRes.error.code, rRes.error.message);
+      if (dRes.error) console.error("districts error:", dRes.error.code, dRes.error.message);
+      if (sRes.error) console.error("stations error:", sRes.error.code, sRes.error.message);
+      if (oRes.error) console.error("profiles error:", oRes.error.code, oRes.error.message);
+
+      // If ALL fail, likely an RLS or connectivity issue
+      if (rRes.error && dRes.error && sRes.error && oRes.error) {
+        const msg = rRes.error.message || "Cannot connect to Supabase. Check RLS policies.";
+        setError(msg);
+        console.error("TPDOP: All queries failed.", msg);
+      }
+
       setRegions(rRes.data || []);
       setDistricts(dRes.data || []);
       setStations(sRes.data || []);
       setOfficers(oRes.data || []);
     } catch (e) {
-      setError(e.message);
-      console.error("TPDOP load error:", e);
+      const msg = e?.message || JSON.stringify(e);
+      setError(msg);
+      console.error("TPDOP load error:", msg);
     } finally {
       setLoading(false);
     }
