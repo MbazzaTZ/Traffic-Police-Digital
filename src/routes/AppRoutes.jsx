@@ -35,6 +35,11 @@ import EvidencePage from "../pages/cid/EvidencePage";
 import SuspectsPage from "../pages/cid/SuspectsPage";
 
 import CommandCenter from "../pages/command/CommandCenter";
+import CommandIncidents from "../pages/command/CommandIncidents";
+import CommandOfficers from "../pages/command/CommandOfficers";
+import CommandReports from "../pages/command/CommandReports";
+import CommandAlerts from "../pages/command/CommandAlerts";
+import NidaSearchPage from "../pages/cid/NidaSearchPage";
 
 const ROLE_HOME = {
   admin_officer:"/admin", igp:"/command", digp:"/command",
@@ -95,7 +100,11 @@ export default function AppRoutes() {
 
       {/* Command Center */}
       <Route path="/command"           element={<Guard roles={COMMAND}><CommandCenter/></Guard>}/>
-      <Route path="/command/*"         element={<Guard roles={COMMAND}><CommandCenter/></Guard>}/>
+      <Route path="/command/incidents" element={<Guard roles={COMMAND}><CommandIncidents/></Guard>}/>
+      <Route path="/command/alerts"    element={<Guard roles={COMMAND}><CommandAlerts/></Guard>}/>
+      <Route path="/command/officers"  element={<Guard roles={COMMAND}><CommandOfficers/></Guard>}/>
+      <Route path="/command/reports"   element={<Guard roles={COMMAND}><CommandReports/></Guard>}/>
+      <Route path="/command/settings"  element={<Guard roles={COMMAND}><CommandCenter/></Guard>}/>
 
       {/* Regular Police */}
       <Route path="/dashboard"     element={<Guard roles={OFFICER}><RegularPoliceDashboard/></Guard>}/>
@@ -124,7 +133,7 @@ export default function AppRoutes() {
       <Route path="/cid/suspects" element={<Guard roles={CID}><SuspectsPage/></Guard>}/>
       <Route path="/cid/wanted"   element={<Guard roles={CID}><WantedPage/></Guard>}/>
       <Route path="/cid/evidence" element={<Guard roles={CID}><EvidencePage/></Guard>}/>
-      <Route path="/cid/search"   element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
+      <Route path="/cid/search"   element={<Guard roles={CID}><NidaSearchPage/></Guard>}/>
       <Route path="/cid/profile"  element={<Guard roles={CID}><MyProfilePage/></Guard>}/>
 
       <Route path="*" element={<Navigate to="/" replace/>}/>
