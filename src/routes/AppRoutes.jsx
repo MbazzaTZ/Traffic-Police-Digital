@@ -25,23 +25,23 @@ import AlertsPage             from "../pages/regular-police/AlertsPage";
 import SettingsPage           from "../pages/regular-police/SettingsPage";
 
 // Traffic
-import TrafficDashboard from "../pages/traffic/TrafficDashboard";
-import CitationsPage    from "../pages/traffic/CitationsPage";
+import TrafficDashboard  from "../pages/traffic/TrafficDashboard";
+import CitationsPage     from "../pages/traffic/CitationsPage";
+import AccidentsPage     from "../pages/traffic/AccidentsPage";
+import VehicleSearchPage from "../pages/traffic/VehicleSearchPage";
+import CheckpointsPage   from "../pages/traffic/CheckpointsPage";
 
 // CID
 import CIDDashboard from "../pages/cid/CIDDashboard";
+import CasesPage    from "../pages/cid/CasesPage";
+import WantedPage   from "../pages/cid/WantedPage";
+import EvidencePage from "../pages/cid/EvidencePage";
 
 const ROLE_HOME = {
-  admin_officer:   "/admin",
-  traffic_officer: "/traffic",
-  cid_officer:     "/cid",
-  forensic_officer:"/cid",
-  ocs:             "/dashboard",
-  ocd:             "/dashboard",
-  rpc:             "/dashboard",
-  igp:             "/admin",
-  regular_officer: "/dashboard",
-  inspector:       "/dashboard",
+  admin_officer:"/admin", igp:"/admin", digp:"/admin",
+  traffic_officer:"/traffic", cid_officer:"/cid", forensic_officer:"/cid",
+  regular_officer:"/dashboard", inspector:"/dashboard",
+  ocs:"/dashboard", ocd:"/dashboard", rpc:"/dashboard",
 };
 
 function Guard({ children, roles }) {
@@ -49,41 +49,34 @@ function Guard({ children, roles }) {
   const [role,   setRole]   = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    async function check(session) {
       if (!session) { setStatus("unauth"); return; }
-      // Prefer profile role over metadata
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single();
-      const r = profile?.role || session.user.user_metadata?.role || "";
-      setRole(r);
-      setStatus("ok");
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_e, session) => {
-      if (!session) { setStatus("unauth"); return; }
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single();
-      const r = profile?.role || session.user.user_metadata?.role || "";
+      const { data:p } = await supabase.from("profiles").select("role").eq("id",session.user.id).maybeSingle();
+      const r = p?.role || session.user.user_metadata?.role || "regular_officer";
       setRole(r); setStatus("ok");
-    });
-    return () => subscription.unsubscribe();
+    }
+    supabase.auth.getSession().then(({data:{session}})=>check(session));
+    const {data:{subscription}} = supabase.auth.onAuthStateChange((_,session)=>check(session));
+    return ()=>subscription.unsubscribe();
   }, []);
 
   if (status==="checking") return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", fontFamily:"system-ui", color:"#64748B" }}>
-      <div style={{ textAlign:"center" }}>
-        <div style={{ width:40, height:40, border:"3px solid #E2E8F0", borderTopColor:"#0D3477", borderRadius:"50%", animation:"spin 1s linear infinite", margin:"0 auto 16px" }}/>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        <div style={{ fontSize:14 }}>Loading TPDOP...</div>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", fontFamily:"system-ui" }}>
+      <div style={{ textAlign:"center", color:"#64748B" }}>
+        <div style={{ width:40, height:40, border:"3px solid #E2E8F0", borderTopColor:"#0D3477", borderRadius:"50%", animation:"spin 1s linear infinite", margin:"0 auto 14px" }}/>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}`}</style>
+        <div>Loading TPDOP...</div>
       </div>
     </div>
   );
-
   if (status==="unauth") return <Navigate to="/" replace/>;
   if (roles && !roles.includes(role)) return <Navigate to={ROLE_HOME[role]||"/"} replace/>;
   return children;
 }
 
-const ADMIN = ["admin_officer","igp","digp"];
+const ADMIN   = ["admin_officer","igp","digp"];
 const TRAFFIC = ["traffic_officer"];
-const CID = ["cid_officer","forensic_officer"];
+const CID     = ["cid_officer","forensic_officer"];
 const OFFICER = ["regular_officer","inspector","ocs","ocd","rpc",...ADMIN];
 
 export default function AppRoutes() {
@@ -100,7 +93,7 @@ export default function AppRoutes() {
       <Route path="/admin/roles"       element={<Guard roles={ADMIN}><RolesPage/></Guard>}/>
       <Route path="/admin/settings"    element={<Guard roles={ADMIN}><AdminSettingsPage/></Guard>}/>
 
-      {/* Regular police */}
+      {/* Regular Police */}
       <Route path="/dashboard"     element={<Guard roles={OFFICER}><RegularPoliceDashboard/></Guard>}/>
       <Route path="/person-search" element={<Guard roles={OFFICER}><PersonSearchPage/></Guard>}/>
       <Route path="/incidents"     element={<Guard roles={OFFICER}><IncidentReportsPage/></Guard>}/>
@@ -114,18 +107,18 @@ export default function AppRoutes() {
       {/* Traffic */}
       <Route path="/traffic"             element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
       <Route path="/traffic/citations"   element={<Guard roles={TRAFFIC}><CitationsPage/></Guard>}/>
-      <Route path="/traffic/accidents"   element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
-      <Route path="/traffic/vehicles"    element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
-      <Route path="/traffic/checkpoints" element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
+      <Route path="/traffic/accidents"   element={<Guard roles={TRAFFIC}><AccidentsPage/></Guard>}/>
+      <Route path="/traffic/vehicles"    element={<Guard roles={TRAFFIC}><VehicleSearchPage/></Guard>}/>
+      <Route path="/traffic/checkpoints" element={<Guard roles={TRAFFIC}><CheckpointsPage/></Guard>}/>
       <Route path="/traffic/settings"    element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
 
       {/* CID */}
-      <Route path="/cid"           element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
-      <Route path="/cid/cases"     element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
-      <Route path="/cid/suspects"  element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
-      <Route path="/cid/wanted"    element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
-      <Route path="/cid/evidence"  element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
-      <Route path="/cid/search"    element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
+      <Route path="/cid"          element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
+      <Route path="/cid/cases"    element={<Guard roles={CID}><CasesPage/></Guard>}/>
+      <Route path="/cid/wanted"   element={<Guard roles={CID}><WantedPage/></Guard>}/>
+      <Route path="/cid/evidence" element={<Guard roles={CID}><EvidencePage/></Guard>}/>
+      <Route path="/cid/suspects" element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
+      <Route path="/cid/search"   element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
 
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Routes>
