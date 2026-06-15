@@ -1,3 +1,4 @@
+import { supabase } from "../lib/supabase";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, Building2, MapPin,
@@ -97,7 +98,7 @@ export default function AdminLayout({ children, pageTitle = "Admin", pageTitle2 
               <div style={{ fontSize:10, color:"rgba(255,255,255,.4)" }}>TZP-ADMIN-001</div>
             </div>
           </div>
-          <button onClick={() => nav("/")}
+          <button onClick={async () => { await supabase.auth.signOut(); nav("/"); }}
             style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"8px 12px", borderRadius:8, border:"none", background:"transparent", color:"rgba(255,255,255,.4)", cursor:"pointer", fontSize:12 }}
             onMouseEnter={e => { e.currentTarget.style.background="rgba(220,38,38,.15)"; e.currentTarget.style.color="#FCA5A5"; }}
             onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="rgba(255,255,255,.4)"; }}>
