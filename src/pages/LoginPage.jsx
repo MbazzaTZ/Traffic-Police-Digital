@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Shield, User, Lock } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const [badge, setBadge]     = useState("");
@@ -16,181 +16,242 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight:"100vh", display:"flex", background:"#EEF2F7" }}>
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      background: "#F0F4F8",
+      fontFamily: "'Segoe UI', system-ui, sans-serif",
+    }}>
 
-      {/* ── LEFT PANEL ── */}
+      {/* ── LEFT — White branding panel ── */}
       <div style={{
         flex: 1,
-        background: "linear-gradient(160deg, #03102B 0%, #071E4A 45%, #0D3477 100%)",
+        background: "white",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "60px 48px",
-        position: "relative",
-        overflow: "hidden",
+        padding: "60px 80px",
+        borderRight: "1px solid #E2E8F0",
       }}>
-        {/* Decorative circles */}
-        <div style={{ position:"absolute", top:-120, right:-120, width:340, height:340, borderRadius:"50%", border:"1px solid rgba(255,255,255,.05)" }} />
-        <div style={{ position:"absolute", top:-60, right:-60,  width:200, height:200, borderRadius:"50%", border:"1px solid rgba(255,255,255,.05)" }} />
-        <div style={{ position:"absolute", bottom:-100, left:-100, width:300, height:300, borderRadius:"50%", border:"1px solid rgba(255,255,255,.04)" }} />
 
-        {/* Logo — transparent PNG on dark = perfect */}
-        <div style={{ position:"relative", zIndex:1, textAlign:"center", maxWidth:400 }}>
-
-          {/* Glowing ring behind logo */}
-          <div style={{
-            width: 140, height: 140,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 70%)",
-            border: "1px solid rgba(255,255,255,.12)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 24px",
-            boxShadow: "0 0 40px rgba(255,255,255,.06)",
-          }}>
-            <img
-              src="/police-logo-transparent.png"
-              alt="Tanzania Police Force"
-              style={{ width: 110, height: 110, objectFit: "contain" }}
-            />
-          </div>
-
-          {/* Country */}
-          <p style={{ color:"rgba(255,255,255,.4)", fontSize:11, letterSpacing:3, textTransform:"uppercase", marginBottom:12 }}>
+        {/* Gov header */}
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <p style={{ fontSize: 13, fontWeight: 800, color: "#082A63", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
             Jamhuri ya Muungano wa Tanzania
           </p>
-
-          {/* System name */}
-          <h1 style={{ color:"white", fontSize:52, fontWeight:900, letterSpacing:-1, margin:"0 0 8px", lineHeight:1 }}>
-            TPDOP
-          </h1>
-
-          <div style={{ width:48, height:3, background:"rgba(255,255,255,.2)", borderRadius:2, margin:"14px auto" }} />
-
-          <p style={{ color:"rgba(255,255,255,.75)", fontSize:15, fontWeight:600, marginBottom:6 }}>
-            Tanzania Police Digital Operations Platform
+          <p style={{ fontSize: 11, fontWeight: 600, color: "#64748B", letterSpacing: 1, textTransform: "uppercase" }}>
+            Wizara ya Mambo ya Ndani ya Nchi
           </p>
-          <p style={{ color:"rgba(255,255,255,.38)", fontSize:13, marginBottom:36 }}>
-            Jukwaa la Kidijitali la Uendeshaji wa Polisi
-          </p>
+        </div>
 
-          {/* Feature pills */}
-          <div style={{ display:"flex", flexDirection:"column", gap:10, alignItems:"flex-start", marginTop:4 }}>
-            {[
-              { icon:"🔒", text:"End-to-End Encrypted · Usimbaji Salama" },
-              { icon:"📍", text:"Real-Time GPS Tracking · Ufuatiliaji wa GPS" },
-              { icon:"🛡", text:"Audit Logged · Kila Hatua Inarekodiwa" },
-              { icon:"📱", text:"Biometric 2FA · Uthibitisho wa Viumbe" },
-            ].map(f => (
-              <div key={f.text} style={{
-                display:"flex", alignItems:"center", gap:10,
-                padding:"8px 14px", borderRadius:8,
-                background:"rgba(255,255,255,.06)",
-                border:"1px solid rgba(255,255,255,.08)",
-                width:"100%",
-              }}>
-                <span style={{ fontSize:14 }}>{f.icon}</span>
-                <span style={{ color:"rgba(255,255,255,.6)", fontSize:12 }}>{f.text}</span>
-              </div>
-            ))}
-          </div>
+        {/* Police logo — large, clean */}
+        <img
+          src="/police-logo.png"
+          alt="Jeshi la Polisi Tanzania"
+          style={{
+            width: 220,
+            height: 220,
+            objectFit: "contain",
+            marginBottom: 28,
+            filter: "drop-shadow(0 4px 16px rgba(8,42,99,.15))",
+          }}
+        />
+
+        {/* Force name */}
+        <h1 style={{
+          fontSize: 38,
+          fontWeight: 900,
+          color: "#082A63",
+          textAlign: "center",
+          letterSpacing: 1,
+          margin: "0 0 8px",
+          textTransform: "uppercase",
+        }}>
+          Jeshi la Polisi Tanzania
+        </h1>
+
+        <p style={{
+          fontSize: 14,
+          color: "#64748B",
+          textAlign: "center",
+          marginBottom: 48,
+        }}>
+          Tanzania Police Digital Operations Platform
+        </p>
+
+        {/* Divider */}
+        <div style={{ width: 60, height: 3, background: "#082A63", borderRadius: 2, marginBottom: 36 }} />
+
+        {/* Feature list */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 340 }}>
+          {[
+            "🔒  End-to-End Encrypted · Salama",
+            "📍  Real-Time GPS Tracking · Ufuatiliaji",
+            "🛡️  Audit Logged · Kila Hatua Inarekodiwa",
+            "📱  Biometric 2FA · Uthibitisho wa Viumbe",
+          ].map(f => (
+            <div key={f} style={{
+              fontSize: 12,
+              color: "#475569",
+              padding: "8px 14px",
+              background: "#F8FAFC",
+              border: "1px solid #E2E8F0",
+              borderRadius: 8,
+              borderLeft: "3px solid #082A63",
+            }}>
+              {f}
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ── RIGHT PANEL ── */}
+      {/* ── RIGHT — Login card ── */}
       <div style={{
-        width: 460,
-        background: "white",
+        width: 440,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "48px 52px",
+        padding: "40px 32px",
+        background: "#F0F4F8",
       }}>
-        <div style={{ width:"100%" }}>
+
+        <div style={{
+          width: "100%",
+          background: "white",
+          borderRadius: 20,
+          padding: "40px 36px",
+          boxShadow: "0 8px 32px rgba(8,42,99,.12), 0 2px 8px rgba(0,0,0,.06)",
+          border: "1px solid #E2E8F0",
+        }}>
 
           {/* Coat of Arms */}
-          <div style={{ textAlign:"center", marginBottom:20 }}>
+          <div style={{ textAlign: "center", marginBottom: 18 }}>
             <img
               src="/Coat of Arms.png"
-              alt="Coat of Arms of Tanzania"
-              style={{ width:80, height:80, objectFit:"contain" }}
+              alt="Coat of Arms"
+              style={{ width: 72, height: 72, objectFit: "contain" }}
             />
           </div>
 
-          <h2 style={{ textAlign:"center", fontSize:24, fontWeight:800, color:"#082A63", marginBottom:6 }}>
-            Officer Sign In
+          {/* Title */}
+          <h2 style={{
+            textAlign: "center",
+            fontSize: 20,
+            fontWeight: 800,
+            color: "#082A63",
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}>
+            Ingia Kwenye Mfumo
           </h2>
-          <p style={{ textAlign:"center", color:"#94A3B8", fontSize:13, marginBottom:30, lineHeight:1.5 }}>
-            Enter your badge number and password<br/>to access the system
+          <p style={{ textAlign: "center", color: "#94A3B8", fontSize: 13, marginBottom: 28 }}>
+            Tumia taarifa zako za kazi kuendelea
           </p>
 
           <form onSubmit={submit}>
+
             {/* Badge */}
-            <div className="field">
-              <label>Badge Number · Nambari ya Beji</label>
-              <div className="field-wrap">
-                <span className="field-icon"><User size={15} /></span>
-                <input
-                  value={badge} onChange={e => setBadge(e.target.value)}
-                  placeholder="TZP-2026-00124"
-                  required autoComplete="username"
-                />
-              </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+                Service / Badge Number
+              </label>
+              <input
+                value={badge}
+                onChange={e => setBadge(e.target.value)}
+                placeholder="Weka namba ya utambuliSho"
+                required
+                style={{
+                  width: "100%", height: 46,
+                  padding: "0 14px",
+                  border: "1.5px solid #D1D5DB",
+                  borderRadius: 10, fontSize: 14,
+                  outline: "none", boxSizing: "border-box",
+                  color: "#1E293B",
+                  transition: "border-color .2s",
+                }}
+                onFocus={e => e.target.style.borderColor = "#082A63"}
+                onBlur={e => e.target.style.borderColor = "#D1D5DB"}
+              />
             </div>
 
             {/* Password */}
-            <div className="field">
-              <label>Password · Nywila</label>
-              <div className="field-wrap">
-                <span className="field-icon"><Lock size={15} /></span>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+                Password
+              </label>
+              <div style={{ position: "relative" }}>
                 <input
                   type={showPw ? "text" : "password"}
-                  value={pw} onChange={e => setPw(e.target.value)}
-                  placeholder="••••••••"
-                  required autoComplete="current-password"
+                  value={pw}
+                  onChange={e => setPw(e.target.value)}
+                  placeholder="Weka nenosiri"
+                  required
+                  style={{
+                    width: "100%", height: 46,
+                    padding: "0 42px 0 14px",
+                    border: "1.5px solid #D1D5DB",
+                    borderRadius: 10, fontSize: 14,
+                    outline: "none", boxSizing: "border-box",
+                    color: "#1E293B",
+                    transition: "border-color .2s",
+                  }}
+                  onFocus={e => e.target.style.borderColor = "#082A63"}
+                  onBlur={e => e.target.style.borderColor = "#D1D5DB"}
                 />
-                <button type="button" className="field-action" onClick={() => setShowPw(!showPw)}>
-                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                <button
+                  type="button"
+                  onClick={() => setShowPw(!showPw)}
+                  style={{
+                    position: "absolute", right: 12, top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none", border: "none",
+                    cursor: "pointer", color: "#94A3B8",
+                    display: "flex", padding: 0,
+                  }}
+                >
+                  {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
             </div>
 
-            {/* Options */}
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"4px 0 22px", fontSize:13 }}>
-              <label style={{ display:"flex", gap:7, alignItems:"center", cursor:"pointer", color:"#64748B" }}>
-                <input type="checkbox" style={{ accentColor:"#0D3477" }} />
-                Remember this device
+            {/* Remember + Forgot */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 22, fontSize: 13 }}>
+              <label style={{ display: "flex", gap: 6, alignItems: "center", cursor: "pointer", color: "#64748B" }}>
+                <input type="checkbox" style={{ accentColor: "#082A63" }} />
+                Remember Me
               </label>
-              <a href="#" style={{ color:"#0D3477", fontWeight:600, textDecoration:"none" }}>Forgot password?</a>
+              <a href="#" style={{ color: "#082A63", fontWeight: 600, textDecoration: "none" }}>
+                Forgot Password?
+              </a>
             </div>
 
             {/* Submit */}
-            <button type="submit" disabled={loading} style={{
-              width:"100%", height:50,
-              background: loading ? "#94A3B8" : "#0D3477",
-              color:"white", border:"none", borderRadius:12,
-              fontSize:15, fontWeight:700, cursor: loading ? "not-allowed" : "pointer",
-              display:"flex", alignItems:"center", justifyContent:"center", gap:10,
-              transition:"background .2s",
-            }}>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%", height: 50,
+                background: loading ? "#94A3B8" : "#082A63",
+                color: "white", border: "none",
+                borderRadius: 10, fontSize: 15,
+                fontWeight: 700, cursor: loading ? "not-allowed" : "pointer",
+                display: "flex", alignItems: "center",
+                justifyContent: "center", gap: 10,
+                transition: "background .2s",
+              }}
+            >
               {loading
-                ? <><span className="spinner" /> Authenticating...</>
-                : <><Shield size={18} /> Access System · Ingia Mfumo</>}
+                ? <><span className="spinner" /> Inaingia...</>
+                : <>⊙ Login</>}
             </button>
           </form>
 
-          {/* Audit note */}
-          <div style={{ marginTop:22, textAlign:"center", fontSize:11, color:"#CBD5E1", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
-            <Lock size={11} />
-            All access is logged · Usalama wa Serikali · Encrypted
-          </div>
-
-          {/* Bottom badge row */}
-          <div style={{ display:"flex", justifyContent:"center", gap:16, marginTop:20 }}>
-            {["🔒 Secure","📋 Audited","🇹🇿 Tanzania"].map(b => (
-              <span key={b} style={{ fontSize:11, color:"#CBD5E1", display:"flex", alignItems:"center", gap:4 }}>{b}</span>
-            ))}
-          </div>
+          {/* Footer */}
+          <p style={{ marginTop: 20, textAlign: "center", fontSize: 11, color: "#CBD5E1" }}>
+            🔒 Mfumo huu uko salama · Matumizi yote yanarekodiwa
+          </p>
         </div>
       </div>
     </div>
