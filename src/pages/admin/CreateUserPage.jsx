@@ -2,88 +2,50 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../layouts/AdminLayout";
 import { UserPlus, CheckCircle, AlertTriangle, Eye, EyeOff, ChevronDown } from "lucide-react";
-import { useAppData, TZ_REGIONS, RANKS, ROLES, ROLE_PERMS, DEPARTMENTS } from "../../context/AppDataContext";
+import { useAppData, RANKS, ROLES, ROLE_PERMS, DEPARTMENTS } from "../../context/AppDataContext";
 
 const ROLE_LABELS = Object.fromEntries(ROLES.map(r => [r.v, r.l]));
 
-const sel = {
-  width:"100%", height:44, border:"1.5px solid #E2E8F0", borderRadius:10,
-  padding:"0 36px 0 12px", fontSize:13, outline:"none",
-  boxSizing:"border-box", fontFamily:"inherit", background:"white",
-  appearance:"none", WebkitAppearance:"none", cursor:"pointer",
-  color:"#1E293B",
+const S = {
+  sel: { width:"100%", height:44, border:"1.5px solid #E2E8F0", borderRadius:10, padding:"0 36px 0 12px", fontSize:13, outline:"none", boxSizing:"border-box", background:"white", appearance:"none", WebkitAppearance:"none", cursor:"pointer", color:"#1E293B" },
+  inp: { width:"100%", height:44, border:"1.5px solid #E2E8F0", borderRadius:10, padding:"0 12px", fontSize:13, outline:"none", boxSizing:"border-box", color:"#1E293B" },
+  lbl: { display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 },
 };
 
-const txt = {
-  width:"100%", height:44, border:"1.5px solid #E2E8F0", borderRadius:10,
-  padding:"0 12px", fontSize:13, outline:"none",
-  boxSizing:"border-box", fontFamily:"inherit", color:"#1E293B",
-};
-
-function Sel({ label, required=true, value, onChange, options, placeholder="Select...", disabled=false }) {
+function Field({ label, required=true, children }) {
   return (
     <div style={{ marginBottom:16 }}>
-      <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 }}>
-        {label} {required && <span style={{ color:"#DC2626" }}>*</span>}
-      </label>
-      <div style={{ position:"relative" }}>
-        <select value={value} onChange={onChange} required={required} disabled={disabled}
-          style={{ ...sel, borderColor: disabled?"#F1F5F9":"#E2E8F0", color: disabled?"#94A3B8":"#1E293B", background: disabled?"#F8FAFC":"white" }}
-          onFocus={e => { if(!disabled) e.target.style.borderColor="#0D3477"; }}
-          onBlur={e => e.target.style.borderColor="#E2E8F0"}>
-          <option value="">{disabled ? "Select region first..." : placeholder}</option>
-          {options.map(o => typeof o === "string"
-            ? <option key={o} value={o}>{o}</option>
-            : <option key={o.v} value={o.v}>{o.l}</option>)}
-        </select>
-        <ChevronDown size={15} color={disabled?"#CBD5E1":"#64748B"} style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", pointerEvents:"none" }} />
-      </div>
+      <label style={S.lbl}>{label} {required && <span style={{ color:"#DC2626" }}>*</span>}</label>
+      {children}
     </div>
   );
 }
 
-function Inp({ label, required=true, value, onChange, placeholder, type="text" }) {
+function SelWrap({ value, onChange, children, disabled }) {
   return (
-    <div style={{ marginBottom:16 }}>
-      <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 }}>
-        {label} {required && <span style={{ color:"#DC2626" }}>*</span>}
-      </label>
-      <input type={type} value={value} onChange={onChange} placeholder={placeholder} required={required}
-        style={txt}
-        onFocus={e => e.target.style.borderColor="#0D3477"}
-        onBlur={e => e.target.style.borderColor="#E2E8F0"} />
-    </div>
-  );
-}
-
-function PwInp({ label, value, onChange, placeholder, show, toggle }) {
-  return (
-    <div style={{ marginBottom:16 }}>
-      <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 }}>
-        {label} <span style={{ color:"#DC2626" }}>*</span>
-      </label>
-      <div style={{ position:"relative" }}>
-        <input type={show?"text":"password"} value={value} onChange={onChange} placeholder={placeholder} required
-          style={{ ...txt, paddingRight:42 }}
-          onFocus={e => e.target.style.borderColor="#0D3477"}
-          onBlur={e => e.target.style.borderColor="#E2E8F0"} />
-        <button type="button" onClick={toggle}
-          style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"#94A3B8", display:"flex", padding:0 }}>
-          {show ? <EyeOff size={16}/> : <Eye size={16}/>}
-        </button>
-      </div>
+    <div style={{ position:"relative" }}>
+      <select value={value} onChange={onChange} disabled={disabled}
+        style={{ ...S.sel, background:disabled?"#F8FAFC":"white", color:disabled?"#94A3B8":"#1E293B" }}
+        onFocus={e=>{ if(!disabled) e.target.style.borderColor="#0D3477"; }}
+        onBlur={e=>e.target.style.borderColor="#E2E8F0"}>
+        {children}
+      </select>
+      <ChevronDown size={15} color={disabled?"#CBD5E1":"#64748B"} style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", pointerEvents:"none" }} />
     </div>
   );
 }
 
 export default function CreateUserPage() {
   const nav = useNavigate();
-  const { stations, addOfficer } = useAppData();
+  const { regions, districtsForRegion, stationsForRegion, addOfficer, loading } = useAppData();
 
-  const [step, setStep]   = useState(1);
-  const [done, setDone]   = useState(false);
-  const [showPw, setShowPw]   = useState(false);
+  const [step, setStep]     = useState(1);
+  const [saving, setSaving] = useState(false);
+  const [done, setDone]     = useState(false);
+  const [err, setErr]       = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
+  const [createdOfficer, setCreatedOfficer] = useState(null);
 
   const [form, setForm] = useState({
     full_name:"", badge:"", nida:"", phone:"", email:"",
@@ -93,230 +55,198 @@ export default function CreateUserPage() {
   });
 
   const upd = k => e => {
-    const val = e.target.value;
-    // Cascade: region change → clear district + station
-    if (k === "region") return setForm(f => ({ ...f, region:val, district:"", station_id:"" }));
-    // District change → clear station
-    if (k === "district") return setForm(f => ({ ...f, district:val, station_id:"" }));
-    setForm(f => ({ ...f, [k]:val }));
+    const v = e.target.value;
+    if (k==="region")   return setForm(f=>({ ...f, region:v, district:"", station_id:"" }));
+    if (k==="district") return setForm(f=>({ ...f, district:v, station_id:"" }));
+    setForm(f=>({ ...f, [k]:v }));
   };
 
-  // Derived: districts for selected region
-  const availableDistricts = form.region ? (TZ_REGIONS[form.region] || []) : [];
+  const availableDistricts = districtsForRegion(form.region);
+  const availableStations  = stationsForRegion(form.region, form.district);
+  const selectedStation    = availableStations.find(s=>s.id===form.station_id);
 
-  // Stations filtered by selected region (and district if picked)
-  const availableStations = stations.filter(s => {
-    if (!form.region) return false;
-    const regionMatch = s.region === form.region;
-    const districtMatch = !form.district || s.district === form.district;
-    return regionMatch && districtMatch;
-  });
-
-  // Selected station object
-  const selectedStation = stations.find(s => s.id === form.station_id);
-
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (form.password !== form.confirm_password) {
-      alert("Passwords do not match · Nywila hazilingani");
-      return;
+    setErr("");
+    if (form.password !== form.confirm_password) { setErr("Passwords do not match · Nywila hazilingani"); return; }
+    if (form.password.length < 8) { setErr("Password must be at least 8 characters"); return; }
+    setSaving(true);
+    try {
+      const officer = await addOfficer(form);
+      setCreatedOfficer(officer);
+      setDone(true);
+    } catch (e) {
+      setErr(e.message || "Failed to create officer. Check Supabase logs.");
+    } finally {
+      setSaving(false);
     }
-    addOfficer({ ...form, station_name: selectedStation?.name || "" });
-    setDone(true);
   }
 
   function reset() {
-    setDone(false);
-    setStep(1);
+    setDone(false); setStep(1); setErr(""); setCreatedOfficer(null);
     setForm({ full_name:"", badge:"", nida:"", phone:"", email:"", rank:"", role:"", department:"", region:"", district:"", station_id:"", password:"", confirm_password:"", notes:"" });
   }
 
-  const card = { background:"white", borderRadius:18, padding:28, border:"1px solid #E2E8F0", boxShadow:"0 1px 4px rgba(0,0,0,.05)", marginBottom:16 };
-  const sHd = (t, s) => (
-    <div style={{ marginBottom:20, paddingBottom:12, borderBottom:"2px solid #F1F5F9" }}>
-      <div style={{ fontSize:15, fontWeight:700, color:"#03102B" }}>{t}</div>
-      <div style={{ fontSize:12, color:"#94A3B8", marginTop:2 }}>{s}</div>
-    </div>
-  );
-
   if (done) return (
-    <AdminLayout pageTitle="Create Officer" pageTitle2="Unda Afisa">
+    <AdminLayout pageTitle="Create Officer">
       <div style={{ maxWidth:560, margin:"60px auto", background:"white", borderRadius:20, padding:"48px 40px", textAlign:"center", border:"1px solid #E2E8F0", boxShadow:"0 4px 20px rgba(0,0,0,.08)" }}>
         <div style={{ width:72, height:72, borderRadius:"50%", background:"#F0FDF4", border:"2px solid #BBF7D0", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px" }}>
           <CheckCircle size={36} color="#16A34A" />
         </div>
-        <h2 style={{ fontSize:22, fontWeight:800, color:"#03102B", marginBottom:6 }}>Officer Account Created!</h2>
-        <p style={{ color:"#64748B", fontSize:13, marginBottom:20 }}>Akaunti ya Afisa Imeundwa</p>
-
+        <h2 style={{ fontSize:22, fontWeight:800, color:"#03102B", marginBottom:6 }}>Officer Created in Supabase!</h2>
+        <p style={{ color:"#64748B", fontSize:13, marginBottom:20 }}>Akaunti ya Afisa Imeundwa · Saved to database</p>
         <div style={{ background:"#F8FAFC", borderRadius:12, padding:16, marginBottom:16, textAlign:"left" }}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-            {[
-              ["Full Name", form.full_name], ["Badge", form.badge],
-              ["Rank", form.rank], ["Role", ROLE_LABELS[form.role]],
-              ["Department", form.department], ["Region", form.region],
-              ["District", form.district], ["Station", selectedStation?.name || "—"],
-              ["Phone", form.phone], ["Email", form.email],
-            ].filter(([,v]) => v).map(([k,v]) => (
-              <div key={k}>
-                <div style={{ fontSize:10, color:"#94A3B8", fontWeight:700 }}>{k.toUpperCase()}</div>
-                <div style={{ fontSize:13, fontWeight:600, color:"#1E293B" }}>{v}</div>
-              </div>
+            {[["Full Name",form.full_name],["Badge",form.badge],["Rank",form.rank],["Role",ROLE_LABELS[form.role]],["Department",form.department],["Region",form.region],["District",form.district],["Station",selectedStation?.name||"—"],["Phone",form.phone],["Email",form.email]].filter(([,v])=>v).map(([k,v])=>(
+              <div key={k}><div style={{ fontSize:10, color:"#94A3B8", fontWeight:700 }}>{k.toUpperCase()}</div><div style={{ fontSize:13, fontWeight:600, color:"#1E293B" }}>{v}</div></div>
             ))}
           </div>
         </div>
-
         <div style={{ background:"#FFFBEB", border:"1px solid #FDE68A", borderRadius:10, padding:"10px 14px", marginBottom:20, display:"flex", gap:8, alignItems:"center" }}>
           <AlertTriangle size={15} color="#D97706" />
-          <span style={{ fontSize:12, color:"#92400E" }}>Credentials will be sent to officer's phone & email. First login requires password change.</span>
+          <span style={{ fontSize:12, color:"#92400E" }}>Officer must change password on first login. Check email for credentials.</span>
         </div>
-
         <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
-          <button onClick={reset} style={{ padding:"10px 24px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>
-            + Create Another Officer
-          </button>
-          <button onClick={() => nav("/admin/officers")} style={{ padding:"10px 24px", borderRadius:10, border:"1px solid #E2E8F0", background:"white", color:"#475569", fontWeight:700, cursor:"pointer", fontSize:13 }}>
-            View All Officers
-          </button>
+          <button onClick={reset} style={{ padding:"10px 24px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>+ Create Another</button>
+          <button onClick={()=>nav("/admin/officers")} style={{ padding:"10px 24px", borderRadius:10, border:"1px solid #E2E8F0", background:"white", color:"#475569", fontWeight:700, cursor:"pointer", fontSize:13 }}>View All Officers</button>
         </div>
       </div>
     </AdminLayout>
   );
 
+  const card = { background:"white", borderRadius:18, padding:28, border:"1px solid #E2E8F0", boxShadow:"0 1px 4px rgba(0,0,0,.05)", marginBottom:16 };
+
   return (
     <AdminLayout pageTitle="Create Officer" pageTitle2="Unda Akaunti ya Afisa">
       <div style={{ maxWidth:860, margin:"0 auto" }}>
-
         <div style={{ marginBottom:22 }}>
           <h1 style={{ fontSize:24, fontWeight:800, color:"#03102B", margin:0 }}>Create Officer Account</h1>
-          <p style={{ color:"#64748B", marginTop:4 }}>Unda Akaunti ya Afisa Mpya · Fields marked <span style={{ color:"#DC2626" }}>*</span> are required</p>
+          <p style={{ color:"#64748B", marginTop:4 }}>Saves directly to Supabase · Fields marked <span style={{ color:"#DC2626" }}>*</span> required</p>
         </div>
 
-        {/* Step indicator */}
+        {/* Steps */}
         <div style={{ display:"flex", marginBottom:28 }}>
-          {[{ n:1, label:"Personal Info" },{ n:2, label:"Assignment" },{ n:3, label:"Credentials" }].map((s,i) => (
+          {[{n:1,label:"Personal Info"},{n:2,label:"Assignment"},{n:3,label:"Credentials"}].map((s,i)=>(
             <div key={s.n} style={{ display:"flex", alignItems:"center", flex:1 }}>
               <div style={{ display:"flex", alignItems:"center", gap:10, flex:1 }}>
-                <div style={{ width:32, height:32, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", background:step>=s.n?"#0D3477":"#E2E8F0", color:step>=s.n?"white":"#94A3B8", fontSize:13, fontWeight:800 }}>
-                  {step>s.n?"✓":s.n}
-                </div>
-                <div>
-                  <div style={{ fontSize:12, fontWeight:700, color:step>=s.n?"#03102B":"#94A3B8" }}>Step {s.n}</div>
-                  <div style={{ fontSize:11, color:"#94A3B8" }}>{s.label}</div>
-                </div>
+                <div style={{ width:32, height:32, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", background:step>=s.n?"#0D3477":"#E2E8F0", color:step>=s.n?"white":"#94A3B8", fontSize:13, fontWeight:800 }}>{step>s.n?"✓":s.n}</div>
+                <div><div style={{ fontSize:12, fontWeight:700, color:step>=s.n?"#03102B":"#94A3B8" }}>Step {s.n}</div><div style={{ fontSize:11, color:"#94A3B8" }}>{s.label}</div></div>
               </div>
               {i<2 && <div style={{ height:2, flex:1, background:step>s.n?"#0D3477":"#E2E8F0", margin:"0 8px" }} />}
             </div>
           ))}
         </div>
 
+        {err && <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:10, padding:"10px 14px", marginBottom:16, display:"flex", gap:8, alignItems:"center" }}><AlertTriangle size={15} color="#DC2626"/><span style={{ fontSize:13, color:"#B91C1C" }}>{err}</span></div>}
+
         <form onSubmit={handleSubmit}>
           <div style={card}>
 
-            {/* ── STEP 1: Personal Info ── */}
+            {/* STEP 1 */}
             {step===1 && (
               <>
-                {sHd("Personal Information","Taarifa za Kibinafsi")}
+                <div style={{ marginBottom:20, paddingBottom:12, borderBottom:"2px solid #F1F5F9" }}>
+                  <div style={{ fontSize:15, fontWeight:700, color:"#03102B" }}>Personal Information · Taarifa za Kibinafsi</div>
+                </div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 24px" }}>
-                  <Inp label="Full Name · Jina Kamili" value={form.full_name} onChange={upd("full_name")} placeholder="e.g. John Doe Mwangi" />
-                  <Inp label="Badge Number · Nambari ya Beji" value={form.badge} onChange={upd("badge")} placeholder="e.g. TZP-2026-00201" />
-                  <Inp label="NIDA Number · Nambari ya NIDA" value={form.nida} onChange={upd("nida")} placeholder="19xxxxxx-xxxxx-xxxxx-x" required={false} />
-                  <Inp label="Phone Number · Simu" value={form.phone} onChange={upd("phone")} placeholder="+255 712 345 678" type="tel" />
-                  <Inp label="Email Address" value={form.email} onChange={upd("email")} placeholder="officer@polisi.go.tz" type="email" />
+                  <Field label="Full Name · Jina Kamili">
+                    <input value={form.full_name} onChange={upd("full_name")} placeholder="e.g. John Doe Mwangi" required style={S.inp} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"} />
+                  </Field>
+                  <Field label="Badge Number · Nambari ya Beji">
+                    <input value={form.badge} onChange={upd("badge")} placeholder="e.g. TZP-2026-00201" required style={S.inp} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"} />
+                  </Field>
+                  <Field label="NIDA Number" required={false}>
+                    <input value={form.nida} onChange={upd("nida")} placeholder="19xxxxxx-xxxxx-xxxxx-x" style={S.inp} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"} />
+                  </Field>
+                  <Field label="Phone · Simu">
+                    <input value={form.phone} onChange={upd("phone")} placeholder="+255 712 345 678" type="tel" required style={S.inp} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"} />
+                  </Field>
+                  <Field label="Email Address">
+                    <input value={form.email} onChange={upd("email")} placeholder="officer@polisi.go.tz" type="email" required style={S.inp} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"} />
+                  </Field>
                 </div>
               </>
             )}
 
-            {/* ── STEP 2: Assignment ── */}
+            {/* STEP 2 */}
             {step===2 && (
               <>
-                {sHd("Rank, Role & Station Assignment","Cheo, Jukumu na Uwekaji wa Kituo")}
+                <div style={{ marginBottom:20, paddingBottom:12, borderBottom:"2px solid #F1F5F9" }}>
+                  <div style={{ fontSize:15, fontWeight:700, color:"#03102B" }}>Rank, Role & Assignment · Cheo, Jukumu na Uwekaji</div>
+                </div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 24px" }}>
-                  <Sel label="Rank · Cheo" value={form.rank} onChange={upd("rank")} options={RANKS} placeholder="Select rank..." />
-                  <Sel label="Role · Jukumu" value={form.role} onChange={upd("role")} options={ROLES} placeholder="Select role..." />
-                  <Sel label="Department · Idara" value={form.department} onChange={upd("department")} options={DEPARTMENTS} placeholder="Select department..." />
+                  <Field label="Rank · Cheo">
+                    <SelWrap value={form.rank} onChange={upd("rank")}>
+                      <option value="">Select rank...</option>
+                      {RANKS.map(r=><option key={r}>{r}</option>)}
+                    </SelWrap>
+                  </Field>
+                  <Field label="Role · Jukumu">
+                    <SelWrap value={form.role} onChange={upd("role")}>
+                      <option value="">Select role...</option>
+                      {ROLES.map(r=><option key={r.v} value={r.v}>{r.l}</option>)}
+                    </SelWrap>
+                  </Field>
+                  <Field label="Department · Idara">
+                    <SelWrap value={form.department} onChange={upd("department")}>
+                      <option value="">Select department...</option>
+                      {DEPARTMENTS.map(d=><option key={d}>{d}</option>)}
+                    </SelWrap>
+                  </Field>
                 </div>
 
                 {/* Location cascade */}
-                <div style={{ borderTop:"2px solid #F1F5F9", paddingTop:18, marginTop:6, marginBottom:4 }}>
-                  <div style={{ fontSize:13, fontWeight:700, color:"#0D3477", marginBottom:14 }}>
-                    📍 Location Assignment · Uwekaji wa Eneo
-                  </div>
+                <div style={{ borderTop:"2px solid #F1F5F9", paddingTop:18, marginTop:4 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#0D3477", marginBottom:14 }}>📍 Location Assignment · Uwekaji wa Eneo</div>
+                  {loading && <div style={{ color:"#94A3B8", fontSize:13, marginBottom:14 }}>Loading regions from Supabase...</div>}
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"0 18px" }}>
+                    {/* Region */}
+                    <Field label="Region · Mkoa">
+                      <SelWrap value={form.region} onChange={upd("region")}>
+                        <option value="">Select region...</option>
+                        {regions.map(r=><option key={r.id} value={r.name}>{r.name}</option>)}
+                      </SelWrap>
+                      {regions.length===0 && !loading && (
+                        <div style={{ marginTop:5, fontSize:11, color:"#D97706" }}>⚠ No regions yet — <span style={{ cursor:"pointer", textDecoration:"underline", color:"#0D3477" }} onClick={()=>nav("/admin/regions")}>Add regions first</span></div>
+                      )}
+                    </Field>
 
-                    {/* 1. Region */}
-                    <Sel
-                      label="Region · Mkoa"
-                      value={form.region}
-                      onChange={upd("region")}
-                      options={Object.keys(TZ_REGIONS).sort()}
-                      placeholder="Select region..."
-                    />
+                    {/* District */}
+                    <Field label="District · Wilaya">
+                      <SelWrap value={form.district} onChange={upd("district")} disabled={!form.region}>
+                        <option value="">{form.region?"Select district...":"Select region first..."}</option>
+                        {availableDistricts.map(d=><option key={d.id} value={d.name}>{d.name}</option>)}
+                      </SelWrap>
+                    </Field>
 
-                    {/* 2. District — unlocks after region */}
-                    <Sel
-                      label="District · Wilaya"
-                      value={form.district}
-                      onChange={upd("district")}
-                      options={availableDistricts}
-                      placeholder={form.region ? "Select district..." : "Select region first..."}
-                      disabled={!form.region}
-                    />
-
-                    {/* 3. Station — pulls from created stations */}
-                    <div style={{ marginBottom:16 }}>
-                      <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 }}>
-                        Station · Kituo <span style={{ color:"#DC2626" }}>*</span>
-                      </label>
-                      <div style={{ position:"relative" }}>
-                        <select
-                          value={form.station_id}
-                          onChange={upd("station_id")}
-                          required
-                          disabled={!form.region}
-                          style={{ ...sel, borderColor:!form.region?"#F1F5F9":"#E2E8F0", color:!form.region?"#94A3B8":"#1E293B", background:!form.region?"#F8FAFC":"white" }}
-                          onFocus={e => { if(form.region) e.target.style.borderColor="#0D3477"; }}
-                          onBlur={e => e.target.style.borderColor="#E2E8F0"}
-                        >
-                          <option value="">
-                            {!form.region
-                              ? "Select region first..."
-                              : availableStations.length === 0
-                                ? "No stations in this region yet — add stations first"
-                                : "Select station..."}
-                          </option>
-                          {availableStations.map(s => (
-                            <option key={s.id} value={s.id}>{s.name} ({s.type})</option>
-                          ))}
-                        </select>
-                        <ChevronDown size={15} color={!form.region?"#CBD5E1":"#64748B"} style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", pointerEvents:"none" }} />
-                      </div>
-                      {form.region && availableStations.length === 0 && (
-                        <div style={{ marginTop:6, display:"flex", alignItems:"center", gap:6 }}>
-                          <span style={{ fontSize:11, color:"#D97706" }}>⚠ No stations found for {form.region}{form.district?` / ${form.district}`:""}</span>
-                          <button type="button" onClick={() => nav("/admin/stations")}
-                            style={{ fontSize:11, color:"#0D3477", fontWeight:700, background:"none", border:"none", cursor:"pointer", textDecoration:"underline", padding:0 }}>
-                            + Add Station
-                          </button>
+                    {/* Station */}
+                    <Field label="Station · Kituo">
+                      <SelWrap value={form.station_id} onChange={upd("station_id")} disabled={!form.region}>
+                        <option value="">
+                          {!form.region ? "Select region first..." : availableStations.length===0 ? "No stations in this region" : "Select station..."}
+                        </option>
+                        {availableStations.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+                      </SelWrap>
+                      {form.region && availableStations.length===0 && (
+                        <div style={{ marginTop:5, fontSize:11, color:"#D97706" }}>
+                          ⚠ No stations in {form.region} · <span style={{ cursor:"pointer", textDecoration:"underline", color:"#0D3477" }} onClick={()=>nav("/admin/stations")}>Add a station first</span>
                         </div>
                       )}
                       {selectedStation && (
-                        <div style={{ marginTop:6, background:"#F0FDF4", border:"1px solid #BBF7D0", borderRadius:8, padding:"8px 12px", display:"flex", gap:8, alignItems:"center" }}>
-                          <CheckCircle size={14} color="#16A34A" />
-                          <span style={{ fontSize:12, color:"#166534", fontWeight:600 }}>{selectedStation.name} · {selectedStation.type} · {selectedStation.region}</span>
+                        <div style={{ marginTop:6, background:"#F0FDF4", border:"1px solid #BBF7D0", borderRadius:8, padding:"7px 12px", display:"flex", gap:7, alignItems:"center" }}>
+                          <CheckCircle size={13} color="#16A34A"/><span style={{ fontSize:12, color:"#166534", fontWeight:600 }}>{selectedStation.name}</span>
                         </div>
                       )}
-                    </div>
+                    </Field>
                   </div>
                 </div>
 
-                {/* Role permissions preview */}
+                {/* Permissions preview */}
                 {form.role && (
                   <div style={{ background:"#EFF6FF", border:"1px solid #BFDBFE", borderRadius:12, padding:"14px 16px", marginTop:8 }}>
-                    <div style={{ fontSize:12, fontWeight:700, color:"#0D3477", marginBottom:8 }}>
-                      ACCESS PREVIEW · {ROLE_LABELS[form.role]?.toUpperCase()}
-                    </div>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#0D3477", marginBottom:8 }}>ACCESS PREVIEW · {ROLE_LABELS[form.role]?.toUpperCase()}</div>
                     <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                      {(ROLE_PERMS[form.role] || ["Full System Access"]).map(p => (
+                      {(ROLE_PERMS[form.role]||["Full System Access"]).map(p=>(
                         <span key={p} style={{ background:"#DBEAFE", color:"#1D4ED8", padding:"3px 10px", borderRadius:999, fontSize:11, fontWeight:600 }}>{p}</span>
                       ))}
                     </div>
@@ -325,35 +255,39 @@ export default function CreateUserPage() {
               </>
             )}
 
-            {/* ── STEP 3: Credentials ── */}
+            {/* STEP 3 */}
             {step===3 && (
               <>
-                {sHd("Login Credentials","Taarifa za Kuingia Mfumo")}
-                <div style={{ background:"#FFFBEB", border:"1px solid #FDE68A", borderRadius:10, padding:"10px 14px", marginBottom:20, display:"flex", gap:8, alignItems:"center" }}>
-                  <AlertTriangle size={15} color="#D97706" />
-                  <span style={{ fontSize:12, color:"#92400E" }}>Officer must change password on first login. Credentials sent via SMS and email.</span>
+                <div style={{ marginBottom:20, paddingBottom:12, borderBottom:"2px solid #F1F5F9" }}>
+                  <div style={{ fontSize:15, fontWeight:700, color:"#03102B" }}>Login Credentials · Taarifa za Kuingia</div>
+                </div>
+                <div style={{ background:"#FFFBEB", border:"1px solid #FDE68A", borderRadius:10, padding:"10px 14px", marginBottom:18, display:"flex", gap:8, alignItems:"center" }}>
+                  <AlertTriangle size={15} color="#D97706"/>
+                  <span style={{ fontSize:12, color:"#92400E" }}>A Supabase auth user will be created. Officer must change password on first login.</span>
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 24px" }}>
-                  <PwInp label="Password · Nywila" value={form.password} onChange={upd("password")} placeholder="Min 8 characters" show={showPw} toggle={() => setShowPw(!showPw)} />
-                  <PwInp label="Confirm Password · Thibitisha" value={form.confirm_password} onChange={upd("confirm_password")} placeholder="Repeat password" show={showPw2} toggle={() => setShowPw2(!showPw2)} />
+                  <Field label="Password · Nywila">
+                    <div style={{ position:"relative" }}>
+                      <input type={showPw?"text":"password"} value={form.password} onChange={upd("password")} placeholder="Min 8 characters" required style={{ ...S.inp, paddingRight:42 }} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}/>
+                      <button type="button" onClick={()=>setShowPw(!showPw)} style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"#94A3B8", display:"flex", padding:0 }}>{showPw?<EyeOff size={16}/>:<Eye size={16}/>}</button>
+                    </div>
+                  </Field>
+                  <Field label="Confirm Password · Thibitisha">
+                    <div style={{ position:"relative" }}>
+                      <input type={showPw2?"text":"password"} value={form.confirm_password} onChange={upd("confirm_password")} placeholder="Repeat password" required style={{ ...S.inp, paddingRight:42 }} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}/>
+                      <button type="button" onClick={()=>setShowPw2(!showPw2)} style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"#94A3B8", display:"flex", padding:0 }}>{showPw2?<EyeOff size={16}/>:<Eye size={16}/>}</button>
+                    </div>
+                  </Field>
                 </div>
-                <div style={{ marginBottom:16 }}>
-                  <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 }}>Admin Notes (optional)</label>
-                  <textarea value={form.notes} onChange={upd("notes")} rows={3} placeholder="Any notes about this officer..."
-                    style={{ width:"100%", border:"1.5px solid #E2E8F0", borderRadius:10, padding:"10px 12px", fontSize:13, outline:"none", boxSizing:"border-box", resize:"vertical" }}
-                    onFocus={e => e.target.style.borderColor="#0D3477"} onBlur={e => e.target.style.borderColor="#E2E8F0"} />
-                </div>
+                <Field label="Admin Notes (optional)" required={false}>
+                  <textarea value={form.notes} onChange={upd("notes")} rows={3} placeholder="Any notes about this officer..." style={{ ...S.inp, height:"auto", padding:"10px 12px", resize:"vertical" }} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}/>
+                </Field>
 
-                {/* Account Summary */}
+                {/* Summary */}
                 <div style={{ background:"#F8FAFC", borderRadius:12, padding:16 }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:"#475569", marginBottom:12 }}>ACCOUNT SUMMARY · MUHTASARI WA AKAUNTI</div>
+                  <div style={{ fontSize:12, fontWeight:700, color:"#475569", marginBottom:12 }}>ACCOUNT SUMMARY · MUHTASARI</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
-                    {[
-                      ["Name", form.full_name], ["Badge", form.badge], ["Rank", form.rank],
-                      ["Role", ROLE_LABELS[form.role]], ["Department", form.department],
-                      ["Region", form.region], ["District", form.district],
-                      ["Station", selectedStation?.name||"—"], ["Phone", form.phone],
-                    ].filter(([,v]) => v).map(([k,v]) => (
+                    {[["Name",form.full_name],["Badge",form.badge],["Rank",form.rank],["Role",ROLE_LABELS[form.role]],["Department",form.department],["Region",form.region],["District",form.district],["Station",selectedStation?.name||"—"],["Email",form.email]].filter(([,v])=>v).map(([k,v])=>(
                       <div key={k} style={{ background:"white", borderRadius:8, padding:"10px 12px", border:"1px solid #E2E8F0" }}>
                         <div style={{ fontSize:10, color:"#94A3B8", fontWeight:700 }}>{k.toUpperCase()}</div>
                         <div style={{ fontSize:12, fontWeight:600, color:"#1E293B", marginTop:2 }}>{v}</div>
@@ -365,22 +299,22 @@ export default function CreateUserPage() {
             )}
           </div>
 
-          {/* Navigation */}
+          {/* Nav buttons */}
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-            <button type="button" onClick={() => setStep(s => Math.max(1,s-1))} disabled={step===1}
+            <button type="button" onClick={()=>setStep(s=>Math.max(1,s-1))} disabled={step===1}
               style={{ padding:"10px 24px", borderRadius:10, border:"1px solid #E2E8F0", background:"white", color:"#475569", fontWeight:700, cursor:step===1?"not-allowed":"pointer", opacity:step===1?.5:1, fontSize:13 }}>
               ← Previous
             </button>
             <div style={{ fontSize:12, color:"#94A3B8" }}>Step {step} of 3</div>
             {step<3 ? (
-              <button type="button" onClick={() => setStep(s=>s+1)}
+              <button type="button" onClick={()=>setStep(s=>s+1)}
                 style={{ padding:"10px 28px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>
                 Next →
               </button>
             ) : (
-              <button type="submit"
-                style={{ padding:"10px 28px", borderRadius:10, border:"none", background:"#059669", color:"white", fontWeight:700, cursor:"pointer", fontSize:13, display:"flex", alignItems:"center", gap:8 }}>
-                <UserPlus size={16} /> Create Officer Account
+              <button type="submit" disabled={saving}
+                style={{ padding:"10px 28px", borderRadius:10, border:"none", background:saving?"#94A3B8":"#059669", color:"white", fontWeight:700, cursor:saving?"not-allowed":"pointer", fontSize:13, display:"flex", alignItems:"center", gap:8 }}>
+                {saving ? <><span style={{ width:16, height:16, border:"2px solid rgba(255,255,255,.3)", borderTopColor:"white", borderRadius:"50%", animation:"spin 1s linear infinite", display:"inline-block" }}/> Saving to Supabase...</> : <><UserPlus size={16}/> Create Officer Account</>}
               </button>
             )}
           </div>

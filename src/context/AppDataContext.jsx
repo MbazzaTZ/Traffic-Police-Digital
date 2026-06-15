@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { supabase } from "../lib/supabase";
 
-// ── Tanzania: all 31 regions + districts ──
+// ── Tanzania: 31 regions + districts (local reference only) ──
 export const TZ_REGIONS = {
   "Arusha":         ["Arusha Urban","Meru","Ngorongoro","Monduli","Karatu","Longido","Arusha Rural"],
   "Dar es Salaam":  ["Ilala","Kinondoni","Temeke","Ubungo","Kigamboni"],
@@ -34,11 +35,16 @@ export const TZ_REGIONS = {
   "Zanzibar West":  ["Magharibi A","Magharibi B","Mjini"],
 };
 
-export const RANKS = [
-  "Constable","Corporal","Sergeant","Staff Sergeant","Inspector",
-  "ASP","SP","SSP","ACP","DCP","SCP",
-  "Commissioner of Police","RPC","DIGP","IGP",
-];
+export const TZ_ZONES = {
+  "Northern":  ["Arusha","Kilimanjaro","Tanga"],
+  "Eastern":   ["Dar es Salaam","Pwani","Morogoro"],
+  "Southern":  ["Iringa","Njombe","Mbeya","Ruvuma","Lindi","Mtwara","Songwe","Rukwa","Katavi"],
+  "Central":   ["Dodoma","Singida","Tabora"],
+  "Lake":      ["Mwanza","Mara","Kagera","Simiyu","Shinyanga","Geita","Kigoma"],
+  "Zanzibar":  ["Zanzibar North","Zanzibar South","Zanzibar West","Pemba North","Pemba South"],
+};
+
+export const RANKS = ["Constable","Corporal","Sergeant","Staff Sergeant","Inspector","ASP","SP","SSP","ACP","DCP","SCP","Commissioner of Police","RPC","DIGP","IGP"];
 
 export const ROLES = [
   { v:"regular_officer",  l:"Regular Officer" },
@@ -64,102 +70,200 @@ export const ROLE_PERMS = {
   admin_officer:    ["Manage Users","Create Accounts","All Admin Activities","System Settings","Roles Management"],
 };
 
-export const DEPARTMENTS = [
-  "Operations","CID","Traffic","Intelligence","Forensics",
-  "Community Policing","Anti-Narcotics","Cyber Crime",
-  "Human Resources","Administration","ICT",
-  "Internal Affairs","Training","Procurement","Legal Services",
-];
+export const DEPARTMENTS = ["Operations","CID","Traffic","Intelligence","Forensics","Community Policing","Anti-Narcotics","Cyber Crime","Human Resources","Administration","ICT","Internal Affairs","Training","Procurement","Legal Services"];
 
-// ── helpers: read/write localStorage safely ──
-function load(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-function save(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
-}
-
-const AppDataContext = createContext(null);
+const Ctx = createContext(null);
 
 export function AppDataProvider({ children }) {
-  const [stations, setStations] = useState(() => load("tpdop_stations", []));
-  const [regions,  setRegions]  = useState(() => load("tpdop_regions",  []));
-  const [officers, setOfficers] = useState(() => load("tpdop_officers", []));
+  const [regions,   setRegions]   = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [stations,  setStations]  = useState([]);
+  const [officers,  setOfficers]  = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState(null);
 
-  // Persist every change to localStorage
-  useEffect(() => { save("tpdop_stations", stations); }, [stations]);
-  useEffect(() => { save("tpdop_regions",  regions);  }, [regions]);
-  useEffect(() => { save("tpdop_officers", officers); }, [officers]);
+  // ── Load all data on mount ──
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [rRes, dRes, sRes, oRes] = await Promise.all([
+        supabase.from("regions").select("*").order("name"),
+        supabase.from("districts").select("*, regions(name)").order("name"),
+        supabase.from("stations").select("*, regions(name), districts(name)").order("name"),
+        supabase.from("profiles").select("*, regions(name), districts(name), stations(name)").order("created_at", { ascending: false }),
+      ]);
+      if (rRes.error) throw rRes.error;
+      if (dRes.error) throw dRes.error;
+      if (sRes.error) throw sRes.error;
+      if (oRes.error) throw oRes.error;
+      setRegions(rRes.data || []);
+      setDistricts(dRes.data || []);
+      setStations(sRes.data || []);
+      setOfficers(oRes.data || []);
+    } catch (e) {
+      setError(e.message);
+      console.error("TPDOP load error:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  function addStation(station) {
-    const s = {
-      ...station,
-      id: `STN-${Date.now()}`,
-      officers: 0,
-      status: "Active",
-      createdAt: new Date().toISOString(),
-    };
-    setStations(prev => [s, ...prev]);
-    return s;
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  // ── Regions ──
+  async function addRegion({ name, code, zone }) {
+    // 1. Insert or get zone
+    let zone_id = null;
+    if (zone) {
+      const { data: zd } = await supabase.from("zones").upsert({ name: zone }, { onConflict: "name" }).select("id").single();
+      zone_id = zd?.id;
+      if (!zone_id) {
+        const { data: ze } = await supabase.from("zones").select("id").eq("name", zone).single();
+        zone_id = ze?.id;
+      }
+    }
+
+    // 2. Insert region
+    const { data: region, error: rErr } = await supabase
+      .from("regions")
+      .insert({ name, code: code || null, zone_id })
+      .select()
+      .single();
+    if (rErr) throw rErr;
+
+    // 3. Auto-insert all districts for this region
+    const districtNames = TZ_REGIONS[name] || [];
+    if (districtNames.length > 0) {
+      const rows = districtNames.map(d => ({ name: d, region_id: region.id }));
+      await supabase.from("districts").insert(rows);
+    }
+
+    await loadAll();
+    return region;
   }
 
-  function addRegion(region) {
-    const r = {
-      ...region,
-      id: `RGN-${Date.now()}`,
-      districts: TZ_REGIONS[region.name] || [],
-      stations: 0,
-      officers: 0,
-    };
-    setRegions(prev => [r, ...prev]);
-    return r;
+  // ── Stations ──
+  async function addStation({ name, code, type, region, district, phone, address, ocs_name }) {
+    // Resolve region_id
+    const rRow = regions.find(r => r.name === region);
+    const region_id = rRow?.id || null;
+
+    // Resolve district_id
+    const dRow = districts.find(d => d.name === district && d.region_id === region_id);
+    const district_id = dRow?.id || null;
+
+    const { data, error: sErr } = await supabase
+      .from("stations")
+      .insert({
+        name,
+        code: code || null,
+        type: type || "police_station",
+        region_id,
+        district_id,
+        phone: phone || null,
+        address: address || null,
+        status: "active",
+      })
+      .select()
+      .single();
+    if (sErr) throw sErr;
+    await loadAll();
+    return data;
   }
 
-  function addOfficer(officer) {
-    const o = {
-      ...officer,
-      id: `OFF-${Date.now()}`,
-      status: "Active",
-      createdAt: new Date().toISOString(),
-    };
-    setOfficers(prev => [o, ...prev]);
-    return o;
+  // ── Officers (profiles) ──
+  async function addOfficer({ full_name, badge, nida, phone, email, rank, role, department, region, district, station_id, password, notes }) {
+    // 1. Create auth user
+    const { data: authData, error: authErr } = await supabase.auth.admin
+      ? await supabase.auth.signUp({ email, password, options: { data: { role, badge, full_name } } })
+      : await supabase.auth.signUp({ email, password, options: { data: { role, badge, full_name } } });
+
+    if (authErr) throw authErr;
+    const user_id = authData?.user?.id;
+    if (!user_id) throw new Error("Failed to create auth user");
+
+    // 2. Resolve IDs
+    const rRow = regions.find(r => r.name === region);
+    const region_id = rRow?.id || null;
+    const dRow = districts.find(d => d.name === district && d.region_id === region_id);
+    const district_id = dRow?.id || null;
+
+    // 3. Insert profile
+    const { data: profile, error: pErr } = await supabase
+      .from("profiles")
+      .insert({
+        id: user_id,
+        badge,
+        full_name,
+        rank,
+        role,
+        department: department || null,
+        region_id,
+        district_id,
+        station_id: station_id || null,
+        phone: phone || null,
+        email: email || null,
+        nida: nida || null,
+        status: "active",
+      })
+      .select()
+      .single();
+    if (pErr) throw pErr;
+
+    await loadAll();
+    return profile;
   }
 
-  function deleteStation(id)  { setStations(p => p.filter(x => x.id !== id)); }
-  function deleteRegion(id)   { setRegions(p  => p.filter(x => x.id !== id)); }
-  function deleteOfficer(id)  { setOfficers(p => p.filter(x => x.id !== id)); }
-
-  function updateOfficer(id, patch) {
-    setOfficers(p => p.map(o => o.id === id ? { ...o, ...patch } : o));
+  async function deleteStation(id) {
+    await supabase.from("stations").delete().eq("id", id);
+    await loadAll();
   }
 
-  function clearAll() {
-    setStations([]); setRegions([]); setOfficers([]);
-    localStorage.removeItem("tpdop_stations");
-    localStorage.removeItem("tpdop_regions");
-    localStorage.removeItem("tpdop_officers");
+  async function deleteOfficer(id) {
+    await supabase.from("profiles").delete().eq("id", id);
+    await loadAll();
+  }
+
+  async function deleteRegion(id) {
+    await supabase.from("regions").delete().eq("id", id);
+    await loadAll();
+  }
+
+  // ── Helpers ──
+  function districtsForRegion(regionName) {
+    const r = regions.find(x => x.name === regionName);
+    if (!r) return [];
+    return districts.filter(d => d.region_id === r.id);
+  }
+
+  function stationsForRegion(regionName, districtName) {
+    const r = regions.find(x => x.name === regionName);
+    if (!r) return [];
+    return stations.filter(s => {
+      const regionMatch = s.region_id === r.id;
+      if (!districtName) return regionMatch;
+      const d = districts.find(x => x.name === districtName && x.region_id === r.id);
+      return regionMatch && (!d || s.district_id === d.id);
+    });
   }
 
   return (
-    <AppDataContext.Provider value={{
-      stations, regions, officers,
-      addStation, addRegion, addOfficer,
-      deleteStation, deleteRegion, deleteOfficer,
-      updateOfficer, clearAll,
+    <Ctx.Provider value={{
+      regions, districts, stations, officers,
+      loading, error,
+      addRegion, addStation, addOfficer,
+      deleteRegion, deleteStation, deleteOfficer,
+      districtsForRegion, stationsForRegion,
+      refresh: loadAll,
     }}>
       {children}
-    </AppDataContext.Provider>
+    </Ctx.Provider>
   );
 }
 
 export function useAppData() {
-  const ctx = useContext(AppDataContext);
-  if (!ctx) throw new Error("useAppData must be used within AppDataProvider");
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error("useAppData must be within AppDataProvider");
   return ctx;
 }
