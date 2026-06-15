@@ -29,7 +29,8 @@ export default function LoginPage() {
         .single();
 
       const role = profile?.role || data.user.user_metadata?.role || "";
-      const dest = role === "admin_officer" ? "/admin" : "/dashboard";
+      const ROLE_HOME = { admin_officer:"/admin", igp:"/admin", digp:"/admin", traffic_officer:"/traffic", cid_officer:"/cid", forensic_officer:"/cid" };
+      const dest = ROLE_HOME[role] || "/dashboard";
       nav(dest);
     } catch (e) {
       setError(e.message || "Login failed. Check your credentials.");

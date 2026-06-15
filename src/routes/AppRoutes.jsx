@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -24,67 +24,110 @@ import MessagesPage           from "../pages/regular-police/MessagesPage";
 import AlertsPage             from "../pages/regular-police/AlertsPage";
 import SettingsPage           from "../pages/regular-police/SettingsPage";
 
-// Session-aware guard
-function Guard({ children, adminOnly = false }) {
-  const [status, setStatus] = useState("checking"); // checking | ok | unauth
-  const [isAdmin, setIsAdmin] = useState(false);
+// Traffic
+import TrafficDashboard from "../pages/traffic/TrafficDashboard";
+import CitationsPage    from "../pages/traffic/CitationsPage";
+
+// CID
+import CIDDashboard from "../pages/cid/CIDDashboard";
+
+const ROLE_HOME = {
+  admin_officer:   "/admin",
+  traffic_officer: "/traffic",
+  cid_officer:     "/cid",
+  forensic_officer:"/cid",
+  ocs:             "/dashboard",
+  ocd:             "/dashboard",
+  rpc:             "/dashboard",
+  igp:             "/admin",
+  regular_officer: "/dashboard",
+  inspector:       "/dashboard",
+};
+
+function Guard({ children, roles }) {
+  const [status, setStatus] = useState("checking");
+  const [role,   setRole]   = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) { setStatus("unauth"); return; }
-      const role = session.user.user_metadata?.role || "";
-      setIsAdmin(role === "admin_officer");
+      // Prefer profile role over metadata
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single();
+      const r = profile?.role || session.user.user_metadata?.role || "";
+      setRole(r);
       setStatus("ok");
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_e, session) => {
       if (!session) { setStatus("unauth"); return; }
-      const role = session.user.user_metadata?.role || "";
-      setIsAdmin(role === "admin_officer");
-      setStatus("ok");
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single();
+      const r = profile?.role || session.user.user_metadata?.role || "";
+      setRole(r); setStatus("ok");
     });
     return () => subscription.unsubscribe();
   }, []);
 
-  if (status === "checking") return (
+  if (status==="checking") return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", fontFamily:"system-ui", color:"#64748B" }}>
       <div style={{ textAlign:"center" }}>
         <div style={{ width:40, height:40, border:"3px solid #E2E8F0", borderTopColor:"#0D3477", borderRadius:"50%", animation:"spin 1s linear infinite", margin:"0 auto 16px" }}/>
-        <div style={{ fontSize:14 }}>Loading...</div>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <div style={{ fontSize:14 }}>Loading TPDOP...</div>
       </div>
     </div>
   );
 
-  if (status === "unauth") return <Navigate to="/" replace />;
-  if (adminOnly && !isAdmin) return <Navigate to="/dashboard" replace />;
+  if (status==="unauth") return <Navigate to="/" replace/>;
+  if (roles && !roles.includes(role)) return <Navigate to={ROLE_HOME[role]||"/"} replace/>;
   return children;
 }
+
+const ADMIN = ["admin_officer","igp","digp"];
+const TRAFFIC = ["traffic_officer"];
+const CID = ["cid_officer","forensic_officer"];
+const OFFICER = ["regular_officer","inspector","ocs","ocd","rpc",...ADMIN];
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/" element={<LoginPage/>}/>
 
-      {/* Admin routes */}
-      <Route path="/admin"              element={<Guard adminOnly><AdminDashboard /></Guard>} />
-      <Route path="/admin/officers"     element={<Guard adminOnly><OfficersPage /></Guard>} />
-      <Route path="/admin/create-user"  element={<Guard adminOnly><CreateUserPage /></Guard>} />
-      <Route path="/admin/stations"     element={<Guard adminOnly><StationsPage /></Guard>} />
-      <Route path="/admin/regions"      element={<Guard adminOnly><RegionsPage /></Guard>} />
-      <Route path="/admin/roles"        element={<Guard adminOnly><RolesPage /></Guard>} />
-      <Route path="/admin/settings"     element={<Guard adminOnly><AdminSettingsPage /></Guard>} />
+      {/* Admin */}
+      <Route path="/admin"             element={<Guard roles={ADMIN}><AdminDashboard/></Guard>}/>
+      <Route path="/admin/officers"    element={<Guard roles={ADMIN}><OfficersPage/></Guard>}/>
+      <Route path="/admin/create-user" element={<Guard roles={ADMIN}><CreateUserPage/></Guard>}/>
+      <Route path="/admin/stations"    element={<Guard roles={ADMIN}><StationsPage/></Guard>}/>
+      <Route path="/admin/regions"     element={<Guard roles={ADMIN}><RegionsPage/></Guard>}/>
+      <Route path="/admin/roles"       element={<Guard roles={ADMIN}><RolesPage/></Guard>}/>
+      <Route path="/admin/settings"    element={<Guard roles={ADMIN}><AdminSettingsPage/></Guard>}/>
 
-      {/* Officer routes */}
-      <Route path="/dashboard"    element={<Guard><RegularPoliceDashboard /></Guard>} />
-      <Route path="/person-search"element={<Guard><PersonSearchPage /></Guard>} />
-      <Route path="/incidents"    element={<Guard><IncidentReportsPage /></Guard>} />
-      <Route path="/arrests"      element={<Guard><ArrestsPage /></Guard>} />
-      <Route path="/patrols"      element={<Guard><PatrolDashboardPage /></Guard>} />
-      <Route path="/evidence"     element={<Guard><EvidenceDashboardPage /></Guard>} />
-      <Route path="/messages"     element={<Guard><MessagesPage /></Guard>} />
-      <Route path="/alerts"       element={<Guard><AlertsPage /></Guard>} />
-      <Route path="/settings"     element={<Guard><SettingsPage /></Guard>} />
+      {/* Regular police */}
+      <Route path="/dashboard"     element={<Guard roles={OFFICER}><RegularPoliceDashboard/></Guard>}/>
+      <Route path="/person-search" element={<Guard roles={OFFICER}><PersonSearchPage/></Guard>}/>
+      <Route path="/incidents"     element={<Guard roles={OFFICER}><IncidentReportsPage/></Guard>}/>
+      <Route path="/arrests"       element={<Guard roles={OFFICER}><ArrestsPage/></Guard>}/>
+      <Route path="/patrols"       element={<Guard roles={OFFICER}><PatrolDashboardPage/></Guard>}/>
+      <Route path="/evidence"      element={<Guard roles={OFFICER}><EvidenceDashboardPage/></Guard>}/>
+      <Route path="/messages"      element={<Guard roles={OFFICER}><MessagesPage/></Guard>}/>
+      <Route path="/alerts"        element={<Guard roles={OFFICER}><AlertsPage/></Guard>}/>
+      <Route path="/settings"      element={<Guard roles={OFFICER}><SettingsPage/></Guard>}/>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Traffic */}
+      <Route path="/traffic"             element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
+      <Route path="/traffic/citations"   element={<Guard roles={TRAFFIC}><CitationsPage/></Guard>}/>
+      <Route path="/traffic/accidents"   element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
+      <Route path="/traffic/vehicles"    element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
+      <Route path="/traffic/checkpoints" element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
+      <Route path="/traffic/settings"    element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
+
+      {/* CID */}
+      <Route path="/cid"           element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
+      <Route path="/cid/cases"     element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
+      <Route path="/cid/suspects"  element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
+      <Route path="/cid/wanted"    element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
+      <Route path="/cid/evidence"  element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
+      <Route path="/cid/search"    element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
+
+      <Route path="*" element={<Navigate to="/" replace/>}/>
     </Routes>
   );
 }
