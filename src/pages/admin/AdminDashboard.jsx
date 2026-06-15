@@ -9,7 +9,7 @@ export default function AdminDashboard() {
     <AdminLayout pageTitle="Dashboard" pageTitle2="Dashibodi ya Usimamizi">
 
       {/* Welcome banner */}
-      <div style={{ background:"linear-gradient(135deg,#1a0533,#2d0a52,#3d1270)", borderRadius:18, padding:"22px 28px", color:"white", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16, marginBottom:22, boxShadow:"0 8px 28px rgba(61,18,112,.35)" }}>
+      <div style={{ background:"linear-gradient(135deg,#03102B,#05193E,#082A63)", borderRadius:18, padding:"22px 28px", color:"white", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16, marginBottom:22, boxShadow:"0 8px 28px rgba(3,16,43,.35)" }}>
         <div style={{ display:"flex", alignItems:"center", gap:16 }}>
           <div style={{ width:64, height:64, borderRadius:"50%", background:"linear-gradient(135deg,#FFD700,#FFA500)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
             <span style={{ fontSize:26, fontWeight:900 }}>A</span>
@@ -22,7 +22,7 @@ export default function AdminDashboard() {
         </div>
         <div style={{ display:"flex", gap:10 }}>
           <button onClick={() => nav("/admin/create-user")}
-            style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"#FFD700", color:"#1a0533", fontWeight:700, fontSize:13, cursor:"pointer" }}>
+            style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"#FFD700", color:"#03102B", fontWeight:700, fontSize:13, cursor:"pointer" }}>
             + Create Officer
           </button>
           <button onClick={() => nav("/admin/stations")}
@@ -35,7 +35,7 @@ export default function AdminDashboard() {
       {/* KPIs — all zero until real data */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:14, marginBottom:22 }}>
         {[
-          { label:"Total Officers",    sw:"Maafisa Wote",       color:"#7C3AED", icon:Users },
+          { label:"Total Officers",    sw:"Maafisa Wote",       color:"#0D3477", icon:Users },
           { label:"Police Stations",   sw:"Vituo vya Polisi",   color:"#0D3477", icon:Building2 },
           { label:"Regions",           sw:"Mikoa",              color:"#059669", icon:MapPin },
           { label:"Active Roles",      sw:"Majukumu",           color:"#D97706", icon:Shield },
@@ -54,10 +54,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div style={{ fontSize:16, fontWeight:700, color:"#1a0533", marginBottom:12 }}>Quick Actions · Vitendo vya Haraka</div>
+      <div style={{ fontSize:16, fontWeight:700, color:"#03102B", marginBottom:12 }}>Quick Actions · Vitendo vya Haraka</div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:22 }}>
         {[
-          { icon:UserPlus,  label:"Create Officer",  sw:"Unda Afisa",       path:"/admin/create-user", color:"#7C3AED" },
+          { icon:UserPlus,  label:"Create Officer",  sw:"Unda Afisa",       path:"/admin/create-user", color:"#0D3477" },
           { icon:Building2, label:"Add Station",     sw:"Ongeza Kituo",     path:"/admin/stations",    color:"#0D3477" },
           { icon:MapPin,    label:"Manage Regions",  sw:"Simamia Mikoa",    path:"/admin/regions",     color:"#059669" },
           { icon:Shield,    label:"Manage Roles",    sw:"Simamia Majukumu", path:"/admin/roles",       color:"#D97706" },
@@ -84,14 +84,14 @@ export default function AdminDashboard() {
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
         <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
           <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-            <div style={{ fontSize:14, fontWeight:700, color:"#1a0533" }}>Officers</div>
+            <div style={{ fontSize:14, fontWeight:700, color:"#03102B" }}>Officers</div>
             <button onClick={() => nav("/admin/officers")} style={{ background:"white", border:"1px solid #E2E8F0", borderRadius:8, padding:"6px 12px", fontSize:12, fontWeight:600, cursor:"pointer", color:"#475569" }}>View All</button>
           </div>
           <div style={{ padding:"50px 20px", textAlign:"center", color:"#94A3B8" }}>
             <Users size={36} style={{ opacity:.2, marginBottom:10 }} />
             <div style={{ fontSize:14, fontWeight:600, color:"#64748B" }}>No officers created yet</div>
             <div style={{ fontSize:12, marginTop:4 }}>Maafisa hawajafunguliwa bado</div>
-            <button onClick={() => nav("/admin/create-user")} style={{ marginTop:14, padding:"8px 20px", borderRadius:10, border:"none", background:"#7C3AED", color:"white", fontWeight:700, cursor:"pointer", fontSize:12 }}>
+            <button onClick={() => nav("/admin/create-user")} style={{ marginTop:14, padding:"8px 20px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", fontSize:12 }}>
               Create First Officer
             </button>
           </div>
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
 
         <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
           <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9" }}>
-            <div style={{ fontSize:14, fontWeight:700, color:"#1a0533" }}>Recent Activity · Shughuli za Hivi Karibuni</div>
+            <div style={{ fontSize:14, fontWeight:700, color:"#03102B" }}>Recent Activity · Shughuli za Hivi Karibuni</div>
             <div style={{ fontSize:11, color:"#94A3B8" }}>System audit log</div>
           </div>
           <div style={{ padding:"50px 20px", textAlign:"center", color:"#94A3B8" }}>

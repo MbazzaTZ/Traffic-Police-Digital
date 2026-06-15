@@ -24,18 +24,18 @@ export default function RegionsPage() {
     <AdminLayout pageTitle="Regions & Districts" pageTitle2="Mikoa na Wilaya">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
         <div>
-          <h1 style={{ fontSize:24, fontWeight:800, color:"#1a0533", margin:0 }}>Regions & Districts</h1>
+          <h1 style={{ fontSize:24, fontWeight:800, color:"#03102B", margin:0 }}>Regions & Districts</h1>
           <p style={{ color:"#64748B", marginTop:3 }}>Mikoa na Wilaya · Tanzania national structure · {regions.length} regions added</p>
         </div>
         <button onClick={() => setModal(true)}
-          style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"#7C3AED", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
+          style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
           <Plus size={16} /> Add Region
         </button>
       </div>
 
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
         {[
-          { label:"Regions / Mikoa",  c:"#7C3AED", v:regions.length },
+          { label:"Regions / Mikoa",  c:"#0D3477", v:regions.length },
           { label:"Districts / Wilaya",c:"#0D3477", v:0 },
           { label:"Stations / Vituo", c:"#059669", v:0 },
           { label:"Officers / Maafisa",c:"#D97706", v:0 },
@@ -52,7 +52,7 @@ export default function RegionsPage() {
           <MapPin size={48} style={{ opacity:.2, marginBottom:14 }} />
           <div style={{ fontSize:16, fontWeight:600, color:"#64748B" }}>No regions added yet</div>
           <div style={{ fontSize:13, marginTop:6 }}>Mikoa haijafunguliwa bado · Tanzania has 31 regions — add them here</div>
-          <button onClick={() => setModal(true)} style={{ marginTop:18, padding:"10px 24px", borderRadius:10, border:"none", background:"#7C3AED", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>
+          <button onClick={() => setModal(true)} style={{ marginTop:18, padding:"10px 24px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>
             Add First Region
           </button>
         </div>
@@ -61,18 +61,18 @@ export default function RegionsPage() {
           {regions.map((r, i) => (
             <div key={i} style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", padding:"16px 20px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-                <div style={{ width:40, height:40, borderRadius:10, background:"#F5F3FF", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                  <MapPin size={18} color="#7C3AED" />
+                <div style={{ width:40, height:40, borderRadius:10, background:"#EFF6FF", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <MapPin size={18} color="#0D3477" />
                 </div>
                 <div>
-                  <div style={{ fontSize:15, fontWeight:800, color:"#1a0533" }}>{r.name} Region</div>
+                  <div style={{ fontSize:15, fontWeight:800, color:"#03102B" }}>{r.name} Region</div>
                   <div style={{ fontSize:12, color:"#64748B" }}>Code: {r.code} · Zone: {r.zone || "—"}</div>
                 </div>
               </div>
               <div style={{ display:"flex", gap:20 }}>
                 {[["Districts","0"],["Stations","0"],["Officers","0"]].map(([k,v]) => (
                   <div key={k} style={{ textAlign:"center" }}>
-                    <div style={{ fontSize:16, fontWeight:800, color:"#7C3AED" }}>{v}</div>
+                    <div style={{ fontSize:16, fontWeight:800, color:"#0D3477" }}>{v}</div>
                     <div style={{ fontSize:10, color:"#94A3B8" }}>{k}</div>
                   </div>
                 ))}
@@ -86,7 +86,7 @@ export default function RegionsPage() {
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.5)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:100 }}>
           <div style={{ background:"white", borderRadius:20, padding:28, width:440 }}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:20 }}>
-              <div style={{ fontSize:17, fontWeight:800, color:"#1a0533" }}>Add Region · Ongeza Mkoa</div>
+              <div style={{ fontSize:17, fontWeight:800, color:"#03102B" }}>Add Region · Ongeza Mkoa</div>
               <button onClick={() => setModal(false)} style={{ width:32, height:32, borderRadius:8, background:"#F1F5F9", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><X size={16} /></button>
             </div>
             {done ? (
@@ -110,10 +110,10 @@ export default function RegionsPage() {
                   <div key={f.key} style={{ marginBottom:14 }}>
                     <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 }}>{f.label} *</label>
                     <input value={form[f.key]} onChange={upd(f.key)} placeholder={f.ph} required style={inp}
-                      onFocus={e => e.target.style.borderColor="#7C3AED"} onBlur={e => e.target.style.borderColor="#E2E8F0"} />
+                      onFocus={e => e.target.style.borderColor="#0D3477"} onBlur={e => e.target.style.borderColor="#E2E8F0"} />
                   </div>
                 ))}
-                <button type="submit" style={{ width:"100%", height:44, background:"#7C3AED", color:"white", border:"none", borderRadius:10, fontWeight:700, cursor:"pointer", fontSize:14 }}>
+                <button type="submit" style={{ width:"100%", height:44, background:"#0D3477", color:"white", border:"none", borderRadius:10, fontWeight:700, cursor:"pointer", fontSize:14 }}>
                   Add Region · Ongeza Mkoa
                 </button>
               </form>

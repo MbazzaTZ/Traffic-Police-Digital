@@ -11,11 +11,11 @@ export default function OfficersPage() {
     <AdminLayout pageTitle="Officers" pageTitle2="Maafisa Wote">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
         <div>
-          <h1 style={{ fontSize:24, fontWeight:800, color:"#1a0533", margin:0 }}>Officers <span style={{ fontWeight:500, color:"#94A3B8", fontSize:18 }}>· Maafisa</span></h1>
+          <h1 style={{ fontSize:24, fontWeight:800, color:"#03102B", margin:0 }}>Officers <span style={{ fontWeight:500, color:"#94A3B8", fontSize:18 }}>· Maafisa</span></h1>
           <p style={{ color:"#64748B", marginTop:3 }}>All registered officers in the system</p>
         </div>
         <button onClick={() => nav("/admin/create-user")}
-          style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"#7C3AED", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
+          style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
           <UserPlus size={16} /> Create Officer
         </button>
       </div>
@@ -23,7 +23,7 @@ export default function OfficersPage() {
       {/* Stats — all zero */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:18 }}>
         {[
-          { label:"Total",     c:"#7C3AED" },
+          { label:"Total",     c:"#0D3477" },
           { label:"Active",    c:"#059669" },
           { label:"Pending",   c:"#D97706" },
           { label:"Suspended", c:"#DC2626" },
@@ -47,7 +47,7 @@ export default function OfficersPage() {
         <Users size={48} style={{ opacity:.2, marginBottom:14 }} />
         <div style={{ fontSize:16, fontWeight:600, color:"#64748B" }}>No officers registered yet</div>
         <div style={{ fontSize:13, marginTop:6 }}>Maafisa hawajasajiliwa bado · Create your first officer to get started</div>
-        <button onClick={() => nav("/admin/create-user")} style={{ marginTop:18, padding:"10px 24px", borderRadius:10, border:"none", background:"#7C3AED", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>
+        <button onClick={() => nav("/admin/create-user")} style={{ marginTop:18, padding:"10px 24px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>
           Create First Officer · Unda Afisa wa Kwanza
         </button>
       </div>

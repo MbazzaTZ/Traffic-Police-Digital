@@ -21,11 +21,11 @@ export default function AdminSettingsPage() {
     return (
       <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden", marginBottom:16 }}>
         <div style={{ padding:"14px 20px", borderBottom:"1px solid #F1F5F9", display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:34, height:34, borderRadius:10, background:"#F5F3FF", display:"flex", alignItems:"center", justifyContent:"center" }}>
-            <Icon size={17} color="#7C3AED" />
+          <div style={{ width:34, height:34, borderRadius:10, background:"#EFF6FF", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <Icon size={17} color="#0D3477" />
           </div>
           <div>
-            <div style={{ fontSize:14, fontWeight:700, color:"#1a0533" }}>{title}</div>
+            <div style={{ fontSize:14, fontWeight:700, color:"#03102B" }}>{title}</div>
             <div style={{ fontSize:11, color:"#94A3B8" }}>{sub}</div>
           </div>
         </div>
@@ -38,7 +38,7 @@ export default function AdminSettingsPage() {
     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"11px 0", borderBottom:"1px solid #F8FAFC" }}>
       <span style={{ fontSize:13, color:"#1E293B" }}>{label}</span>
       <button onClick={() => setSettings(s => ({ ...s, [key]: !s[key] }))}
-        style={{ width:44, height:24, borderRadius:12, border:"none", background:settings[key] ? "#7C3AED" : "#E2E8F0", position:"relative", cursor:"pointer", transition:".2s", flexShrink:0 }}>
+        style={{ width:44, height:24, borderRadius:12, border:"none", background:settings[key] ? "#0D3477" : "#E2E8F0", position:"relative", cursor:"pointer", transition:".2s", flexShrink:0 }}>
         <span style={{ position:"absolute", top:2, left:settings[key] ? 22 : 2, width:20, height:20, borderRadius:"50%", background:"white", transition:".2s", display:"block", boxShadow:"0 1px 4px rgba(0,0,0,.2)" }} />
       </button>
     </div>
@@ -50,12 +50,12 @@ export default function AdminSettingsPage() {
     <AdminLayout pageTitle="System Settings" pageTitle2="Mipangilio ya Mfumo">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:22 }}>
         <div>
-          <h1 style={{ fontSize:24, fontWeight:800, color:"#1a0533", margin:0 }}>System Settings</h1>
+          <h1 style={{ fontSize:24, fontWeight:800, color:"#03102B", margin:0 }}>System Settings</h1>
           <p style={{ color:"#64748B", marginTop:3 }}>Mipangilio ya Mfumo · TPDOP v1.0.0</p>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           {saved && <span style={{ display:"flex", gap:6, alignItems:"center", color:"#16A34A", fontWeight:700, fontSize:13 }}><CheckCircle size={16} /> Saved!</span>}
-          <button onClick={save} style={{ padding:"10px 24px", borderRadius:10, border:"none", background:"#7C3AED", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
+          <button onClick={save} style={{ padding:"10px 24px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
             <Save size={15} /> Save Settings
           </button>
         </div>
@@ -69,7 +69,7 @@ export default function AdminSettingsPage() {
                 <div key={k} style={{ marginBottom:14 }}>
                   <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 }}>{l}</label>
                   <input type={t} value={settings[k]} onChange={upd(k)} style={inp}
-                    onFocus={e => e.target.style.borderColor="#7C3AED"} onBlur={e => e.target.style.borderColor="#E2E8F0"} />
+                    onFocus={e => e.target.style.borderColor="#0D3477"} onBlur={e => e.target.style.borderColor="#E2E8F0"} />
                 </div>
               ))}
               <div style={{ marginBottom:14 }}>

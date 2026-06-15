@@ -27,18 +27,18 @@ export default function StationsPage() {
     <AdminLayout pageTitle="Stations" pageTitle2="Vituo vya Polisi">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
         <div>
-          <h1 style={{ fontSize:24, fontWeight:800, color:"#1a0533", margin:0 }}>Police Stations <span style={{ fontWeight:500, color:"#94A3B8", fontSize:18 }}>· Vituo</span></h1>
+          <h1 style={{ fontSize:24, fontWeight:800, color:"#03102B", margin:0 }}>Police Stations <span style={{ fontWeight:500, color:"#94A3B8", fontSize:18 }}>· Vituo</span></h1>
           <p style={{ color:"#64748B", marginTop:3 }}>{stations.length} stations registered</p>
         </div>
         <button onClick={() => setModal(true)}
-          style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"#7C3AED", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
+          style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
           <Plus size={16} /> Add Station
         </button>
       </div>
 
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:18 }}>
         {[
-          { label:"Total Stations",  c:"#7C3AED" },
+          { label:"Total Stations",  c:"#0D3477" },
           { label:"HQ",             c:"#0D3477" },
           { label:"Police Stations", c:"#059669" },
           { label:"Police Posts",   c:"#D97706" },
@@ -61,7 +61,7 @@ export default function StationsPage() {
           <Building2 size={48} style={{ opacity:.2, marginBottom:14 }} />
           <div style={{ fontSize:16, fontWeight:600, color:"#64748B" }}>No stations added yet</div>
           <div style={{ fontSize:13, marginTop:6 }}>Vituo havijafunguliwa bado · Add your first police station</div>
-          <button onClick={() => setModal(true)} style={{ marginTop:18, padding:"10px 24px", borderRadius:10, border:"none", background:"#7C3AED", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>
+          <button onClick={() => setModal(true)} style={{ marginTop:18, padding:"10px 24px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>
             Add First Station
           </button>
         </div>
@@ -69,11 +69,11 @@ export default function StationsPage() {
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
           {filtered.map((s, i) => (
             <div key={i} style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
-              <div style={{ height:4, background:"#7C3AED" }} />
+              <div style={{ height:4, background:"#0D3477" }} />
               <div style={{ padding:18 }}>
                 <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
                   <div>
-                    <div style={{ fontSize:14, fontWeight:800, color:"#1a0533" }}>{s.name}</div>
+                    <div style={{ fontSize:14, fontWeight:800, color:"#03102B" }}>{s.name}</div>
                     <div style={{ fontSize:11, color:"#94A3B8", marginTop:2 }}>{s.code}</div>
                   </div>
                   <span style={{ background:"#F0FDF4", color:"#16A34A", padding:"3px 9px", borderRadius:999, fontSize:10, fontWeight:700 }}>{s.status}</span>
@@ -97,7 +97,7 @@ export default function StationsPage() {
           <div style={{ background:"white", borderRadius:20, padding:30, width:"100%", maxWidth:540, maxHeight:"90vh", overflowY:"auto" }}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:22 }}>
               <div>
-                <div style={{ fontSize:18, fontWeight:800, color:"#1a0533" }}>Add Police Station</div>
+                <div style={{ fontSize:18, fontWeight:800, color:"#03102B" }}>Add Police Station</div>
                 <div style={{ fontSize:12, color:"#94A3B8", marginTop:2 }}>Ongeza Kituo cha Polisi</div>
               </div>
               <button onClick={() => setModal(false)} style={{ width:32, height:32, borderRadius:8, background:"#F1F5F9", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><X size={16} /></button>
@@ -121,7 +121,7 @@ export default function StationsPage() {
                   <div key={f.key} style={{ marginBottom:14 }}>
                     <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 }}>{f.label} *</label>
                     <input value={form[f.key]} onChange={upd(f.key)} placeholder={f.ph} required style={inp}
-                      onFocus={e => e.target.style.borderColor="#7C3AED"} onBlur={e => e.target.style.borderColor="#E2E8F0"} />
+                      onFocus={e => e.target.style.borderColor="#0D3477"} onBlur={e => e.target.style.borderColor="#E2E8F0"} />
                   </div>
                 ))}
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 14px" }}>
@@ -139,7 +139,7 @@ export default function StationsPage() {
                     </select>
                   </div>
                 </div>
-                <button type="submit" style={{ width:"100%", height:46, background:"#7C3AED", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:"pointer" }}>
+                <button type="submit" style={{ width:"100%", height:46, background:"#0D3477", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:"pointer" }}>
                   Add Station · Ongeza Kituo
                 </button>
               </form>

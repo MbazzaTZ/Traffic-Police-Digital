@@ -37,7 +37,7 @@ export default function CreateUserPage() {
 
   const sectionHd = (title, sub) => (
     <div style={{ marginBottom: 16, paddingBottom: 10, borderBottom: "2px solid #F1F5F9" }}>
-      <div style={{ fontSize: 15, fontWeight: 700, color: "#1a0533" }}>{title}</div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: "#03102B" }}>{title}</div>
       <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>{sub}</div>
     </div>
   );
@@ -60,7 +60,7 @@ export default function CreateUserPage() {
         <div style={{ position: "relative" }}>
           <input type={opts.show ? "text" : "password"} value={form[key]} onChange={upd(key)} placeholder={opts.placeholder} required={opts.required !== false}
             style={{ ...inp({ paddingRight: 42 }) }}
-            onFocus={e => e.target.style.borderColor = "#7C3AED"}
+            onFocus={e => e.target.style.borderColor = "#0D3477"}
             onBlur={e => e.target.style.borderColor = "#E2E8F0"} />
           <button type="button" onClick={opts.toggle}
             style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#94A3B8", display: "flex" }}>
@@ -70,7 +70,7 @@ export default function CreateUserPage() {
       ) : (
         <input type={opts.type || "text"} value={form[key]} onChange={upd(key)} placeholder={opts.placeholder} required={opts.required !== false}
           style={inp()}
-          onFocus={e => e.target.style.borderColor = "#7C3AED"}
+          onFocus={e => e.target.style.borderColor = "#0D3477"}
           onBlur={e => e.target.style.borderColor = "#E2E8F0"} />
       )}
     </div>
@@ -82,7 +82,7 @@ export default function CreateUserPage() {
         <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#F0FDF4", border: "2px solid #BBF7D0", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
           <CheckCircle size={36} color="#16A34A" />
         </div>
-        <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1a0533", marginBottom: 8 }}>Officer Account Created!</h2>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: "#03102B", marginBottom: 8 }}>Officer Account Created!</h2>
         <p style={{ color: "#64748B", marginBottom: 6 }}>Akaunti ya Afisa Imeundwa</p>
         <div style={{ background: "#F8FAFC", borderRadius: 12, padding: 16, margin: "20px 0", textAlign: "left" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -105,7 +105,7 @@ export default function CreateUserPage() {
         </div>
         <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
           <button onClick={() => { setDone(false); setForm({ full_name:"",badge:"",rank:"",role:"",department:"",region:"",station:"",phone:"",email:"",nida:"",password:"",confirm_password:"",notes:"" }); setStep(1); }}
-            style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: "#7C3AED", color: "white", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
+            style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: "#0D3477", color: "white", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
             + Create Another Officer
           </button>
           <button onClick={() => window.location.href = "/admin/officers"}
@@ -123,7 +123,7 @@ export default function CreateUserPage() {
 
         {/* Page header */}
         <div style={{ marginBottom: 22 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1a0533", margin: 0 }}>Create Officer Account</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: "#03102B", margin: 0 }}>Create Officer Account</h1>
           <p style={{ color: "#64748B", marginTop: 4 }}>Unda Akaunti ya Afisa Mpya · All fields marked * are required</p>
         </div>
 
@@ -139,16 +139,16 @@ export default function CreateUserPage() {
                 <div style={{
                   width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  background: step >= s.n ? "#7C3AED" : "#E2E8F0",
+                  background: step >= s.n ? "#0D3477" : "#E2E8F0",
                   color: step >= s.n ? "white" : "#94A3B8",
                   fontSize: 13, fontWeight: 800,
                 }}>{step > s.n ? "✓" : s.n}</div>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: step >= s.n ? "#1a0533" : "#94A3B8" }}>Step {s.n}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: step >= s.n ? "#03102B" : "#94A3B8" }}>Step {s.n}</div>
                   <div style={{ fontSize: 11, color: "#94A3B8" }}>{s.label}</div>
                 </div>
               </div>
-              {i < 2 && <div style={{ height: 2, flex: 1, background: step > s.n ? "#7C3AED" : "#E2E8F0", margin: "0 8px" }} />}
+              {i < 2 && <div style={{ height: 2, flex: 1, background: step > s.n ? "#0D3477" : "#E2E8F0", margin: "0 8px" }} />}
             </div>
           ))}
         </div>
@@ -184,8 +184,8 @@ export default function CreateUserPage() {
 
                 {/* Role permissions preview */}
                 {form.role && (
-                  <div style={{ background: "#F5F3FF", border: "1px solid #DDD6FE", borderRadius: 12, padding: "14px 16px", marginTop: 4 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "#7C3AED", marginBottom: 8 }}>ACCESS PREVIEW · {ROLE_LABELS[form.role]?.toUpperCase()}</div>
+                  <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 12, padding: "14px 16px", marginTop: 4 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#0D3477", marginBottom: 8 }}>ACCESS PREVIEW · {ROLE_LABELS[form.role]?.toUpperCase()}</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {(form.role === "regular_officer" ? ["Person Search","Incident Reports","Arrests","Detentions","Patrol","Evidence Upload","Communications"] :
                         form.role === "traffic_officer" ? ["Vehicle Search","Driver Licenses","Traffic Citations","Accident Reports","Insurance Verification"] :
@@ -193,7 +193,7 @@ export default function CreateUserPage() {
                         form.role === "ocs" ? ["All Station Officers","Station Reports","Station Cases","Station Statistics","Detentions","Cells"] :
                         form.role === "admin_officer" ? ["Manage Users","Create Accounts","All Admin Activities","System Settings","Roles Management"] :
                         ["Full System Access"]).map(p => (
-                          <span key={p} style={{ background: "#EDE9FE", color: "#7C3AED", padding: "3px 10px", borderRadius: 999, fontSize: 11, fontWeight: 600 }}>{p}</span>
+                          <span key={p} style={{ background: "#DBEAFE", color: "#0D3477", padding: "3px 10px", borderRadius: 999, fontSize: 11, fontWeight: 600 }}>{p}</span>
                         ))}
                     </div>
                   </div>
@@ -244,7 +244,7 @@ export default function CreateUserPage() {
             <div style={{ fontSize: 12, color: "#94A3B8" }}>Step {step} of 3</div>
             {step < 3 ? (
               <button type="button" onClick={() => setStep(s => s + 1)}
-                style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "#7C3AED", color: "white", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
+                style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "#0D3477", color: "white", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
                 Next →
               </button>
             ) : (

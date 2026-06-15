@@ -6,7 +6,7 @@ const ROLES = [
     perms:["Manage Users","Create Accounts","System Settings","Roles Management","Audit Logs"] },
   { name:"igp",             label:"IGP / DIGP",       sw:"Mkurugenzi",              color:"#DC2626", bg:"#FEF2F2",
     perms:["Full System Access","All Regions","National Statistics","Intelligence","Internal Affairs"] },
-  { name:"rpc",             label:"RPC",              sw:"Kamanda wa Mkoa",          color:"#7C3AED", bg:"#F5F3FF",
+  { name:"rpc",             label:"RPC",              sw:"Kamanda wa Mkoa",          color:"#0D3477", bg:"#EFF6FF",
     perms:["View Region","All Districts","Regional Intelligence","Regional Dashboards"] },
   { name:"ocd",             label:"OCD",              sw:"Kamanda wa Wilaya",        color:"#0891B2", bg:"#EFF6FF",
     perms:["Manage District","All Stations","District Statistics","District Crime Reports"] },
@@ -18,7 +18,7 @@ const ROLES = [
     perms:["Person Search","Incident Reports","Arrests","Detentions","Patrol","Evidence","Communications"] },
   { name:"traffic_officer", label:"Traffic Officer",  sw:"Afisa wa Barabara",       color:"#D97706", bg:"#FFFBEB",
     perms:["Vehicle Search","Driver Licenses","Traffic Citations","Accident Reports","Insurance"] },
-  { name:"cid_officer",     label:"CID Officer",      sw:"Afisa wa CID",            color:"#7C3AED", bg:"#F5F3FF",
+  { name:"cid_officer",     label:"CID Officer",      sw:"Afisa wa CID",            color:"#0D3477", bg:"#EFF6FF",
     perms:["Criminal Cases","Warrants","Investigations","Suspects","Evidence","Forensics","Wanted Persons"] },
 ];
 
@@ -39,7 +39,7 @@ export default function RolesPage() {
   return (
     <AdminLayout pageTitle="Roles & Access" pageTitle2="Majukumu na Ruhusa">
       <div style={{ marginBottom:22 }}>
-        <h1 style={{ fontSize:24, fontWeight:800, color:"#1a0533", margin:0 }}>Roles & Access Control</h1>
+        <h1 style={{ fontSize:24, fontWeight:800, color:"#03102B", margin:0 }}>Roles & Access Control</h1>
         <p style={{ color:"#64748B", marginTop:3 }}>Majukumu na Udhibiti wa Ufikiaji · {ROLES.length} system roles defined</p>
       </div>
 
@@ -50,7 +50,7 @@ export default function RolesPage() {
             <div style={{ padding:16 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
                 <div>
-                  <div style={{ fontSize:14, fontWeight:800, color:"#1a0533" }}>{r.label}</div>
+                  <div style={{ fontSize:14, fontWeight:800, color:"#03102B" }}>{r.label}</div>
                   <div style={{ fontSize:11, color:"#94A3B8" }}>{r.sw}</div>
                 </div>
                 <span style={{ background:r.bg, color:r.color, padding:"2px 8px", borderRadius:999, fontSize:10, fontWeight:700 }}>0 officers</span>
@@ -68,7 +68,7 @@ export default function RolesPage() {
       {/* Access Matrix */}
       <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"auto" }}>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9" }}>
-          <div style={{ fontSize:14, fontWeight:700, color:"#1a0533" }}>Access Matrix · Jedwali la Ruhusa</div>
+          <div style={{ fontSize:14, fontWeight:700, color:"#03102B" }}>Access Matrix · Jedwali la Ruhusa</div>
           <div style={{ fontSize:12, color:"#94A3B8" }}>Which roles can access which modules</div>
         </div>
         <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
