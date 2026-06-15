@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { LayoutDashboard, Activity, Bell, Users, FileText, Map, Settings, LogOut, Shield } from "lucide-react";
+import { LayoutDashboard, Activity, Bell, Users, FileText, Map, Settings, LogOut, Shield, FileCheck } from "lucide-react";
 
 const NAV = [
   { icon:LayoutDashboard, label:"Command Center", sw:"Makao Makuu",   path:"/command" },
@@ -8,6 +8,7 @@ const NAV = [
   { icon:Bell,            label:"Issue Alerts",   sw:"Toa Tahadhari", path:"/command/alerts" },
   { icon:Users,           label:"Officers",       sw:"Maafisa",       path:"/command/officers" },
   { icon:FileText,        label:"Reports",        sw:"Ripoti",        path:"/command/reports" },
+  { icon:FileCheck,       label:"Approvals",      sw:"Maombi",        path:"/command/approvals" },
   { icon:Settings,        label:"Settings",       sw:"Mipangilio",    path:"/command/settings" },
 ];
 

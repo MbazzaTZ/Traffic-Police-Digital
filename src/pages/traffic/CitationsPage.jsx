@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import TrafficLayout from "../../layouts/TrafficLayout";
-import { Plus, X, CheckCircle, AlertTriangle, Search } from "lucide-react";
+import { Plus, X, CheckCircle, AlertTriangle, Search, Download, FileText } from "lucide-react";
+import { exportCitation, exportReport } from "../../lib/pdfExport";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 
@@ -67,9 +68,19 @@ export default function CitationsPage() {
           <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Traffic Citations <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Faini</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{citations.length} total · TZS {citations.reduce((a,c)=>a+(c.fine_paid?0:c.fine_amount||0),0).toLocaleString()} unpaid</p>
         </div>
-        <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#D97706", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
-          <Plus size={15}/> Issue Citation · Toa Faini
-        </button>
+        <div style={{ display:"flex", gap:8 }}>
+          <button onClick={()=>exportReport("Traffic Citations Report",
+            ["Ref","Driver","Plate","Offense","Fine TZS","Status","Date"],
+            filtered.map(c=>[c.ref_number,c.driver_name,c.vehicle_plate,c.offense_type,(c.fine_amount||0).toLocaleString(),c.status,new Date(c.created_at).toLocaleDateString("en-GB")]),
+            `${filtered.length} citations`)}
+            disabled={filtered.length===0}
+            style={{ padding:"9px 16px", borderRadius:10, border:"1px solid #E2E8F0", background:"white", color:"#0D3477", fontWeight:700, cursor:filtered.length===0?"not-allowed":"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13, opacity:filtered.length===0?.5:1 }}>
+            <FileText size={15}/> Export PDF
+          </button>
+          <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#D97706", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+            <Plus size={15}/> Issue Citation · Toa Faini
+          </button>
+        </div>
       </div>
 
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:16 }}>
@@ -101,7 +112,7 @@ export default function CitationsPage() {
         ) : (
           <table style={{ width:"100%", borderCollapse:"collapse" }}>
             <thead><tr style={{ background:"#F8FAFC", borderBottom:"2px solid #E2E8F0" }}>
-              {["Ref #","Driver","Plate","Offense","Fine (TZS)","Status","Issued By","Date"].map(h=>(
+              {["Ref #","Driver","Plate","Offense","Fine (TZS)","Status","Issued By","Date",""].map(h=>(
                 <th key={h} style={{ padding:"11px 14px", textAlign:"left", fontSize:11, fontWeight:700, color:"#64748B", textTransform:"uppercase", letterSpacing:.4, whiteSpace:"nowrap" }}>{h}</th>
               ))}
             </tr></thead>
@@ -120,6 +131,13 @@ export default function CitationsPage() {
                     <td style={{ padding:"11px 14px" }}><span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{c.status}</span></td>
                     <td style={{ padding:"11px 14px", fontSize:12, color:"#475569" }}>{c.profiles?.full_name||"—"}</td>
                     <td style={{ padding:"11px 14px", fontSize:11, color:"#94A3B8" }}>{new Date(c.created_at).toLocaleDateString("en-GB")}</td>
+                    <td style={{ padding:"11px 14px" }}>
+                      <button onClick={()=>exportCitation(c, c.profiles?.full_name||"Officer")}
+                        title="Download PDF"
+                        style={{ width:30, height:30, borderRadius:7, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#D97706" }}>
+                        <Download size={14}/>
+                      </button>
+                    </td>
                   </tr>
                 );
               })}

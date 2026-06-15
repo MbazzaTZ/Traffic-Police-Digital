@@ -40,6 +40,7 @@ import CommandOfficers from "../pages/command/CommandOfficers";
 import CommandReports from "../pages/command/CommandReports";
 import CommandAlerts from "../pages/command/CommandAlerts";
 import NidaSearchPage from "../pages/cid/NidaSearchPage";
+import ApprovalsPage from "../pages/shared/ApprovalsPage";
 
 const ROLE_HOME = {
   admin_officer:"/admin", igp:"/command", digp:"/command",
@@ -104,6 +105,7 @@ export default function AppRoutes() {
       <Route path="/command/alerts"    element={<Guard roles={COMMAND}><CommandAlerts/></Guard>}/>
       <Route path="/command/officers"  element={<Guard roles={COMMAND}><CommandOfficers/></Guard>}/>
       <Route path="/command/reports"   element={<Guard roles={COMMAND}><CommandReports/></Guard>}/>
+      <Route path="/command/approvals" element={<Guard roles={COMMAND}><ApprovalsPage/></Guard>}/>
       <Route path="/command/settings"  element={<Guard roles={COMMAND}><CommandCenter/></Guard>}/>
 
       {/* Regular Police */}
@@ -117,6 +119,7 @@ export default function AppRoutes() {
       <Route path="/alerts"        element={<Guard roles={OFFICER}><AlertsPage/></Guard>}/>
       <Route path="/settings"      element={<Guard roles={OFFICER}><SettingsPage/></Guard>}/>
       <Route path="/profile"       element={<Guard roles={OFFICER}><MyProfilePage/></Guard>}/>
+      <Route path="/approvals"     element={<Guard roles={["regular_officer","inspector","ocs","ocd","rpc","igp","digp","admin_officer"]}><ApprovalsPage/></Guard>}/>
 
       {/* Traffic */}
       <Route path="/traffic"             element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
@@ -126,6 +129,7 @@ export default function AppRoutes() {
       <Route path="/traffic/checkpoints" element={<Guard roles={TRAFFIC}><CheckpointsPage/></Guard>}/>
       <Route path="/traffic/settings"    element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
       <Route path="/traffic/profile"     element={<Guard roles={TRAFFIC}><MyProfilePage/></Guard>}/>
+      <Route path="/traffic/approvals"   element={<Guard roles={TRAFFIC}><ApprovalsPage/></Guard>}/>
 
       {/* CID */}
       <Route path="/cid"          element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
@@ -135,6 +139,7 @@ export default function AppRoutes() {
       <Route path="/cid/evidence" element={<Guard roles={CID}><EvidencePage/></Guard>}/>
       <Route path="/cid/search"   element={<Guard roles={CID}><NidaSearchPage/></Guard>}/>
       <Route path="/cid/profile"  element={<Guard roles={CID}><MyProfilePage/></Guard>}/>
+      <Route path="/cid/approvals"  element={<Guard roles={CID}><ApprovalsPage/></Guard>}/>
 
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Routes>

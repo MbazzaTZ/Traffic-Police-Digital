@@ -1,72 +1,171 @@
 import { useState } from "react";
 import DashboardLayout from "../../../layouts/DashboardLayout";
-import { Search, Fingerprint, CreditCard, Car, Phone, Camera, User } from "lucide-react";
+import { Search, CreditCard, Car, User, Shield, FileText, AlertTriangle, CheckCircle } from "lucide-react";
+import { supabase } from "../../../lib/supabase";
 
 const METHODS = [
-  { icon:CreditCard,  label:"NIDA",          sw:"Nambari ya NIDA",  ph:"19901231-12345-00001-1" },
-  { icon:User,        label:"Full Name",      sw:"Jina Kamili",      ph:"e.g. John Doe Mwangi" },
-  { icon:Car,         label:"Vehicle Plate",  sw:"Nambari ya Gari",  ph:"e.g. T 123 ABC" },
-  { icon:Phone,       label:"Phone",          sw:"Nambari ya Simu",  ph:"+255 712 345 678" },
-  { icon:Fingerprint, label:"Fingerprint",    sw:"Alama ya Kidole",  ph:"Scan fingerprint..." },
-  { icon:Camera,      label:"Face Scan",      sw:"Skanisho la Uso",  ph:"Enable camera..." },
+  { key:"name",  icon:User,       label:"Full Name",     sw:"Jina Kamili",     ph:"e.g. John Doe Mwangi" },
+  { key:"nida",  icon:CreditCard, label:"NIDA",          sw:"Nambari ya NIDA", ph:"19901231-12345-00001-1" },
+  { key:"plate", icon:Car,        label:"Vehicle Plate", sw:"Nambari ya Gari", ph:"e.g. T 123 ABC" },
 ];
 
 export default function PersonSearchPage() {
-  const [method, setMethod] = useState(0);
-  const [query, setQuery]   = useState("");
-  const [searched, setSearched] = useState(false);
+  const [method,   setMethod]   = useState(0);
+  const [query,    setQuery]    = useState("");
+  const [results,  setResults]  = useState(null);
+  const [loading,  setLoading]  = useState(false);
 
-  function doSearch(e) { e.preventDefault(); setSearched(true); }
+  async function doSearch(e) {
+    e.preventDefault();
+    if (!query.trim()) return;
+    setLoading(true); setResults(null);
+    const q = query.trim();
+    const m = METHODS[method].key;
+
+    if (m === "plate") {
+      const { data } = await supabase.from("traffic_citations").select("*").ilike("vehicle_plate",`%${q}%`).order("created_at",{ascending:false});
+      setResults({ kind:"plate", plate:q.toUpperCase(), citations:data||[] });
+    } else {
+      // name or nida — search arrests, suspects, wanted
+      const col = m === "nida" ? "nida" : "full_name";
+      const arrCol = m === "nida" ? "suspect_nida" : "suspect_name";
+      const [arrests, suspects, wanted] = await Promise.all([
+        supabase.from("arrests").select("*").ilike(arrCol,`%${q}%`).order("created_at",{ascending:false}),
+        supabase.from("suspects").select("*, cid_cases(case_number)").ilike(col,`%${q}%`),
+        supabase.from("wanted_persons").select("*").ilike(col,`%${q}%`),
+      ]);
+      setResults({ kind:"person", query:q, arrests:arrests.data||[], suspects:suspects.data||[], wanted:wanted.data||[] });
+    }
+    setLoading(false);
+  }
+
+  const M = METHODS[method];
+  const hasWanted = results?.wanted?.length > 0;
+  const total = results ? (results.kind==="plate" ? results.citations.length : results.arrests.length+results.suspects.length+results.wanted.length) : 0;
 
   return (
     <DashboardLayout pageTitle="Person Search" pageTitle2="Tafuta Mtu">
       <div style={{ marginBottom:20 }}>
-        <h1 style={{ fontSize:24, fontWeight:800, color:"#0D3477", margin:0 }}>
-          Person Search <span style={{ fontWeight:500, color:"#94A3B8", fontSize:18 }}>· Tafuta Mtu</span>
-        </h1>
-        <p style={{ color:"#64748B", marginTop:4 }}>Search Tanzania National Database · NIDA, Criminal Records, Warrants</p>
+        <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Person & Vehicle Search <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Tafuta</span></h1>
+        <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>Search records by name, NIDA, or vehicle plate</p>
       </div>
 
-      {/* Method Tabs */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:10, marginBottom:18 }}>
-        {METHODS.map((m, i) => {
-          const Icon = m.icon;
-          const active = method === i;
-          return (
-            <button key={i} onClick={() => { setMethod(i); setSearched(false); setQuery(""); }}
-              style={{ background:active?"#0D3477":"white", color:active?"white":"#475569", border:`2px solid ${active?"#0D3477":"#E2E8F0"}`, borderRadius:12, padding:"12px 8px", display:"flex", flexDirection:"column", alignItems:"center", gap:6, cursor:"pointer", transition:".15s" }}>
-              <Icon size={20} />
-              <div style={{ fontSize:12, fontWeight:700 }}>{m.label}</div>
-              <div style={{ fontSize:10, opacity:.65 }}>{m.sw}</div>
+      <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:24, marginBottom:20 }}>
+        {/* Method tabs */}
+        <div style={{ display:"flex", gap:8, marginBottom:18 }}>
+          {METHODS.map((mt,i)=>{
+            const Icon=mt.icon;
+            return (
+              <button key={mt.key} onClick={()=>{setMethod(i);setResults(null);setQuery("");}}
+                style={{ flex:1, padding:"12px", borderRadius:10, border:`2px solid ${method===i?"#0D3477":"#E2E8F0"}`, background:method===i?"#EFF6FF":"white", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:5 }}>
+                <Icon size={18} color={method===i?"#0D3477":"#94A3B8"}/>
+                <span style={{ fontSize:13, fontWeight:700, color:method===i?"#0D3477":"#475569" }}>{mt.label}</span>
+                <span style={{ fontSize:10, color:"#94A3B8" }}>{mt.sw}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <form onSubmit={doSearch}>
+          <div style={{ display:"flex", gap:12 }}>
+            <div style={{ flex:1, display:"flex", alignItems:"center", gap:10, background:"#F8FAFC", borderRadius:10, padding:"0 16px", border:"2px solid #E2E8F0", height:52 }}>
+              <M.icon size={20} color="#94A3B8"/>
+              <input value={query} onChange={e=>setQuery(M.key==="plate"?e.target.value.toUpperCase():e.target.value)} placeholder={M.ph}
+                style={{ border:"none", outline:"none", fontSize:16, fontWeight:600, width:"100%", background:"transparent", color:"#1E293B", fontFamily:M.key==="plate"?"monospace":"inherit" }}
+                onFocus={e=>e.parentElement.style.borderColor="#0D3477"} onBlur={e=>e.parentElement.style.borderColor="#E2E8F0"}/>
+            </div>
+            <button type="submit" disabled={loading} style={{ padding:"0 32px", height:52, background:loading?"#94A3B8":"#0D3477", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:loading?"not-allowed":"pointer", display:"flex", alignItems:"center", gap:8 }}>
+              <Search size={17}/> {loading?"Searching...":"Search"}
             </button>
-          );
-        })}
+          </div>
+        </form>
       </div>
 
-      {/* Search Bar */}
-      <form onSubmit={doSearch} style={{ display:"flex", gap:10, marginBottom:18 }}>
-        <div style={{ flex:1, display:"flex", alignItems:"center", gap:10, background:"white", borderRadius:10, padding:"0 16px", border:"1.5px solid #E2E8F0", height:44 }}>
-          <Search size={18} color="#94A3B8" />
-          <input value={query} onChange={e => setQuery(e.target.value)} placeholder={METHODS[method].ph}
-            style={{ border:"none", outline:"none", fontSize:14, color:"#1E293B", width:"100%", background:"transparent" }} />
-        </div>
-        <button type="submit" style={{ padding:"0 28px", height:44, background:"#0D3477", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:13, cursor:"pointer" }}>
-          Search · Tafuta
-        </button>
-      </form>
+      {results && (
+        <>
+          <div style={{ background:total>0?(hasWanted?"#FEF2F2":"#FFFBEB"):"#F0FDF4", border:`1px solid ${total>0?(hasWanted?"#FECACA":"#FDE68A"):"#BBF7D0"}`, borderRadius:12, padding:"14px 18px", marginBottom:16, display:"flex", alignItems:"center", gap:10 }}>
+            {total>0 ? <AlertTriangle size={18} color={hasWanted?"#DC2626":"#D97706"}/> : <CheckCircle size={18} color="#16A34A"/>}
+            <div style={{ fontSize:14, fontWeight:700, color:total>0?(hasWanted?"#B91C1C":"#92400E"):"#166534" }}>
+              {hasWanted ? `⚠ WANTED PERSON MATCH — ${total} record(s)` : total>0 ? `${total} record(s) found` : "No records found — clean"}
+            </div>
+          </div>
 
-      {/* Results */}
-      {searched ? (
+          {results.kind==="plate" ? (
+            <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+              <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:"#0D3477" }}>
+                Citations for {results.plate} ({results.citations.length})
+              </div>
+              {results.citations.length===0 ? (
+                <div style={{ padding:"40px", textAlign:"center", color:"#94A3B8" }}>No citations found for this plate</div>
+              ) : (
+                <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                  <thead><tr style={{ background:"#F8FAFC" }}>
+                    {["Ref","Offense","Fine TZS","Status","Date"].map(h=><th key={h} style={{ padding:"10px 14px", textAlign:"left", fontSize:11, fontWeight:700, color:"#64748B", textTransform:"uppercase" }}>{h}</th>)}
+                  </tr></thead>
+                  <tbody>
+                    {results.citations.map(c=>(
+                      <tr key={c.id} style={{ borderBottom:"1px solid #F1F5F9" }}>
+                        <td style={{ padding:"10px 14px", fontFamily:"monospace", fontWeight:700, color:"#D97706", fontSize:12 }}>{c.ref_number}</td>
+                        <td style={{ padding:"10px 14px", fontSize:13 }}>{c.offense_type}</td>
+                        <td style={{ padding:"10px 14px", fontWeight:700 }}>{(c.fine_amount||0).toLocaleString()}</td>
+                        <td style={{ padding:"10px 14px" }}><span style={{ background:c.status==="paid"?"#F0FDF4":"#FEF2F2", color:c.status==="paid"?"#16A34A":"#DC2626", padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700 }}>{c.status}</span></td>
+                        <td style={{ padding:"10px 14px", fontSize:11, color:"#94A3B8" }}>{new Date(c.created_at).toLocaleDateString("en-GB")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          ) : (
+            <>
+              {hasWanted && (
+                <div style={{ background:"white", borderRadius:14, border:"2px solid #DC2626", overflow:"hidden", marginBottom:14 }}>
+                  <div style={{ background:"#FEF2F2", padding:"12px 18px", fontSize:14, fontWeight:800, color:"#DC2626", display:"flex", alignItems:"center", gap:8 }}><Shield size={16}/> WANTED PERSONS</div>
+                  {results.wanted.map(w=>(
+                    <div key={w.id} style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <div>
+                        <div style={{ fontSize:14, fontWeight:700, color:"#1E293B" }}>{w.full_name} {w.alias&&<span style={{ color:"#94A3B8", fontWeight:400 }}>· "{w.alias}"</span>}</div>
+                        <div style={{ fontSize:12, color:"#64748B" }}>{w.offenses||"—"} · NIDA: {w.nida||"Unknown"}</div>
+                      </div>
+                      <span style={{ background:w.danger_level==="armed"?"#7C3AED":"#DC2626", color:"white", padding:"4px 12px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"uppercase" }}>{w.danger_level}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {[
+                { title:"Arrest Records", icon:Shield, color:"#D97706", items:results.arrests, render:a=>({ name:a.suspect_name, sub:`${a.charge} · NIDA: ${a.suspect_nida||"—"}`, badge:a.ref_number, status:a.status }) },
+                { title:"Suspect Records", icon:User, color:"#0891B2", items:results.suspects, render:s=>({ name:s.full_name, sub:`${s.cid_cases?.case_number?`Case ${s.cid_cases.case_number}`:"No case"}`, badge:s.gender, status:s.status }) },
+              ].filter(s=>s.items.length>0).map(section=>{
+                const Icon=section.icon;
+                return (
+                  <div key={section.title} style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden", marginBottom:14 }}>
+                    <div style={{ padding:"12px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:section.color, display:"flex", alignItems:"center", gap:8 }}><Icon size={16}/> {section.title} ({section.items.length})</div>
+                    {section.items.map((item,i)=>{
+                      const r=section.render(item);
+                      return (
+                        <div key={i} style={{ padding:"12px 18px", borderBottom:i<section.items.length-1?"1px solid #F8FAFC":"none", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                          <div><div style={{ fontSize:13, fontWeight:700, color:"#1E293B" }}>{r.name}</div><div style={{ fontSize:12, color:"#64748B" }}>{r.sub}</div></div>
+                          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                            {r.badge && <span style={{ fontFamily:"monospace", fontSize:11, color:"#94A3B8" }}>{r.badge}</span>}
+                            {r.status && <span style={{ background:"#F1F5F9", color:"#475569", padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{r.status}</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </>
+      )}
+
+      {!results && !loading && (
         <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
-          <Search size={40} style={{ opacity:.2, marginBottom:12 }} />
-          <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>No results found</div>
-          <div style={{ fontSize:13, marginTop:4 }}>Hakuna matokeo · Try a different search term</div>
-        </div>
-      ) : (
-        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
-          <Search size={40} style={{ opacity:.2, marginBottom:12 }} />
-          <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>Enter search criteria above</div>
-          <div style={{ fontSize:13, marginTop:4 }}>Weka vigezo vya utafutaji hapo juu</div>
+          <Search size={48} style={{ opacity:.15, marginBottom:14 }}/>
+          <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>Search by {M.label}</div>
+          <div style={{ fontSize:13, marginTop:6 }}>Results from arrests, suspects, wanted persons & citations</div>
         </div>
       )}
     </DashboardLayout>

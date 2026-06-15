@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { Car, FileText, AlertTriangle, Search, LayoutDashboard, Settings, LogOut, Bell } from "lucide-react";
+import { Car, FileText, AlertTriangle, Search, LayoutDashboard, Settings, LogOut, Bell, FileCheck } from "lucide-react";
 
 const NAV = [
   { icon:LayoutDashboard, label:"Dashboard",    sw:"Dashibodi",    path:"/traffic" },
@@ -8,6 +8,7 @@ const NAV = [
   { icon:AlertTriangle,   label:"Accidents",    sw:"Ajali",        path:"/traffic/accidents" },
   { icon:Search,          label:"Veh. Search",  sw:"Tafuta Gari",  path:"/traffic/vehicles" },
   { icon:Car,             label:"Checkpoints",  sw:"Vizuizi",      path:"/traffic/checkpoints" },
+  { icon:FileCheck,       label:"Approvals",    sw:"Maombi",       path:"/traffic/approvals" },
   { icon:Settings,        label:"Settings",     sw:"Mipangilio",   path:"/traffic/settings" },
 ];
 

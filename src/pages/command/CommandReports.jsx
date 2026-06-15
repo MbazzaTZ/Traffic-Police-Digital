@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import CommandLayout from "../../layouts/CommandLayout";
 import { FileText, TrendingUp, Download, BarChart3 } from "lucide-react";
+import { exportReport } from "../../lib/pdfExport";
 import { supabase } from "../../lib/supabase";
 
 const card = { background:"rgba(255,255,255,.04)", borderRadius:14, border:"1px solid rgba(255,255,255,.08)" };
@@ -49,7 +50,10 @@ export default function CommandReports() {
           <h1 style={{ fontSize:24, fontWeight:900, color:"white", margin:0 }}>Reports & Analytics</h1>
           <p style={{ color:"rgba(255,255,255,.45)", fontSize:13, marginTop:3 }}>National crime statistics · Takwimu za Kitaifa</p>
         </div>
-        <button onClick={()=>window.print()} style={{ padding:"9px 18px", borderRadius:10, border:"1px solid rgba(255,255,255,.2)", background:"rgba(255,255,255,.06)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
+        <button onClick={()=>exportReport("National Crime Statistics",
+            ["Metric","Value"],
+            [["Total Incidents",String(data.incidents.length)],["Total Arrests",String(data.arrests.length)],["Citations",String(data.citations.length)],["CID Cases",String(data.cases.length)],["Fines Issued (TZS)",totalFines.toLocaleString()],["Fines Collected (TZS)",paidFines.toLocaleString()]],
+            "TPDOP National Report")} style={{ padding:"9px 18px", borderRadius:10, border:"1px solid rgba(255,255,255,.2)", background:"rgba(255,255,255,.06)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
           <Download size={15}/> Export Report
         </button>
       </div>

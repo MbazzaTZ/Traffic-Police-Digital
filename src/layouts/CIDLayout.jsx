@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { LayoutDashboard, FolderOpen, Users, Search, FileText, Shield, LogOut, Bell } from "lucide-react";
+import { LayoutDashboard, FolderOpen, Users, Search, FileText, Shield, LogOut, Bell, FileCheck } from "lucide-react";
 
 const NAV = [
   { icon:LayoutDashboard, label:"Dashboard",   sw:"Dashibodi",  path:"/cid" },
@@ -9,6 +9,7 @@ const NAV = [
   { icon:Shield,          label:"Wanted",      sw:"Watuhumiwa", path:"/cid/wanted" },
   { icon:FileText,        label:"Evidence",    sw:"Ushahidi",   path:"/cid/evidence" },
   { icon:Search,          label:"NIDA Search", sw:"Tafuta NIDA",path:"/cid/search" },
+  { icon:FileCheck,       label:"Approvals",   sw:"Maombi",     path:"/cid/approvals" },
 ];
 
 export default function CIDLayout({ children, pageTitle="CID", pageTitle2="" }) {
