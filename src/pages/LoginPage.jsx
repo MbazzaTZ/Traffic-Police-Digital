@@ -83,27 +83,7 @@ export default function LoginPage() {
         {/* Divider */}
         <div style={{ width: 60, height: 3, background: "#082A63", borderRadius: 2, marginBottom: 36 }} />
 
-        {/* Feature list */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 340 }}>
-          {[
-            "🔒  End-to-End Encrypted · Salama",
-            "📍  Real-Time GPS Tracking · Ufuatiliaji",
-            "🛡️  Audit Logged · Kila Hatua Inarekodiwa",
-            "📱  Biometric 2FA · Uthibitisho wa Viumbe",
-          ].map(f => (
-            <div key={f} style={{
-              fontSize: 12,
-              color: "#475569",
-              padding: "8px 14px",
-              background: "#F8FAFC",
-              border: "1px solid #E2E8F0",
-              borderRadius: 8,
-              borderLeft: "3px solid #082A63",
-            }}>
-              {f}
-            </div>
-          ))}
-        </div>
+
       </div>
 
       {/* ── RIGHT — Login card ── */}
