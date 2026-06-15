@@ -1,7 +1,12 @@
-import PersonSearchPage from "./pages/regular-police/person-search/PersonSearchPage";
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./routes/AppRoutes";
 
 function App() {
-  return <PersonSearchPage />;
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
 }
 
 export default App;
