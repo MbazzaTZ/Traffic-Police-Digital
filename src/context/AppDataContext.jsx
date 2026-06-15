@@ -89,9 +89,12 @@ export function AppDataProvider({ children }) {
     try {
       // Load each table independently so one failure doesn't block others
       const rRes = await supabase.from("regions").select("*").order("name");
-      const dRes = await supabase.from("districts").select("*").order("name");
-      const sRes = await supabase.from("stations").select("*").order("name");
-      const oRes = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+      const dRes = await supabase.from("districts").select("*, region_id, regions(id, name)").order("name");
+      const sRes = await supabase.from("stations").select("*, regions(name), districts(name)").order("name");
+      const oRes = await supabase
+        .from("profiles")
+        .select("*, regions(name), districts(name), stations!profiles_station_id_fkey(name, type)")
+        .order("created_at", { ascending: false });
 
       // Log errors but don't throw — show what we can
       if (rRes.error) console.error("regions error:", rRes.error.code, rRes.error.message);
