@@ -1,42 +1,57 @@
-import { Bell, MessageSquare, MapPin, Wifi, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { Bell, MessageSquare, MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-export default function Topbar() {
-  const [time] = useState(new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }));
+export default function Topbar({ pageTitle, pageTitle2 }) {
+  const nav = useNavigate();
+  const now = new Date();
+  const date = now.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
 
   return (
     <header className="topbar">
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <MapPin size={15} color="#2E7D32" />
-        <span style={{ fontSize: 13, color: "#475569", fontWeight: 600 }}>Makambako Police Station</span>
-        <span style={{ fontSize: 12, color: "#94A3B8", marginLeft: 8 }}>
-          {new Date().toLocaleDateString("en-GB")} · {time}
-        </span>
+      {/* Left: breadcrumb */}
+      <div className="topbar-breadcrumb">
+        <MapPin size={14} color="#16A34A" />
+        <span>Makambako Police Station</span>
+        <span style={{ color: "#E2E8F0" }}>·</span>
+        <span className="topbar-page-title">{pageTitle || "Dashboard"}</span>
+        {pageTitle2 && (
+          <span style={{ color: "#94A3B8", fontSize: 13 }}>· {pageTitle2}</span>
+        )}
+        <span style={{ color: "#E2E8F0", margin: "0 4px" }}>·</span>
+        <span style={{ fontSize: 12, color: "#94A3B8" }}>{date}</span>
       </div>
 
-      <div className="topbar-actions">
-        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#f0fdf4", padding: "6px 14px", borderRadius: 20, border: "1px solid #bbf7d0" }}>
-          <Wifi size={14} color="#16a34a" />
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#16a34a" }}>ON DUTY</span>
+      {/* Right: actions */}
+      <div className="topbar-right">
+        <div className="topbar-chip chip-online">
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#16A34A", display: "inline-block" }} />
+          ON DUTY
         </div>
 
-        <div style={{ position: "relative" }}>
-          <Bell size={22} color="#475569" style={{ cursor: "pointer" }} />
-          <span style={{ position: "absolute", top: -4, right: -4, background: "#dc2626", color: "white", fontSize: 10, borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>3</span>
-        </div>
+        <button className="topbar-icon-btn" onClick={() => nav("/messages")}>
+          <MessageSquare size={18} />
+          <span className="topbar-badge">5</span>
+        </button>
 
-        <div style={{ position: "relative" }}>
-          <MessageSquare size={22} color="#475569" style={{ cursor: "pointer" }} />
-          <span style={{ position: "absolute", top: -4, right: -4, background: "#0D3477", color: "white", fontSize: 10, borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>5</span>
-        </div>
+        <button className="topbar-icon-btn" onClick={() => nav("/alerts")}>
+          <Bell size={18} />
+          <span className="topbar-badge">3</span>
+        </button>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "6px 12px", borderRadius: 12, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-          <img src="/police-logo.png" alt="Officer" className="topbar-avatar" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }} />
-          <div style={{ lineHeight: 1.3 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>Insp. D. Mbaza</div>
-            <div style={{ fontSize: 11, color: "#64748b" }}>TZP-2026-00124</div>
+        <div className="topbar-officer">
+          <img
+            src="/avatars/officer-01.jpg"
+            alt="Officer"
+            className="topbar-officer-avatar"
+            onError={e => {
+              e.currentTarget.style.background = "#14489E";
+              e.currentTarget.src = "";
+            }}
+          />
+          <div className="topbar-officer-info">
+            <div className="topbar-officer-name">Insp. D. Mbaza</div>
+            <div className="topbar-officer-badge">TZP-2026-00124</div>
           </div>
-          <ChevronDown size={14} color="#94a3b8" />
         </div>
       </div>
     </header>

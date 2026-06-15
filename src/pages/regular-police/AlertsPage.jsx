@@ -1,76 +1,91 @@
 import DashboardLayout from "../../layouts/DashboardLayout";
-import { AlertTriangle, Bell, Radio, CheckCircle } from "lucide-react";
+import { AlertTriangle, Radio, CheckCircle } from "lucide-react";
 
-const alerts = [
-  { id: "ALT-001", type: "WANTED PERSON", typeSw: "ANAHITAJIKA", title: "JUMA ABDALLAH MWALIMU", desc: "Armed Robbery suspect. Last seen at Njombe Bus Terminal. Approach with extreme caution.", level: "critical", time: "15 mins ago", photo: "/wanted/wanted-01.jpg" },
-  { id: "ALT-002", type: "BOLO",          typeSw: "TAFUTA GARI", title: "Vehicle: T 241 BRT – Red Toyota Premio", desc: "Linked to robbery. Driver armed. Do not attempt to stop alone.", level: "high",     time: "1 hr ago",  photo: null },
-  { id: "ALT-003", type: "MISSING PERSON",typeSw: "MTU ALIYEPOTEA", title: "GRACE JOHN – 8 years old", desc: "Missing from Makambako North since 14:00. Last seen in school uniform.", level: "high",    time: "2 hrs ago", photo: "/suspects/suspect-01.jpg" },
-  { id: "ALT-004", type: "BRIEFING",      typeSw: "HABARI",      title: "Station Morning Briefing – 16 June 2026", desc: "All officers report to station at 07:30 for briefing by OCS.", level: "info",     time: "3 hrs ago", photo: null },
+const ALERTS = [
+  {
+    id:"ALT-001", level:"critical", type:"WANTED PERSON", typeSw:"ANAHITAJIKA",
+    title:"JUMA ABDALLAH MWALIMU",
+    body:"Armed Robbery suspect. Last seen at Njombe Bus Terminal. Approach with extreme caution — may be armed.",
+    photo:"/wanted/wanted-01.jpg", time:"15 mins ago",
+  },
+  {
+    id:"ALT-002", level:"high", type:"BOLO – VEHICLE",   typeSw:"TAFUTA GARI",
+    title:"T 241 BRT – Red Toyota Premio",
+    body:"Linked to armed robbery. Driver may be armed. Do not attempt to stop alone. Coordinate with dispatch.",
+    photo:null, time:"1 hr ago",
+  },
+  {
+    id:"ALT-003", level:"high", type:"MISSING PERSON",   typeSw:"MTU ALIYEPOTEA",
+    title:"GRACE JOHN – 8 years old",
+    body:"Missing from Makambako North since 14:00. Last seen in blue school uniform. Parents at station.",
+    photo:"/suspects/suspect-01.jpg", time:"2 hrs ago",
+  },
+  {
+    id:"ALT-004", level:"info", type:"STATION BRIEFING", typeSw:"HABARI",
+    title:"Morning Briefing – 16 June 2026",
+    body:"All officers report to Makambako Station at 07:30 for briefing by OCS. Attendance mandatory.",
+    photo:null, time:"3 hrs ago",
+  },
 ];
 
-const levelStyle = {
-  critical: { bg: "#fef2f2", border: "#fecaca", badge: "#dc2626", icon: "🔴" },
-  high:     { bg: "#fffbeb", border: "#fde68a", badge: "#d97706", icon: "🟡" },
-  info:     { bg: "#eff6ff", border: "#bfdbfe", badge: "#1d4ed8", icon: "🔵" },
+const LVL = {
+  critical: { bg:"#FEF2F2", border:"#FECACA", badge:"badge-danger",  icon:"🔴" },
+  high:     { bg:"#FFFBEB", border:"#FDE68A", badge:"badge-warning", icon:"🟡" },
+  info:     { bg:"#EFF6FF", border:"#BFDBFE", badge:"badge-blue",    icon:"🔵" },
 };
 
 export default function AlertsPage() {
   return (
-    <DashboardLayout>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: "#0D3477", margin: 0 }}>Alerts · <span style={{ fontWeight: 500, color: "#94a3b8", fontSize: 22 }}>Tahadhari</span></h1>
-          <p style={{ color: "#94a3b8", margin: "4px 0 0" }}>Live operational alerts from Control Room · Tahadhari za Wakati Halisi</p>
-        </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 700, color: "#dc2626" }}>
-            🔴 {alerts.filter(a => a.level === "critical").length} Critical
+    <DashboardLayout pageTitle="Alerts" pageTitle2="Tahadhari">
+      <div className="page-hd">
+        <div className="page-hd-row">
+          <div>
+            <h1 className="page-title">Alert Center <span className="page-title-sw">· Kituo cha Tahadhari</span></h1>
+            <p className="page-sub">Live operational alerts from Control Room · Tahadhari za Wakati Halisi</p>
           </div>
-          <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 700, color: "#d97706" }}>
-            🟡 {alerts.filter(a => a.level === "high").length} High
+          <div style={{ display: "flex", gap: 10 }}>
+            <span className="badge badge-danger">{ALERTS.filter(a=>a.level==="critical").length} Critical</span>
+            <span className="badge badge-warning">{ALERTS.filter(a=>a.level==="high").length} High</span>
           </div>
         </div>
       </div>
 
-      {/* RADIO BANNER */}
-      <div style={{ background: "linear-gradient(135deg, #082A63, #0D3477)", borderRadius: 18, padding: "16px 24px", marginBottom: 24, color: "white", display: "flex", alignItems: "center", gap: 12 }}>
-        <Radio size={20} />
+      {/* Radio banner */}
+      <div style={{ background:"linear-gradient(135deg, var(--blue-950), var(--blue-800))", borderRadius:"var(--radius-md)", padding:"14px 20px", marginBottom:20, color:"white", display:"flex", alignItems:"center", gap:12 }}>
+        <Radio size={18} />
         <div>
-          <span style={{ fontWeight: 700 }}>Control Room Live · </span>
-          <span style={{ opacity: 0.8, fontSize: 13 }}>Makambako District Radio Channel 4 · All units standby</span>
+          <span style={{ fontWeight:700 }}>Control Room Live · </span>
+          <span style={{ opacity:.7, fontSize:13 }}>Makambako District Radio Channel 4 · All units standby</span>
         </div>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-          <span style={{ background: "rgba(255,255,255,.1)", padding: "4px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700 }}>🔴 LIVE</span>
-        </div>
+        <span className="badge badge-danger" style={{ marginLeft:"auto" }}>🔴 LIVE</span>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {alerts.map(a => {
-          const style = levelStyle[a.level] || levelStyle.info;
+      <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+        {ALERTS.map(a => {
+          const s = LVL[a.level];
           return (
-            <div key={a.id} style={{ background: style.bg, border: `1px solid ${style.border}`, borderRadius: 20, padding: 20 }}>
-              <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+            <div key={a.id} style={{ background:s.bg, border:`1px solid ${s.border}`, borderRadius:"var(--radius-lg)", padding:20 }}>
+              <div style={{ display:"flex", gap:16, alignItems:"flex-start" }}>
                 {a.photo && (
-                  <img src={a.photo} alt="Alert" style={{ width: 80, height: 100, objectFit: "cover", borderRadius: 12, border: "2px solid " + style.border }}
-                    onError={e => { e.target.style.display = "none"; }} />
+                  <img src={a.photo} alt="Alert"
+                    style={{ width:80, height:100, objectFit:"cover", borderRadius:"var(--radius-sm)", border:`1.5px solid ${s.border}`, flexShrink:0 }}
+                    onError={e => { e.currentTarget.style.display="none"; }} />
                 )}
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
-                    <span style={{ background: style.badge, color: "white", padding: "4px 12px", borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
-                      {style.icon} {a.type}
-                    </span>
-                    <span style={{ fontSize: 12, color: "#64748b" }}>{a.id}</span>
-                    <span style={{ fontSize: 12, color: "#94a3b8", marginLeft: "auto" }}>{a.time}</span>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:8, flexWrap:"wrap" }}>
+                    <span className={`badge ${s.badge}`}>{s.icon} {a.type}</span>
+                    <span style={{ fontSize:11, color:"var(--gray-400)" }}>{a.id}</span>
+                    <span style={{ fontSize:11, color:"var(--gray-400)", marginLeft:"auto" }}>{a.time}</span>
                   </div>
-                  <h3 style={{ margin: "0 0 8px", fontSize: 18, color: "#0D3477" }}>{a.title}</h3>
-                  <p style={{ margin: 0, fontSize: 14, color: "#475569", lineHeight: 1.5 }}>{a.desc}</p>
-                  <div style={{ marginTop: 12, display: "flex", gap: 10 }}>
-                    <button style={{ background: "#0D3477", color: "white", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontWeight: 600, fontSize: 13 }}>
-                      Acknowledge · Kubali
+                  <div style={{ fontWeight:800, fontSize:18, color:"var(--blue-800)", marginBottom:6 }}>{a.title}</div>
+                  <p style={{ fontSize:13, color:"var(--gray-500)", lineHeight:1.6, marginBottom:12 }}>{a.body}</p>
+                  <div style={{ display:"flex", gap:10 }}>
+                    <button className="btn btn-primary btn-sm">
+                      <CheckCircle size={14} /> Acknowledge · Kubali
                     </button>
                     {a.level !== "info" && (
-                      <button style={{ background: "white", border: "1px solid #e2e8f0", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontWeight: 600, fontSize: 13 }}>
-                        Escalate · Pindisha
+                      <button className="btn btn-ghost btn-sm">
+                        <AlertTriangle size={14} /> Escalate · Pindisha
                       </button>
                     )}
                   </div>

@@ -1,22 +1,16 @@
 import Sidebar from "../components/dashboard/Sidebar";
 import Topbar from "../components/dashboard/Topbar";
 
-export default function DashboardLayout({ children }) {
+export default function DashboardLayout({ children, pageTitle, pageTitle2 }) {
   return (
-    <div className="dashboard-layout">
-
+    <div className="shell">
       <Sidebar />
-
-      <div className="dashboard-main">
-
-        <Topbar />
-
-        <div className="dashboard-content">
+      <div className="main">
+        <Topbar pageTitle={pageTitle} pageTitle2={pageTitle2} />
+        <div className="page">
           {children}
         </div>
-
       </div>
-
     </div>
   );
 }

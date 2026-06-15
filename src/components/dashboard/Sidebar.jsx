@@ -1,57 +1,93 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Search, FileText, Shield,
-  MapPinned, FolderOpen, MessageSquare, Settings,
-  LogOut, UserCog, AlertTriangle
+  MapPinned, FolderOpen, MessageSquare, Bell,
+  Settings, LogOut
 } from "lucide-react";
 
-const menu = [
-  { icon: LayoutDashboard, label: "Dashboard",        labelSw: "Dashibodi",     path: "/dashboard" },
-  { icon: Search,          label: "Person Search",    labelSw: "Tafuta Mtu",    path: "/person-search" },
-  { icon: FileText,        label: "Incident Reports", labelSw: "Ripoti",        path: "/incidents" },
-  { icon: Shield,          label: "Arrests",          labelSw: "Kukamatwa",     path: "/arrests" },
-  { icon: MapPinned,       label: "Patrols",          labelSw: "Doria",         path: "/patrols" },
-  { icon: FolderOpen,      label: "Evidence",         labelSw: "Ushahidi",      path: "/evidence" },
-  { icon: MessageSquare,   label: "Messages",         labelSw: "Ujumbe",        path: "/messages" },
-  { icon: AlertTriangle,   label: "Alerts",           labelSw: "Tahadhari",     path: "/alerts" },
-  { icon: Settings,        label: "Settings",         labelSw: "Mipangilio",    path: "/settings" },
+const NAV = [
+  { label: "Dashboard",       sw: "Dashibodi",    icon: LayoutDashboard, path: "/dashboard" },
+  { label: "Person Search",   sw: "Tafuta Mtu",   icon: Search,          path: "/person-search" },
+  { label: "Incident Reports",sw: "Ripoti",       icon: FileText,        path: "/incidents" },
+  { label: "Arrests",         sw: "Kukamatwa",    icon: Shield,          path: "/arrests" },
+  { label: "Patrols",         sw: "Doria",        icon: MapPinned,       path: "/patrols" },
+  { label: "Evidence",        sw: "Ushahidi",     icon: FolderOpen,      path: "/evidence" },
+  { label: "Messages",        sw: "Ujumbe",       icon: MessageSquare,   path: "/messages",  badge: 5 },
+  { label: "Alerts",          sw: "Tahadhari",    icon: Bell,            path: "/alerts",    badge: 3 },
+  { label: "Settings",        sw: "Mipangilio",   icon: Settings,        path: "/settings" },
 ];
 
 export default function Sidebar() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const nav = useNavigate();
+  const loc = useLocation();
 
   return (
-    <aside className="sidebar" style={{ display: "flex", flexDirection: "column" }}>
-      <div className="sidebar-header">
-        <img src="/police-logo-transparent.png" alt="Police" className="sidebar-logo" />
-        <h3>TPDOP</h3>
+    <aside className="sidebar">
+      {/* Brand */}
+      <div className="sidebar-brand">
+        <div className="sidebar-logo-ring">
+          <img
+            src="/police-logo-transparent.png"
+            alt="Tanzania Police"
+            onError={e => {
+              e.currentTarget.style.display = "none";
+              e.currentTarget.parentElement.innerHTML =
+                '<div style="color:rgba(255,255,255,.4);font-size:10px;text-align:center">POLISI</div>';
+            }}
+          />
+        </div>
+        <div className="sidebar-app-name">TPDOP</div>
+        <div className="sidebar-app-sub">Digital Operations Platform</div>
       </div>
 
-      <div style={{ flex: 1 }}>
-        {menu.map((item) => {
+      {/* Nav */}
+      <nav className="sidebar-nav">
+        <div className="nav-section-label">Operations</div>
+        {NAV.map(item => {
           const Icon = item.icon;
-          const active = location.pathname === item.path;
+          const active = loc.pathname === item.path;
           return (
             <button
               key={item.path}
-              className={`sidebar-item${active ? " active" : ""}`}
-              onClick={() => navigate(item.path)}
+              className={`nav-item${active ? " active" : ""}`}
+              onClick={() => nav(item.path)}
             >
-              <Icon size={18} />
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{item.label}</div>
-                <div style={{ fontSize: 11, opacity: 0.65 }}>{item.labelSw}</div>
-              </div>
+              <span className="nav-item-icon">
+                <Icon size={17} />
+              </span>
+              <span className="nav-item-text">
+                <div className="nav-item-label">{item.label}</div>
+                <div className="nav-item-sub">{item.sw}</div>
+              </span>
+              {item.badge && (
+                <span className="nav-badge">{item.badge}</span>
+              )}
             </button>
           );
         })}
-      </div>
+      </nav>
 
-      <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 12, marginTop: 12 }}>
-        <button className="sidebar-item" style={{ opacity: 0.75 }} onClick={() => navigate("/")}>
-          <LogOut size={16} />
-          <span style={{ fontSize: 13 }}>Logout / Toka</span>
+      {/* Footer */}
+      <div className="sidebar-footer">
+        <div className="sidebar-officer-card">
+          <img
+            src="/avatars/officer-01.jpg"
+            alt="Officer"
+            className="sidebar-officer-avatar"
+            onError={e => {
+              e.currentTarget.style.background = "#14489E";
+              e.currentTarget.style.display = "block";
+              e.currentTarget.src = "";
+            }}
+          />
+          <div className="sidebar-officer-info">
+            <div className="sidebar-officer-name">Insp. D. Mbaza</div>
+            <div className="sidebar-officer-rank">TZP-2026-00124 · On Duty</div>
+          </div>
+        </div>
+        <button className="logout-btn" onClick={() => nav("/")}>
+          <LogOut size={14} />
+          <span>Logout · Toka</span>
         </button>
       </div>
     </aside>
