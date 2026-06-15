@@ -47,14 +47,13 @@ export default function LoginPage() {
 
         {/* Police logo — large, clean */}
         <img
-          src="/police-logo.png"
+          src="/police-logo-transparent.png"
           alt="Jeshi la Polisi Tanzania"
           style={{
             width: 220,
             height: 220,
             objectFit: "contain",
             marginBottom: 28,
-            filter: "drop-shadow(0 4px 16px rgba(8,42,99,.15))",
           }}
         />
 
