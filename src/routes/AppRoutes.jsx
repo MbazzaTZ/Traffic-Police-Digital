@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 import LoginPage from "../pages/LoginPage";
-
-// Admin
 import AdminDashboard    from "../pages/admin/AdminDashboard";
 import CreateUserPage    from "../pages/admin/CreateUserPage";
 import OfficersPage      from "../pages/admin/OfficersPage";
@@ -13,7 +11,6 @@ import RegionsPage       from "../pages/admin/RegionsPage";
 import RolesPage         from "../pages/admin/RolesPage";
 import AdminSettingsPage from "../pages/admin/AdminSettingsPage";
 
-// Regular police
 import RegularPoliceDashboard from "../pages/regular-police/dashboard/RegularPoliceDashboard";
 import PersonSearchPage       from "../pages/regular-police/person-search/PersonSearchPage";
 import IncidentReportsPage    from "../pages/regular-police/IncidentReportsPage";
@@ -23,25 +20,27 @@ import EvidenceDashboardPage  from "../pages/regular-police/EvidenceDashboardPag
 import MessagesPage           from "../pages/regular-police/MessagesPage";
 import AlertsPage             from "../pages/regular-police/AlertsPage";
 import SettingsPage           from "../pages/regular-police/SettingsPage";
+import MyProfilePage          from "../pages/regular-police/MyProfilePage";
 
-// Traffic
 import TrafficDashboard  from "../pages/traffic/TrafficDashboard";
 import CitationsPage     from "../pages/traffic/CitationsPage";
 import AccidentsPage     from "../pages/traffic/AccidentsPage";
 import VehicleSearchPage from "../pages/traffic/VehicleSearchPage";
 import CheckpointsPage   from "../pages/traffic/CheckpointsPage";
 
-// CID
 import CIDDashboard from "../pages/cid/CIDDashboard";
 import CasesPage    from "../pages/cid/CasesPage";
 import WantedPage   from "../pages/cid/WantedPage";
 import EvidencePage from "../pages/cid/EvidencePage";
+import SuspectsPage from "../pages/cid/SuspectsPage";
+
+import CommandCenter from "../pages/command/CommandCenter";
 
 const ROLE_HOME = {
-  admin_officer:"/admin", igp:"/admin", digp:"/admin",
+  admin_officer:"/admin", igp:"/command", digp:"/command",
+  rpc:"/command", ocd:"/dashboard", ocs:"/dashboard",
   traffic_officer:"/traffic", cid_officer:"/cid", forensic_officer:"/cid",
   regular_officer:"/dashboard", inspector:"/dashboard",
-  ocs:"/dashboard", ocd:"/dashboard", rpc:"/dashboard",
 };
 
 function Guard({ children, roles }) {
@@ -75,9 +74,10 @@ function Guard({ children, roles }) {
 }
 
 const ADMIN   = ["admin_officer","igp","digp"];
+const COMMAND = ["igp","digp","rpc","admin_officer"];
 const TRAFFIC = ["traffic_officer"];
 const CID     = ["cid_officer","forensic_officer"];
-const OFFICER = ["regular_officer","inspector","ocs","ocd","rpc",...ADMIN];
+const OFFICER = ["regular_officer","inspector","ocs","ocd","rpc","igp","digp","admin_officer"];
 
 export default function AppRoutes() {
   return (
@@ -93,6 +93,10 @@ export default function AppRoutes() {
       <Route path="/admin/roles"       element={<Guard roles={ADMIN}><RolesPage/></Guard>}/>
       <Route path="/admin/settings"    element={<Guard roles={ADMIN}><AdminSettingsPage/></Guard>}/>
 
+      {/* Command Center */}
+      <Route path="/command"           element={<Guard roles={COMMAND}><CommandCenter/></Guard>}/>
+      <Route path="/command/*"         element={<Guard roles={COMMAND}><CommandCenter/></Guard>}/>
+
       {/* Regular Police */}
       <Route path="/dashboard"     element={<Guard roles={OFFICER}><RegularPoliceDashboard/></Guard>}/>
       <Route path="/person-search" element={<Guard roles={OFFICER}><PersonSearchPage/></Guard>}/>
@@ -103,6 +107,7 @@ export default function AppRoutes() {
       <Route path="/messages"      element={<Guard roles={OFFICER}><MessagesPage/></Guard>}/>
       <Route path="/alerts"        element={<Guard roles={OFFICER}><AlertsPage/></Guard>}/>
       <Route path="/settings"      element={<Guard roles={OFFICER}><SettingsPage/></Guard>}/>
+      <Route path="/profile"       element={<Guard roles={OFFICER}><MyProfilePage/></Guard>}/>
 
       {/* Traffic */}
       <Route path="/traffic"             element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
@@ -111,14 +116,16 @@ export default function AppRoutes() {
       <Route path="/traffic/vehicles"    element={<Guard roles={TRAFFIC}><VehicleSearchPage/></Guard>}/>
       <Route path="/traffic/checkpoints" element={<Guard roles={TRAFFIC}><CheckpointsPage/></Guard>}/>
       <Route path="/traffic/settings"    element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
+      <Route path="/traffic/profile"     element={<Guard roles={TRAFFIC}><MyProfilePage/></Guard>}/>
 
       {/* CID */}
       <Route path="/cid"          element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
       <Route path="/cid/cases"    element={<Guard roles={CID}><CasesPage/></Guard>}/>
+      <Route path="/cid/suspects" element={<Guard roles={CID}><SuspectsPage/></Guard>}/>
       <Route path="/cid/wanted"   element={<Guard roles={CID}><WantedPage/></Guard>}/>
       <Route path="/cid/evidence" element={<Guard roles={CID}><EvidencePage/></Guard>}/>
-      <Route path="/cid/suspects" element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
       <Route path="/cid/search"   element={<Guard roles={CID}><CIDDashboard/></Guard>}/>
+      <Route path="/cid/profile"  element={<Guard roles={CID}><MyProfilePage/></Guard>}/>
 
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Routes>
