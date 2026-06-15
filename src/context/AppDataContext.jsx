@@ -1,40 +1,44 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
-// Tanzania complete region → districts mapping
+// ── Tanzania: all 31 regions + districts ──
 export const TZ_REGIONS = {
-  "Arusha":           ["Arusha Urban","Meru","Ngorongoro","Monduli","Karatu","Longido","Arusha Rural"],
-  "Dar es Salaam":    ["Ilala","Kinondoni","Temeke","Ubungo","Kigamboni"],
-  "Dodoma":           ["Dodoma Urban","Bahi","Chamwino","Kondoa","Mpwapwa","Chemba","Kondoa"],
-  "Geita":            ["Geita Urban","Bukombe","Chato","Mbogwe","Nyang'hwale"],
-  "Iringa":           ["Iringa Urban","Kilolo","Mufindi","Iringa Rural"],
-  "Kagera":           ["Bukoba Urban","Bukoba Rural","Biharamulo","Karagwe","Kyerwa","Muleba","Ngara","Misenyi"],
-  "Katavi":           ["Mpanda Urban","Mpanda Rural","Mlele","Nsimbo"],
-  "Kigoma":           ["Kigoma Urban","Kigoma Rural","Kibondo","Kasulu","Buhigwe","Kakonko","Uvinza"],
-  "Kilimanjaro":      ["Moshi Urban","Moshi Rural","Hai","Rombo","Same","Siha","Mwanga"],
-  "Lindi":            ["Lindi Urban","Lindi Rural","Kilwa","Liwale","Nachingwea","Ruangwa"],
-  "Mara":             ["Musoma Urban","Musoma Rural","Bunda","Butiama","Rorya","Serengeti","Tarime"],
-  "Mbeya":            ["Mbeya Urban","Mbeya Rural","Busokelo","Chunya","Kyela","Mbarali","Momba","Rungwe"],
-  "Morogoro":         ["Morogoro Urban","Morogoro Rural","Gairo","Ifakara","Kilombero","Kilosa","Mvomero","Ulanga"],
-  "Mtwara":           ["Mtwara Urban","Mtwara Rural","Masasi","Nanyumbu","Newala","Tandahimba"],
-  "Mwanza":           ["Ilemela","Nyamagana","Buchosa","Kwimba","Magu","Misungwi","Sengerema","Ukerewe"],
-  "Njombe":           ["Njombe Urban","Makete","Wanging'ombe","Ludewa","Njombe Rural"],
-  "Pemba North":      ["Micheweni","Wete"],
-  "Pemba South":      ["Chake Chake","Mkoani"],
-  "Pwani":            ["Bagamoyo","Kibaha Urban","Kibaha Rural","Kisarawe","Mafia","Mkuranga","Rufiji"],
-  "Rukwa":            ["Sumbawanga Urban","Sumbawanga Rural","Kalambo","Nkasi"],
-  "Ruvuma":           ["Songea Urban","Songea Rural","Mbinga","Namtumbo","Nyasa","Tunduru"],
-  "Shinyanga":        ["Shinyanga Urban","Shinyanga Rural","Kahama Urban","Kahama Rural","Kishapu","Ushetu"],
-  "Simiyu":           ["Bariadi","Busega","Itilima","Maswa","Meatu"],
-  "Singida":          ["Singida Urban","Singida Rural","Ikungi","Iramba","Manyoni","Mkalama"],
-  "Songwe":           ["Mbozi","Momba","Songwe","Ileje","Vwawa"],
-  "Tabora":           ["Tabora Urban","Igunga","Kaliua","Nzega","Sikonge","Urambo","Uyui"],
-  "Tanga":            ["Tanga Urban","Handeni","Kilindi","Korogwe Urban","Korogwe Rural","Lushoto","Mkinga","Muheza","Pangani"],
-  "Zanzibar North":   ["Kaskazini A","Kaskazini B"],
-  "Zanzibar South":   ["Kati","Kusini"],
-  "Zanzibar West":    ["Magharibi A","Magharibi B","Mjini"],
+  "Arusha":         ["Arusha Urban","Meru","Ngorongoro","Monduli","Karatu","Longido","Arusha Rural"],
+  "Dar es Salaam":  ["Ilala","Kinondoni","Temeke","Ubungo","Kigamboni"],
+  "Dodoma":         ["Dodoma Urban","Bahi","Chamwino","Kondoa","Mpwapwa","Chemba"],
+  "Geita":          ["Geita Urban","Bukombe","Chato","Mbogwe","Nyang'hwale"],
+  "Iringa":         ["Iringa Urban","Kilolo","Mufindi","Iringa Rural"],
+  "Kagera":         ["Bukoba Urban","Bukoba Rural","Biharamulo","Karagwe","Kyerwa","Muleba","Ngara","Misenyi"],
+  "Katavi":         ["Mpanda Urban","Mpanda Rural","Mlele","Nsimbo"],
+  "Kigoma":         ["Kigoma Urban","Kigoma Rural","Kibondo","Kasulu","Buhigwe","Kakonko","Uvinza"],
+  "Kilimanjaro":    ["Moshi Urban","Moshi Rural","Hai","Rombo","Same","Siha","Mwanga"],
+  "Lindi":          ["Lindi Urban","Lindi Rural","Kilwa","Liwale","Nachingwea","Ruangwa"],
+  "Mara":           ["Musoma Urban","Musoma Rural","Bunda","Butiama","Rorya","Serengeti","Tarime"],
+  "Mbeya":          ["Mbeya Urban","Mbeya Rural","Busokelo","Chunya","Kyela","Mbarali","Momba","Rungwe"],
+  "Morogoro":       ["Morogoro Urban","Morogoro Rural","Gairo","Ifakara","Kilombero","Kilosa","Mvomero","Ulanga"],
+  "Mtwara":         ["Mtwara Urban","Mtwara Rural","Masasi","Nanyumbu","Newala","Tandahimba"],
+  "Mwanza":         ["Ilemela","Nyamagana","Buchosa","Kwimba","Magu","Misungwi","Sengerema","Ukerewe"],
+  "Njombe":         ["Njombe Urban","Makete","Wanging'ombe","Ludewa","Njombe Rural"],
+  "Pemba North":    ["Micheweni","Wete"],
+  "Pemba South":    ["Chake Chake","Mkoani"],
+  "Pwani":          ["Bagamoyo","Kibaha Urban","Kibaha Rural","Kisarawe","Mafia","Mkuranga","Rufiji"],
+  "Rukwa":          ["Sumbawanga Urban","Sumbawanga Rural","Kalambo","Nkasi"],
+  "Ruvuma":         ["Songea Urban","Songea Rural","Mbinga","Namtumbo","Nyasa","Tunduru"],
+  "Shinyanga":      ["Shinyanga Urban","Shinyanga Rural","Kahama Urban","Kahama Rural","Kishapu","Ushetu"],
+  "Simiyu":         ["Bariadi","Busega","Itilima","Maswa","Meatu"],
+  "Singida":        ["Singida Urban","Singida Rural","Ikungi","Iramba","Manyoni","Mkalama"],
+  "Songwe":         ["Mbozi","Momba","Songwe","Ileje","Vwawa"],
+  "Tabora":         ["Tabora Urban","Igunga","Kaliua","Nzega","Sikonge","Urambo","Uyui"],
+  "Tanga":          ["Tanga Urban","Handeni","Kilindi","Korogwe Urban","Korogwe Rural","Lushoto","Mkinga","Muheza","Pangani"],
+  "Zanzibar North": ["Kaskazini A","Kaskazini B"],
+  "Zanzibar South": ["Kati","Kusini"],
+  "Zanzibar West":  ["Magharibi A","Magharibi B","Mjini"],
 };
 
-export const RANKS = ["Constable","Corporal","Sergeant","Staff Sergeant","Inspector","ASP","SP","SSP","ACP","DCP","SCP","Commissioner of Police","RPC","DIGP","IGP"];
+export const RANKS = [
+  "Constable","Corporal","Sergeant","Staff Sergeant","Inspector",
+  "ASP","SP","SSP","ACP","DCP","SCP",
+  "Commissioner of Police","RPC","DIGP","IGP",
+];
 
 export const ROLES = [
   { v:"regular_officer",  l:"Regular Officer" },
@@ -60,38 +64,95 @@ export const ROLE_PERMS = {
   admin_officer:    ["Manage Users","Create Accounts","All Admin Activities","System Settings","Roles Management"],
 };
 
-export const DEPARTMENTS = ["Operations","CID","Traffic","Intelligence","Forensics","Community Policing","Anti-Narcotics","Cyber Crime","Human Resources","Administration","ICT","Internal Affairs","Training","Procurement","Legal Services"];
+export const DEPARTMENTS = [
+  "Operations","CID","Traffic","Intelligence","Forensics",
+  "Community Policing","Anti-Narcotics","Cyber Crime",
+  "Human Resources","Administration","ICT",
+  "Internal Affairs","Training","Procurement","Legal Services",
+];
+
+// ── helpers: read/write localStorage safely ──
+function load(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+function save(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
 
 const AppDataContext = createContext(null);
 
 export function AppDataProvider({ children }) {
-  // Stations created by admin
-  const [stations, setStations] = useState([]);
-  // Regions created by admin
-  const [regions, setRegions] = useState([]);
-  // Officers created
-  const [officers, setOfficers] = useState([]);
+  const [stations, setStations] = useState(() => load("tpdop_stations", []));
+  const [regions,  setRegions]  = useState(() => load("tpdop_regions",  []));
+  const [officers, setOfficers] = useState(() => load("tpdop_officers", []));
+
+  // Persist every change to localStorage
+  useEffect(() => { save("tpdop_stations", stations); }, [stations]);
+  useEffect(() => { save("tpdop_regions",  regions);  }, [regions]);
+  useEffect(() => { save("tpdop_officers", officers); }, [officers]);
 
   function addStation(station) {
-    const s = { ...station, id: `STN-${Date.now()}`, officers: 0, status: "Active", createdAt: new Date().toISOString() };
+    const s = {
+      ...station,
+      id: `STN-${Date.now()}`,
+      officers: 0,
+      status: "Active",
+      createdAt: new Date().toISOString(),
+    };
     setStations(prev => [s, ...prev]);
     return s;
   }
 
   function addRegion(region) {
-    const r = { ...region, id: `RGN-${Date.now()}`, districts: TZ_REGIONS[region.name] || [], stations: 0, officers: 0 };
+    const r = {
+      ...region,
+      id: `RGN-${Date.now()}`,
+      districts: TZ_REGIONS[region.name] || [],
+      stations: 0,
+      officers: 0,
+    };
     setRegions(prev => [r, ...prev]);
     return r;
   }
 
   function addOfficer(officer) {
-    const o = { ...officer, id: `OFF-${Date.now()}`, status: "Active", createdAt: new Date().toISOString() };
+    const o = {
+      ...officer,
+      id: `OFF-${Date.now()}`,
+      status: "Active",
+      createdAt: new Date().toISOString(),
+    };
     setOfficers(prev => [o, ...prev]);
     return o;
   }
 
+  function deleteStation(id)  { setStations(p => p.filter(x => x.id !== id)); }
+  function deleteRegion(id)   { setRegions(p  => p.filter(x => x.id !== id)); }
+  function deleteOfficer(id)  { setOfficers(p => p.filter(x => x.id !== id)); }
+
+  function updateOfficer(id, patch) {
+    setOfficers(p => p.map(o => o.id === id ? { ...o, ...patch } : o));
+  }
+
+  function clearAll() {
+    setStations([]); setRegions([]); setOfficers([]);
+    localStorage.removeItem("tpdop_stations");
+    localStorage.removeItem("tpdop_regions");
+    localStorage.removeItem("tpdop_officers");
+  }
+
   return (
-    <AppDataContext.Provider value={{ stations, regions, officers, addStation, addRegion, addOfficer }}>
+    <AppDataContext.Provider value={{
+      stations, regions, officers,
+      addStation, addRegion, addOfficer,
+      deleteStation, deleteRegion, deleteOfficer,
+      updateOfficer, clearAll,
+    }}>
       {children}
     </AppDataContext.Provider>
   );
