@@ -194,10 +194,22 @@ export function AppDataProvider({ children }) {
   }
 
   async function addOfficer({ full_name, badge, nida, phone, email, rank, role, department, region, district, station_id, password }) {
+    // Save current admin session before signUp (which would replace it)
+    const { data: { session: adminSession } } = await supabase.auth.getSession();
+
     const { data:authData, error:authErr } = await supabase.auth.signUp({ email, password, options:{ data:{ role, badge, full_name } } });
     if (authErr) throw authErr;
     const uid = authData?.user?.id;
     if (!uid) throw new Error("Failed to create auth user");
+
+    // Restore the admin session — signUp replaced it with the new user
+    if (adminSession) {
+      await supabase.auth.setSession({
+        access_token: adminSession.access_token,
+        refresh_token: adminSession.refresh_token,
+      });
+    }
+
     const r = regions.find(x=>x.name===region);
     const d = districts.find(x=>x.name===district && x.region_id===r?.id);
     const { data:profile, error:pErr } = await supabase.from("profiles").insert({

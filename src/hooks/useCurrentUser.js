@@ -12,7 +12,7 @@ export function useCurrentUser() {
       setUser(session.user);
       const { data } = await supabase
         .from("profiles")
-        .select("*, stations(name,type), regions(name), districts(name)")
+        .select("*, stations!profiles_station_id_fkey(name,type), regions(name), districts(name)")
         .eq("id", session.user.id)
         .single();
       setProfile(data);

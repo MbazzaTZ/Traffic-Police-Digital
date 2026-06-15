@@ -37,7 +37,7 @@ function SelWrap({ value, onChange, children, disabled }) {
 
 export default function CreateUserPage() {
   const nav = useNavigate();
-  const { regions, districtsForRegion, stationsForRegion, addOfficer, loading } = useAppData();
+  const { regions, districtsForRegion, stationsForLocation, addOfficer, loading } = useAppData();
 
   const [step, setStep]     = useState(1);
   const [saving, setSaving] = useState(false);
@@ -62,7 +62,7 @@ export default function CreateUserPage() {
   };
 
   const availableDistricts = districtsForRegion(form.region);
-  const availableStations  = stationsForRegion(form.region, form.district);
+  const availableStations  = stationsForLocation(form.region, form.district);
   const selectedStation    = availableStations.find(s=>s.id===form.station_id);
 
   async function handleSubmit(e) {

@@ -33,7 +33,13 @@ export default function LoginPage() {
       const dest = ROLE_HOME[role] || "/dashboard";
       nav(dest);
     } catch (e) {
-      setError(e.message || "Login failed. Check your credentials.");
+      let msg = e.message || "Login failed. Check your credentials.";
+      if (/email not confirmed/i.test(msg)) {
+        msg = "Email not confirmed. Admin must disable email confirmation in Supabase → Authentication → Providers → Email, or confirm this user in Authentication → Users.";
+      } else if (/invalid login credentials/i.test(msg)) {
+        msg = "Invalid email or password. Tafadhali angalia taarifa zako.";
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
