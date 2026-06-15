@@ -1,20 +1,16 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  LayoutDashboard, Search, FileText, Shield,
-  MapPinned, FolderOpen, MessageSquare, Bell,
-  Settings, LogOut
-} from "lucide-react";
+import { LayoutDashboard, Search, FileText, Shield, MapPinned, FolderOpen, MessageSquare, Bell, Settings, LogOut } from "lucide-react";
 
 const NAV = [
-  { icon: LayoutDashboard, label: "Dashboard",        sw: "Dashibodi",    path: "/dashboard" },
-  { icon: Search,          label: "Person Search",    sw: "Tafuta Mtu",   path: "/person-search" },
-  { icon: FileText,        label: "Incidents",        sw: "Ripoti",       path: "/incidents" },
-  { icon: Shield,          label: "Arrests",          sw: "Kukamatwa",    path: "/arrests" },
-  { icon: MapPinned,       label: "Patrols",          sw: "Doria",        path: "/patrols" },
-  { icon: FolderOpen,      label: "Evidence",         sw: "Ushahidi",     path: "/evidence" },
-  { icon: MessageSquare,   label: "Messages",         sw: "Ujumbe",       path: "/messages",  badge: 5 },
-  { icon: Bell,            label: "Alerts",           sw: "Tahadhari",    path: "/alerts",    badge: 3 },
-  { icon: Settings,        label: "Settings",         sw: "Mipangilio",   path: "/settings" },
+  { icon:LayoutDashboard, label:"Dashboard",        sw:"Dashibodi",   path:"/dashboard" },
+  { icon:Search,          label:"Person Search",    sw:"Tafuta Mtu",  path:"/person-search" },
+  { icon:FileText,        label:"Incidents",        sw:"Ripoti",      path:"/incidents" },
+  { icon:Shield,          label:"Arrests",          sw:"Kukamatwa",   path:"/arrests" },
+  { icon:MapPinned,       label:"Patrols",          sw:"Doria",       path:"/patrols" },
+  { icon:FolderOpen,      label:"Evidence",         sw:"Ushahidi",    path:"/evidence" },
+  { icon:MessageSquare,   label:"Messages",         sw:"Ujumbe",      path:"/messages" },
+  { icon:Bell,            label:"Alerts",           sw:"Tahadhari",   path:"/alerts" },
+  { icon:Settings,        label:"Settings",         sw:"Mipangilio",  path:"/settings" },
 ];
 
 export default function Sidebar() {
@@ -22,104 +18,51 @@ export default function Sidebar() {
   const loc = useLocation();
 
   return (
-    <aside style={{
-      width: 240,
-      minHeight: "100vh",
-      background: "linear-gradient(180deg,#03102B 0%,#05193E 45%,#082A63 100%)",
-      display: "flex",
-      flexDirection: "column",
-      position: "fixed",
-      top: 0, left: 0,
-      zIndex: 50,
-      boxShadow: "4px 0 24px rgba(0,0,0,.25)",
-    }}>
-
-      {/* Brand */}
-      <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,.07)", textAlign: "center" }}>
-        <div style={{
-          width: 72, height: 72, borderRadius: "50%",
-          background: "rgba(255,255,255,.08)",
-          border: "2px solid rgba(255,255,255,.15)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          margin: "0 auto 10px", padding: 10,
-        }}>
-          <img src="/police-logo-transparent.png" alt="TPDOP"
-            style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+    <aside style={{ width:240, minHeight:"100vh", background:"linear-gradient(180deg,#03102B 0%,#05193E 45%,#082A63 100%)", display:"flex", flexDirection:"column", position:"fixed", top:0, left:0, zIndex:50, boxShadow:"4px 0 24px rgba(0,0,0,.25)" }}>
+      <div style={{ padding:"20px 16px 16px", borderBottom:"1px solid rgba(255,255,255,.07)", textAlign:"center" }}>
+        <div style={{ width:72, height:72, borderRadius:"50%", background:"rgba(255,255,255,.08)", border:"2px solid rgba(255,255,255,.12)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 10px", padding:10 }}>
+          <img src="/police-logo-transparent.png" alt="TPDOP" style={{ width:"100%", height:"100%", objectFit:"contain" }} />
         </div>
-        <div style={{ color: "white", fontWeight: 900, fontSize: 16, letterSpacing: 2 }}>TPDOP</div>
-        <div style={{ color: "rgba(255,255,255,.4)", fontSize: 9, letterSpacing: 1, marginTop: 2 }}>DIGITAL OPERATIONS</div>
+        <div style={{ color:"white", fontWeight:900, fontSize:16, letterSpacing:2 }}>TPDOP</div>
+        <div style={{ color:"rgba(255,255,255,.4)", fontSize:9, letterSpacing:1, marginTop:2 }}>DIGITAL OPERATIONS</div>
       </div>
 
-      {/* Nav */}
-      <nav style={{ flex: 1, padding: "10px 8px", overflowY: "auto" }}>
-        <div style={{ fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,.3)", letterSpacing: 1.5, padding: "8px 10px 4px", textTransform: "uppercase" }}>
-          Operations
-        </div>
+      <nav style={{ flex:1, padding:"10px 8px", overflowY:"auto" }}>
+        <div style={{ fontSize:9, fontWeight:800, color:"rgba(255,255,255,.3)", letterSpacing:1.5, padding:"8px 10px 4px", textTransform:"uppercase" }}>Operations</div>
         {NAV.map(item => {
           const Icon = item.icon;
           const active = loc.pathname === item.path;
           return (
             <button key={item.path} onClick={() => nav(item.path)}
-              style={{
-                width: "100%", display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 12px", borderRadius: 10, border: "none",
-                background: active ? "rgba(255,255,255,.13)" : "transparent",
-                color: active ? "white" : "rgba(255,255,255,.6)",
-                cursor: "pointer", marginBottom: 2,
-                transition: ".15s", textAlign: "left",
-                position: "relative",
-                borderLeft: active ? "3px solid rgba(255,255,255,.5)" : "3px solid transparent",
-              }}
-              onMouseEnter={e => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,.07)"; }}
-              onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
+              style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, border:"none", background:active?"rgba(255,255,255,.13)":"transparent", color:active?"white":"rgba(255,255,255,.6)", cursor:"pointer", marginBottom:2, transition:".15s", textAlign:"left", borderLeft:active?"3px solid rgba(255,255,255,.5)":"3px solid transparent" }}
+              onMouseEnter={e => { if(!active){e.currentTarget.style.background="rgba(255,255,255,.07)";e.currentTarget.style.color="white";}}}
+              onMouseLeave={e => { if(!active){e.currentTarget.style.background="transparent";e.currentTarget.style.color="rgba(255,255,255,.6)";}}}
             >
-              <Icon size={16} style={{ flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{item.label}</div>
-                <div style={{ fontSize: 10, opacity: .5, marginTop: 1 }}>{item.sw}</div>
+              <Icon size={16} style={{ flexShrink:0 }} />
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, fontWeight:600 }}>{item.label}</div>
+                <div style={{ fontSize:10, opacity:.5, marginTop:1 }}>{item.sw}</div>
               </div>
-              {item.badge && (
-                <span style={{
-                  background: "#DC2626", color: "white",
-                  fontSize: 10, fontWeight: 800,
-                  minWidth: 18, height: 18, borderRadius: 9,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  padding: "0 4px",
-                }}>{item.badge}</span>
-              )}
             </button>
           );
         })}
       </nav>
 
-      {/* Officer card + logout */}
-      <div style={{ padding: "10px 8px 14px", borderTop: "1px solid rgba(255,255,255,.07)" }}>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 10,
-          padding: "10px 12px", borderRadius: 10,
-          background: "rgba(255,255,255,.06)",
-          border: "1px solid rgba(255,255,255,.08)",
-          marginBottom: 6, cursor: "pointer",
-        }}>
-          <img src="/police-logo.png" alt="Officer"
-            style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255,255,255,.2)", flexShrink: 0 }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "white", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Insp. D. Mbaza</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)" }}>TZP-2026-00124 · On Duty</div>
+      <div style={{ padding:"10px 8px 14px", borderTop:"1px solid rgba(255,255,255,.07)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.08)", marginBottom:6 }}>
+          <div style={{ width:34, height:34, borderRadius:"50%", background:"#14489E", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+            <span style={{ color:"white", fontSize:13, fontWeight:800 }}>P</span>
+          </div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:"white" }}>Police Officer</div>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,.4)" }}>TPDOP System</div>
           </div>
         </div>
         <button onClick={() => nav("/")}
-          style={{
-            width: "100%", display: "flex", alignItems: "center", gap: 10,
-            padding: "8px 12px", borderRadius: 8, border: "none",
-            background: "transparent", color: "rgba(255,255,255,.4)",
-            cursor: "pointer", fontSize: 12, transition: ".15s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = "rgba(220,38,38,.15)"; e.currentTarget.style.color = "#FCA5A5"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,.4)"; }}
-        >
-          <LogOut size={14} />
-          <span>Logout · Toka</span>
+          style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"8px 12px", borderRadius:8, border:"none", background:"transparent", color:"rgba(255,255,255,.4)", cursor:"pointer", fontSize:12 }}
+          onMouseEnter={e => {e.currentTarget.style.background="rgba(220,38,38,.15)";e.currentTarget.style.color="#FCA5A5";}}
+          onMouseLeave={e => {e.currentTarget.style.background="transparent";e.currentTarget.style.color="rgba(255,255,255,.4)";}}>
+          <LogOut size={14} /><span>Logout · Toka</span>
         </button>
       </div>
     </aside>

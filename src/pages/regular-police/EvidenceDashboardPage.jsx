@@ -1,151 +1,125 @@
 import { useState } from "react";
 import DashboardLayout from "../../layouts/DashboardLayout";
-import { Upload, Lock, CheckCircle, Clock, ChevronRight, X, Camera, Package } from "lucide-react";
-
-const ROWS = [
-  { id:"EVD-2026-001", case:"INC-2026-002", type:"Physical", sw:"Kimwili", desc:"Mobile phone – Tecno Spark",  col:"15/06/2026 09:30", off:"Insp. Mbaza",  status:"In Custody",   sc:"badge-blue",    chain:2 },
-  { id:"EVD-2026-002", case:"INC-2026-001", type:"Photo",    sw:"Picha",   desc:"CCTV footage – Market area",  col:"15/06/2026 08:50", off:"Sgt. Mwenda",   status:"Submitted",    sc:"badge-success", chain:3 },
-  { id:"EVD-2026-003", case:"ARR-2026-001", type:"Weapon",   sw:"Silaha",  desc:"Machete 45cm – seized",       col:"14/06/2026 22:15", off:"Insp. Mbaza",  status:"In Custody",   sc:"badge-blue",    chain:4 },
-  { id:"EVD-2026-004", case:"INC-2026-005", type:"Document", sw:"Hati",    desc:"Forged ID document",          col:"14/06/2026 19:00", off:"Cpl. Kilosa",  status:"Lab Analysis", sc:"badge-warning", chain:1 },
-];
+import { Upload, FolderOpen, X, Camera, Lock } from "lucide-react";
 
 const TYPES = ["Physical Object / Kitu","Photo / Video","Document / Hati","Weapon / Silaha","Drug Sample","Digital Device","Other / Nyingine"];
 
 export default function EvidenceDashboardPage() {
   const [modal, setModal] = useState(false);
   const [done, setDone]   = useState(false);
+  const [evidence, setEvidence] = useState([]);
   const [form, setForm]   = useState({ caseId:"", type:"", desc:"", loc:"", date:"" });
 
-  function upd(k) { return e => setForm(f => ({ ...f, [k]: e.target.value })); }
+  const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+  const inp = { width:"100%", height:42, border:"1.5px solid #E2E8F0", borderRadius:10, padding:"0 12px", fontSize:13, outline:"none", boxSizing:"border-box" };
 
   function submit(e) {
     e.preventDefault();
+    setEvidence(p => [{ ...form, id:`EVD-${Date.now()}`, status:"In Custody", chain:1, created:new Date().toLocaleString("en-GB") }, ...p]);
     setDone(true);
-    setTimeout(() => { setModal(false); setDone(false); }, 2200);
+    setTimeout(() => { setModal(false); setDone(false); setForm({ caseId:"", type:"", desc:"", loc:"", date:"" }); }, 2000);
   }
 
   return (
     <DashboardLayout pageTitle="Evidence" pageTitle2="Ushahidi">
-      <div className="page-hd">
-        <div className="page-hd-row">
-          <div>
-            <h1 className="page-title">Evidence <span className="page-title-sw">· Ushahidi</span></h1>
-            <p className="page-sub">Chain of custody management · {ROWS.length} evidence items</p>
-          </div>
-          <button className="btn btn-primary" style={{ background: "#7C3AED" }} onClick={() => setModal(true)}>
-            <Upload size={16} /> Upload Evidence · Pakia
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+        <div>
+          <h1 style={{ fontSize:24, fontWeight:800, color:"#0D3477", margin:0 }}>Evidence <span style={{ fontWeight:500, color:"#94A3B8", fontSize:18 }}>· Ushahidi</span></h1>
+          <p style={{ color:"#64748B", marginTop:3 }}>{evidence.length} evidence items · Chain of custody active</p>
+        </div>
+        <button onClick={() => setModal(true)} style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"#7C3AED", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>
+          <Upload size={16} /> Upload Evidence · Pakia
+        </button>
+      </div>
+
+      <div style={{ background:"#FFFBEB", border:"1px solid #FDE68A", borderRadius:12, padding:"11px 16px", marginBottom:16, display:"flex", gap:8, alignItems:"center" }}>
+        <Lock size={16} color="#D97706" />
+        <span style={{ fontSize:13, color:"#92400E", fontWeight:600 }}>Chain of Custody Active · All transfers logged with officer ID, timestamp & GPS</span>
+      </div>
+
+      {evidence.length === 0 ? (
+        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:"80px 20px", textAlign:"center", color:"#94A3B8" }}>
+          <FolderOpen size={48} style={{ opacity:.2, marginBottom:14 }} />
+          <div style={{ fontSize:16, fontWeight:600, color:"#64748B" }}>No evidence uploaded yet</div>
+          <div style={{ fontSize:13, marginTop:6 }}>Ushahidi haujapakuliwa bado</div>
+          <button onClick={() => setModal(true)} style={{ marginTop:18, padding:"10px 24px", borderRadius:10, border:"none", background:"#7C3AED", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>
+            Upload First Evidence
           </button>
         </div>
-      </div>
-
-      {/* Stats */}
-      <div className="stats-row stats-4" style={{ marginBottom: 16 }}>
-        {[
-          { label:"Total Items",     sw:"Jumla",          v: ROWS.length,                                        c:"#7C3AED", icon: Package },
-          { label:"In Custody",      sw:"Kinachohifadhiwa", v: ROWS.filter(r=>r.status==="In Custody").length,  c:"#0D3477", icon: Lock },
-          { label:"Submitted",       sw:"Waliwasilishwa", v: ROWS.filter(r=>r.status==="Submitted").length,     c:"#16A34A", icon: CheckCircle },
-          { label:"Under Analysis",  sw:"Uchambuzi",      v: ROWS.filter(r=>r.status==="Lab Analysis").length,  c:"#D97706", icon: Package },
-        ].map(s => {
-          const Icon = s.icon;
-          return (
-            <div key={s.label} className="stat-box" style={{ borderTopColor: s.c }}>
-              <Icon size={20} color={s.c} style={{ marginBottom: 6 }} />
-              <div className="stat-box-value" style={{ color: s.c }}>{s.v}</div>
-              <div className="stat-box-label">{s.label}</div>
-              <div className="stat-box-sw">{s.sw}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* CoC notice */}
-      <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: "var(--radius-md)", padding: "12px 16px", marginBottom: 16, display: "flex", gap: 10, alignItems: "center" }}>
-        <Lock size={16} color="#D97706" />
-        <span style={{ fontSize: 13, color: "#92400E", fontWeight: 600 }}>
-          Chain of Custody Active · Mnyororo wa Usimamizi · All transfers logged with officer ID, timestamp & GPS
-        </span>
-      </div>
-
-      <div className="tbl-wrap">
-        <table className="tbl">
-          <thead>
-            <tr><th>Evidence ID</th><th>Case ID</th><th>Type</th><th>Description</th><th>Collected</th><th>Officer</th><th>Chain #</th><th>Status</th><th></th></tr>
-          </thead>
-          <tbody>
-            {ROWS.map(r => (
-              <tr key={r.id}>
-                <td style={{ fontWeight: 700, color: "#7C3AED" }}>{r.id}</td>
-                <td style={{ fontWeight: 600, color: "var(--blue-700)" }}>{r.case}</td>
-                <td>
-                  <div style={{ fontWeight: 600, fontSize: 13 }}>{r.type}</div>
-                  <div style={{ fontSize: 11, color: "var(--gray-400)" }}>{r.sw}</div>
-                </td>
-                <td style={{ maxWidth: 180, fontSize: 13 }}>{r.desc}</td>
-                <td style={{ fontSize: 11, color: "var(--gray-400)" }}>
-                  <Clock size={11} style={{ verticalAlign: "middle", marginRight: 3 }} />{r.col}
-                </td>
-                <td style={{ fontSize: 12 }}>{r.off}</td>
-                <td style={{ textAlign: "center" }}>
-                  <span className="badge badge-purple">#{r.chain}</span>
-                </td>
-                <td><span className={`badge ${r.sc}`}>{r.status}</span></td>
-                <td><ChevronRight size={15} color="var(--gray-300)" /></td>
+      ) : (
+        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+          <table style={{ width:"100%", borderCollapse:"collapse" }}>
+            <thead>
+              <tr style={{ background:"#F8FAFC", borderBottom:"2px solid #E2E8F0" }}>
+                {["Evidence ID","Case ID","Type","Description","Date","Chain #","Status"].map(h => (
+                  <th key={h} style={{ padding:"12px 14px", textAlign:"left", fontSize:11, fontWeight:700, color:"#64748B", textTransform:"uppercase", letterSpacing:.4 }}>{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {evidence.map((ev, i) => (
+                <tr key={ev.id} style={{ borderBottom:i<evidence.length-1?"1px solid #F1F5F9":"none" }}>
+                  <td style={{ padding:"12px 14px", fontWeight:700, color:"#7C3AED", fontSize:13 }}>{ev.id.slice(-8)}</td>
+                  <td style={{ padding:"12px 14px", fontSize:12, color:"#0D3477", fontWeight:600 }}>{ev.caseId}</td>
+                  <td style={{ padding:"12px 14px", fontSize:13 }}>{ev.type}</td>
+                  <td style={{ padding:"12px 14px", fontSize:13 }}>{ev.desc}</td>
+                  <td style={{ padding:"12px 14px", fontSize:12, color:"#94A3B8" }}>{ev.created}</td>
+                  <td style={{ padding:"12px 14px", textAlign:"center" }}><span style={{ background:"#F5F3FF", color:"#7C3AED", padding:"3px 9px", borderRadius:999, fontSize:11, fontWeight:700 }}>#{ev.chain}</span></td>
+                  <td style={{ padding:"12px 14px" }}><span style={{ background:"#EFF6FF", color:"#1D4ED8", padding:"3px 9px", borderRadius:999, fontSize:11, fontWeight:700 }}>{ev.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {modal && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setModal(false)}>
-          <div className="modal-box">
-            <div className="modal-hd">
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.5)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:100, padding:20 }}>
+          <div style={{ background:"white", borderRadius:20, padding:30, width:"100%", maxWidth:520, maxHeight:"90vh", overflowY:"auto" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:20 }}>
               <div>
-                <div className="modal-title" style={{ color: "#7C3AED" }}>Upload Evidence</div>
-                <div className="modal-sub">Pakia Ushahidi · Chain of Custody will be initiated</div>
+                <div style={{ fontSize:18, fontWeight:800, color:"#7C3AED" }}>Upload Evidence · Pakia Ushahidi</div>
+                <div style={{ fontSize:12, color:"#94A3B8", marginTop:2 }}>Chain of Custody will be initiated</div>
               </div>
-              <button className="modal-close" onClick={() => setModal(false)}><X size={16} /></button>
+              <button onClick={() => setModal(false)} style={{ width:32, height:32, borderRadius:8, background:"#F1F5F9", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><X size={16} /></button>
             </div>
             {done ? (
-              <div className="success-state">
-                <div className="success-icon">📁</div>
-                <h3>Evidence Uploaded!</h3>
-                <p>Ushahidi umepakiwa · EVD-2026-00{Math.floor(Math.random()*90+10)}</p>
+              <div style={{ textAlign:"center", padding:"30px 0" }}>
+                <div style={{ fontSize:40, marginBottom:12 }}>📁</div>
+                <h3 style={{ color:"#16A34A" }}>Evidence Uploaded!</h3>
+                <p style={{ color:"#94A3B8", fontSize:13 }}>Ushahidi umepakiwa</p>
               </div>
             ) : (
               <form onSubmit={submit}>
                 {[
                   { label:"Case / Incident ID", key:"caseId", ph:"e.g. INC-2026-001" },
-                  { label:"Collection Location · Mahali pa Kukusanya", key:"loc", ph:"GPS or address" },
+                  { label:"Collection Location · Mahali", key:"loc", ph:"GPS coordinates or address" },
+                  { label:"Date Collected · Tarehe", key:"date", type:"date" },
                 ].map(f => (
-                  <div className="form-field" key={f.key}>
-                    <label className="form-label">{f.label}</label>
-                    <input className="form-input" value={form[f.key]} onChange={upd(f.key)} placeholder={f.ph} required />
+                  <div key={f.key} style={{ marginBottom:14 }}>
+                    <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 }}>{f.label} *</label>
+                    <input type={f.type||"text"} value={form[f.key]} onChange={upd(f.key)} placeholder={f.ph} required style={inp}
+                      onFocus={e => e.target.style.borderColor="#7C3AED"} onBlur={e => e.target.style.borderColor="#E2E8F0"} />
                   </div>
                 ))}
-                <div className="form-field">
-                  <label className="form-label">Evidence Type · Aina ya Ushahidi</label>
-                  <select className="form-select" value={form.type} onChange={upd("type")} required>
+                <div style={{ marginBottom:14 }}>
+                  <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 }}>Evidence Type *</label>
+                  <select value={form.type} onChange={upd("type")} required style={{ ...inp, paddingLeft:12 }}>
                     <option value="">Select type...</option>
                     {TYPES.map(t => <option key={t}>{t}</option>)}
                   </select>
                 </div>
-                <div className="form-field">
-                  <label className="form-label">Description · Maelezo</label>
-                  <textarea className="form-textarea" rows={3} value={form.desc} onChange={upd("desc")} required />
+                <div style={{ marginBottom:14 }}>
+                  <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 }}>Description · Maelezo *</label>
+                  <textarea value={form.desc} onChange={upd("desc")} rows={3} required style={{ ...inp, height:"auto", padding:"10px 12px" }} />
                 </div>
-                <div className="form-field">
-                  <label className="form-label">Date Collected · Tarehe</label>
-                  <input type="date" className="form-input" value={form.date} onChange={upd("date")} required />
+                <div style={{ border:"2px dashed #E2E8F0", borderRadius:12, padding:20, textAlign:"center", marginBottom:16, cursor:"pointer", color:"#94A3B8" }}>
+                  <Camera size={26} style={{ marginBottom:6 }} />
+                  <div style={{ fontSize:13, fontWeight:600 }}>Tap to attach photos / files</div>
+                  <div style={{ fontSize:11, marginTop:3 }}>PNG, JPG, PDF up to 10MB</div>
                 </div>
-                {/* Upload zone */}
-                <div style={{ border: "2px dashed var(--gray-200)", borderRadius: "var(--radius-md)", padding: 24, textAlign: "center", marginBottom: 16, cursor: "pointer", color: "var(--gray-400)" }}>
-                  <Camera size={28} style={{ marginBottom: 8 }} />
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>Tap to attach photos / files · Pakia picha</div>
-                  <div style={{ fontSize: 11, marginTop: 4 }}>PNG, JPG, PDF up to 10MB</div>
-                </div>
-                <button type="submit" className="btn" style={{ width: "100%", justifyContent: "center", height: 46, background: "#7C3AED", color: "white" }}>
-                  Submit Evidence · Wasilisha Ushahidi
+                <button type="submit" style={{ width:"100%", height:46, background:"#7C3AED", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:"pointer" }}>
+                  Submit Evidence · Wasilisha
                 </button>
               </form>
             )}
