@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "../../layouts/DashboardLayout";
-import { Gavel, Plus, X, CheckCircle, AlertTriangle, Search, Calendar, Eye } from "lucide-react";
+import { Gavel, Plus, X, CheckCircle, AlertTriangle, Search, Calendar, Eye, FileText, MessageSquare, Paperclip, Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
@@ -25,15 +25,31 @@ export default function CourtCasesPage() {
   const [err, setErr] = useState("");
   const [search, setSearch] = useState("");
   const [fStatus, setFStatus] = useState("");
-  const [drawer, setDrawer] = useState(null); // selected case for hearings drawer
+  const [drawer, setDrawer] = useState(null); // selected case for case-file drawer
+  const [drawerTab, setDrawerTab] = useState("hearings"); // hearings | evidence | statements
   const [hearings, setHearings] = useState([]);
   const [hModal, setHModal] = useState(false);
+  // Evidence bundle state
+  const [bundle, setBundle] = useState([]);          // case_evidence rows joined with evidence
+  const [evidencePool, setEvidencePool] = useState([]); // available evidence to attach
+  const [eModal, setEModal] = useState(false);
+  // Statements state
+  const [statements, setStatements] = useState([]);
+  const [sModal, setSModal] = useState(false);
 
   const [form, setForm] = useState({ case_number:"", court_name:"", court_type:"magistrate", accused_name:"", charges:"", filed_date:"", prosecutor:"", defence:"" });
   const upd = k => e => setForm(f=>({...f,[k]:e.target.value}));
 
   const [hForm, setHForm] = useState({ hearing_date:"", hearing_type:"mention", magistrate:"", outcome:"", next_date:"", next_hearing_type:"mention", notes:"" });
   const updH = k => e => setHForm(f=>({...f,[k]:e.target.value}));
+
+  // Evidence attach form
+  const [eForm, setEForm] = useState({ evidence_id:"", exhibit_label:"", purpose:"" });
+  const updE = k => e => setEForm(f=>({...f,[k]:e.target.value}));
+
+  // Statement form
+  const [sForm, setSForm] = useState({ statement_type:"witness", deponent_name:"", deponent_nida:"", deponent_phone:"", deponent_address:"", content:"", language:"sw", sworn:false, cautioned:false, witness_bond:false });
+  const updS = k => e => setSForm(f=>({...f,[k]: e.target.type==="checkbox" ? e.target.checked : e.target.value}));
 
   async function load() {
     setLoading(true);
@@ -43,6 +59,25 @@ export default function CourtCasesPage() {
   async function loadHearings(caseId) {
     const { data } = await supabase.from("hearings").select("*").eq("case_id", caseId).order("hearing_date",{ascending:false});
     setHearings(data||[]);
+  }
+  async function loadBundle(caseId) {
+    const { data } = await supabase.from("case_evidence")
+      .select("*, evidence(*, profiles!evidence_collected_by_fkey(full_name))")
+      .eq("court_case_id", caseId).order("created_at",{ascending:false});
+    setBundle(data||[]);
+  }
+  async function loadEvidencePool() {
+    // Show all evidence in the system — officer chooses which to attach
+    const { data } = await supabase.from("evidence")
+      .select("*, cid_cases(case_number,title)")
+      .order("created_at",{ascending:false}).limit(200);
+    setEvidencePool(data||[]);
+  }
+  async function loadStatements(caseId) {
+    const { data } = await supabase.from("statements")
+      .select("*, profiles!statements_taken_by_fkey(full_name,badge)")
+      .eq("court_case_id", caseId).order("taken_at",{ascending:false});
+    setStatements(data||[]);
   }
   useEffect(()=>{ if(profile!==undefined) load(); },[profile]);
 
@@ -79,6 +114,44 @@ export default function CourtCasesPage() {
     } catch(e){ setErr(e.message); } finally{ setSaving(false); }
   }
 
+  async function attachEvidence(e) {
+    e.preventDefault(); setErr(""); setSaving(true);
+    try {
+      const { data, error } = await supabase.from("case_evidence").insert({
+        court_case_id: drawer.id, evidence_id: eForm.evidence_id,
+        exhibit_label: eForm.exhibit_label || null, purpose: eForm.purpose || null,
+        tendered_by: profile?.id || null,
+      }).select("*, evidence(ref_number, type)").single();
+      if (error) throw error;
+      logAction({ profile, action:"attach_evidence", entityType:"case_evidence", entityId:data.id, entityRef:drawer.ref_number, description:`Attached ${data.evidence?.ref_number} (${eForm.exhibit_label||"no label"}) to ${drawer.ref_number}` });
+      setEModal(false);
+      setEForm({ evidence_id:"", exhibit_label:"", purpose:"" });
+      await loadBundle(drawer.id);
+    } catch(err){ setErr(err.message); } finally{ setSaving(false); }
+  }
+
+  async function detachEvidence(ce) {
+    if (!window.confirm(`Remove ${ce.evidence?.ref_number||"this evidence"} from case ${drawer.ref_number}?`)) return;
+    await supabase.from("case_evidence").delete().eq("id", ce.id);
+    logAction({ profile, action:"detach_evidence", entityType:"case_evidence", entityId:ce.id, entityRef:drawer.ref_number, description:`Detached ${ce.evidence?.ref_number||"evidence"} from ${drawer.ref_number}` });
+    await loadBundle(drawer.id);
+  }
+
+  async function submitStatement(e) {
+    e.preventDefault(); setErr(""); setSaving(true);
+    try {
+      const { data, error } = await supabase.from("statements").insert({
+        ...sForm, court_case_id: drawer.id,
+        taken_by: profile?.id || null, station_id: stationId || null,
+      }).select().single();
+      if (error) throw error;
+      logAction({ profile, action:"record_statement", entityType:"statement", entityId:data.id, entityRef:data.ref_number, description:`${sForm.statement_type} statement from ${sForm.deponent_name} on ${drawer.ref_number}` });
+      setSModal(false);
+      setSForm({ statement_type:"witness", deponent_name:"", deponent_nida:"", deponent_phone:"", deponent_address:"", content:"", language:"sw", sworn:false, cautioned:false, witness_bond:false });
+      await loadStatements(drawer.id);
+    } catch(err){ setErr(err.message); } finally{ setSaving(false); }
+  }
+
   async function setVerdict(c, verdict) {
     const updates = { verdict, status:"concluded", concluded_date:new Date().toISOString() };
     await supabase.from("court_cases").update(updates).eq("id", c.id);
@@ -91,7 +164,13 @@ export default function CourtCasesPage() {
     (!fStatus || c.status===fStatus)
   );
 
-  function openDrawer(c) { setDrawer(c); loadHearings(c.id); }
+  function openDrawer(c) {
+    setDrawer(c);
+    setDrawerTab("hearings");
+    loadHearings(c.id);
+    loadBundle(c.id);
+    loadStatements(c.id);
+  }
 
   return (
     <DashboardLayout pageTitle="Court Cases" pageTitle2="Kesi Mahakamani">
@@ -227,29 +306,128 @@ export default function CourtCasesPage() {
               </div>
             )}
 
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-              <h3 style={{ fontSize:14, fontWeight:800, color:"#1E293B", margin:0 }}>HEARINGS · MASIKILIZO ({hearings.length})</h3>
-              <button onClick={()=>{setErr("");setHModal(true);}} style={{ padding:"6px 12px", borderRadius:7, border:"none", background:"#0D3477", color:"white", fontSize:12, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
-                <Plus size={12}/> New Hearing
-              </button>
+            {/* Drawer tab bar */}
+            <div style={{ display:"flex", gap:4, borderBottom:"1px solid #E2E8F0", marginBottom:14 }}>
+              {[
+                { k:"hearings",   label:"Hearings",   icon:Calendar,       count:hearings.length },
+                { k:"evidence",   label:"Evidence",   icon:Paperclip,      count:bundle.length },
+                { k:"statements", label:"Statements", icon:MessageSquare,  count:statements.length },
+              ].map(t=>{
+                const Icon=t.icon;
+                const isActive=drawerTab===t.k;
+                return (
+                  <button key={t.k} onClick={()=>setDrawerTab(t.k)}
+                    style={{ flex:1, padding:"10px 8px", border:"none", background:"transparent", borderBottom:isActive?"2px solid #0D3477":"2px solid transparent", color:isActive?"#0D3477":"#64748B", fontWeight:isActive?700:600, fontSize:13, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+                    <Icon size={14}/> {t.label} <span style={{ background:isActive?"#0D3477":"#E2E8F0", color:isActive?"white":"#64748B", fontSize:10, padding:"1px 7px", borderRadius:999, fontWeight:700 }}>{t.count}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            {hearings.length===0 ? (
-              <div style={{ padding:"40px 20px", textAlign:"center", color:"#94A3B8", border:"1px dashed #E2E8F0", borderRadius:12 }}>
-                <Calendar size={32} style={{ opacity:.3, marginBottom:8 }}/>
-                <div style={{ fontSize:13 }}>No hearings recorded yet</div>
+            {/* HEARINGS TAB */}
+            {drawerTab==="hearings" && <>
+              <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:10 }}>
+                <button onClick={()=>{setErr("");setHModal(true);}} style={{ padding:"6px 12px", borderRadius:7, border:"none", background:"#0D3477", color:"white", fontSize:12, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
+                  <Plus size={12}/> New Hearing
+                </button>
               </div>
-            ) : hearings.map(h=>(
-              <div key={h.id} style={{ background:"white", border:"1px solid #E2E8F0", borderLeft:"3px solid #0D3477", borderRadius:10, padding:14, marginBottom:10 }}>
-                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                  <span style={{ background:"#EFF6FF", color:"#0D3477", padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{h.hearing_type?.replace(/_/g," ")}</span>
-                  <span style={{ fontSize:11, color:"#94A3B8" }}>{h.hearing_date?new Date(h.hearing_date).toLocaleString("en-GB"):"—"}</span>
+              {hearings.length===0 ? (
+                <div style={{ padding:"40px 20px", textAlign:"center", color:"#94A3B8", border:"1px dashed #E2E8F0", borderRadius:12 }}>
+                  <Calendar size={32} style={{ opacity:.3, marginBottom:8 }}/>
+                  <div style={{ fontSize:13 }}>No hearings recorded yet</div>
                 </div>
-                {h.magistrate && <div style={{ fontSize:12, color:"#475569" }}><strong>Magistrate:</strong> {h.magistrate}</div>}
-                {h.outcome && <div style={{ fontSize:13, color:"#1E293B", marginTop:6 }}>{h.outcome}</div>}
-                {h.next_date && <div style={{ fontSize:11, color:"#D97706", marginTop:6, fontWeight:600 }}>📅 Next: {new Date(h.next_date).toLocaleDateString("en-GB")} ({h.next_hearing_type?.replace(/_/g," ")})</div>}
+              ) : hearings.map(h=>(
+                <div key={h.id} style={{ background:"white", border:"1px solid #E2E8F0", borderLeft:"3px solid #0D3477", borderRadius:10, padding:14, marginBottom:10 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                    <span style={{ background:"#EFF6FF", color:"#0D3477", padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{h.hearing_type?.replace(/_/g," ")}</span>
+                    <span style={{ fontSize:11, color:"#94A3B8" }}>{h.hearing_date?new Date(h.hearing_date).toLocaleString("en-GB"):"—"}</span>
+                  </div>
+                  {h.magistrate && <div style={{ fontSize:12, color:"#475569" }}><strong>Magistrate:</strong> {h.magistrate}</div>}
+                  {h.outcome && <div style={{ fontSize:13, color:"#1E293B", marginTop:6 }}>{h.outcome}</div>}
+                  {h.next_date && <div style={{ fontSize:11, color:"#D97706", marginTop:6, fontWeight:600 }}>📅 Next: {new Date(h.next_date).toLocaleDateString("en-GB")} ({h.next_hearing_type?.replace(/_/g," ")})</div>}
+                </div>
+              ))}
+            </>}
+
+            {/* EVIDENCE TAB */}
+            {drawerTab==="evidence" && <>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                <span style={{ fontSize:11, color:"#94A3B8" }}>Evidence tendered as exhibits in this case</span>
+                <button onClick={()=>{setErr("");loadEvidencePool();setEModal(true);}} style={{ padding:"6px 12px", borderRadius:7, border:"none", background:"#0D3477", color:"white", fontSize:12, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
+                  <Plus size={12}/> Attach Evidence
+                </button>
               </div>
-            ))}
+              {bundle.length===0 ? (
+                <div style={{ padding:"40px 20px", textAlign:"center", color:"#94A3B8", border:"1px dashed #E2E8F0", borderRadius:12 }}>
+                  <Paperclip size={32} style={{ opacity:.3, marginBottom:8 }}/>
+                  <div style={{ fontSize:13 }}>No evidence bundled to this case yet</div>
+                  <div style={{ fontSize:11, marginTop:4 }}>Attach exhibits from the evidence store to build the prosecution bundle</div>
+                </div>
+              ) : bundle.map(ce=>{
+                const ev = ce.evidence || {};
+                return (
+                  <div key={ce.id} style={{ background:"white", border:"1px solid #E2E8F0", borderLeft:"3px solid #D97706", borderRadius:10, padding:14, marginBottom:10 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8 }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
+                          {ce.exhibit_label && <span style={{ background:"#D97706", color:"white", padding:"2px 9px", borderRadius:6, fontSize:11, fontWeight:800, fontFamily:"monospace" }}>{ce.exhibit_label}</span>}
+                          <span style={{ background:"#FFFBEB", color:"#92400E", padding:"2px 9px", borderRadius:999, fontSize:10, fontWeight:700, textTransform:"capitalize" }}>{ev.type||"evidence"}</span>
+                          <span style={{ fontSize:11, color:"#94A3B8", fontFamily:"monospace" }}>{ev.ref_number}</span>
+                        </div>
+                        <div style={{ fontSize:13, fontWeight:600, color:"#1E293B" }}>{ev.description||"—"}</div>
+                        {ce.purpose && <div style={{ fontSize:12, color:"#475569", marginTop:4 }}><em>Purpose:</em> {ce.purpose}</div>}
+                        <div style={{ fontSize:10, color:"#94A3B8", marginTop:6 }}>
+                          Collected by {ev.profiles?.full_name||"—"} · Storage: {ev.storage_location||"—"} · Chain count: {ev.chain_count||1}
+                        </div>
+                      </div>
+                      <button onClick={()=>detachEvidence(ce)} title="Remove from case" style={{ width:28, height:28, borderRadius:6, border:"1px solid #FECACA", background:"white", cursor:"pointer", color:"#DC2626", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <Trash2 size={13}/>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </>}
+
+            {/* STATEMENTS TAB */}
+            {drawerTab==="statements" && <>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                <span style={{ fontSize:11, color:"#94A3B8" }}>Witness, victim, suspect & expert statements</span>
+                <button onClick={()=>{setErr("");setSModal(true);}} style={{ padding:"6px 12px", borderRadius:7, border:"none", background:"#0D3477", color:"white", fontSize:12, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
+                  <Plus size={12}/> Record Statement
+                </button>
+              </div>
+              {statements.length===0 ? (
+                <div style={{ padding:"40px 20px", textAlign:"center", color:"#94A3B8", border:"1px dashed #E2E8F0", borderRadius:12 }}>
+                  <MessageSquare size={32} style={{ opacity:.3, marginBottom:8 }}/>
+                  <div style={{ fontSize:13 }}>No statements recorded yet</div>
+                  <div style={{ fontSize:11, marginTop:4 }}>Record witness, victim, suspect or expert statements for this case</div>
+                </div>
+              ) : statements.map(s=>{
+                const typeC = { witness:"#0891B2", victim:"#7C3AED", suspect:"#DC2626", accused:"#DC2626", expert:"#059669" }[s.statement_type] || "#64748B";
+                return (
+                  <div key={s.id} style={{ background:"white", border:"1px solid #E2E8F0", borderLeft:`3px solid ${typeC}`, borderRadius:10, padding:14, marginBottom:10 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6, flexWrap:"wrap", gap:6 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                        <span style={{ background:`${typeC}18`, color:typeC, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{s.statement_type}</span>
+                        <span style={{ fontSize:10, fontFamily:"monospace", color:"#94A3B8" }}>{s.ref_number}</span>
+                      </div>
+                      <span style={{ fontSize:11, color:"#94A3B8" }}>{new Date(s.taken_at).toLocaleString("en-GB")}</span>
+                    </div>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#1E293B" }}>{s.deponent_name}</div>
+                    {s.deponent_nida && <div style={{ fontSize:11, color:"#94A3B8", fontFamily:"monospace" }}>NIDA: {s.deponent_nida}</div>}
+                    {s.content && <div style={{ fontSize:12, color:"#475569", marginTop:8, padding:"8px 10px", background:"#F8FAFC", borderRadius:6, whiteSpace:"pre-wrap", maxHeight:120, overflowY:"auto" }}>{s.content}</div>}
+                    <div style={{ display:"flex", gap:6, marginTop:8, flexWrap:"wrap" }}>
+                      {s.sworn        && <span style={{ background:"#DCFCE7", color:"#166534", padding:"2px 7px", borderRadius:999, fontSize:9, fontWeight:700 }}>SWORN</span>}
+                      {s.cautioned    && <span style={{ background:"#FEF3C7", color:"#92400E", padding:"2px 7px", borderRadius:999, fontSize:9, fontWeight:700 }}>s.33 CAUTIONED</span>}
+                      {s.witness_bond && <span style={{ background:"#EFF6FF", color:"#0D3477", padding:"2px 7px", borderRadius:999, fontSize:9, fontWeight:700 }}>s.34 BOND</span>}
+                      <span style={{ background:"#F1F5F9", color:"#64748B", padding:"2px 7px", borderRadius:999, fontSize:9, fontWeight:700 }}>{s.language?.toUpperCase()}</span>
+                    </div>
+                    <div style={{ fontSize:10, color:"#94A3B8", marginTop:6 }}>Taken by {s.profiles?.full_name||"—"} {s.profiles?.badge?`(${s.profiles.badge})`:""}</div>
+                  </div>
+                );
+              })}
+            </>}
           </div>
         </div>
       )}
@@ -274,6 +452,98 @@ export default function CourtCasesPage() {
               </div>
               <button type="submit" disabled={saving} style={{ width:"100%", height:46, background:saving?"#94A3B8":"#0D3477", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:saving?"not-allowed":"pointer" }}>
                 {saving?"Recording...":"Record Hearing"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Attach evidence modal */}
+      {eModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:101, padding:20 }} onClick={e=>e.target===e.currentTarget&&setEModal(false)}>
+          <div style={{ background:"white", borderRadius:20, padding:28, width:"100%", maxWidth:560, maxHeight:"90vh", overflowY:"auto" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:18 }}>
+              <div style={{ fontSize:17, fontWeight:800, color:"#0D3477" }}>Attach Evidence · Ambatisha Ushahidi</div>
+              <button onClick={()=>setEModal(false)} style={{ width:32, height:32, borderRadius:8, background:"#F1F5F9", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><X size={16}/></button>
+            </div>
+            {err && <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:8, padding:"9px 14px", marginBottom:14, fontSize:12, color:"#B91C1C" }}>{err}</div>}
+            <form onSubmit={attachEvidence}>
+              <div style={{ marginBottom:14 }}>
+                <label style={S.lbl}>Evidence Record *</label>
+                <select value={eForm.evidence_id} onChange={updE("evidence_id")} required style={S.sel}>
+                  <option value="">— Select evidence from store —</option>
+                  {evidencePool.filter(ev => !bundle.some(b=>b.evidence_id===ev.id)).map(ev=>(
+                    <option key={ev.id} value={ev.id}>
+                      {ev.ref_number} · {ev.type} · {ev.description?.slice(0,50)}{ev.description?.length>50?"…":""}
+                    </option>
+                  ))}
+                </select>
+                <div style={{ fontSize:10, color:"#94A3B8", marginTop:4 }}>{evidencePool.length===0 ? "Loading…" : `${evidencePool.length} evidence records in store. Already-attached items are hidden.`}</div>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr", gap:"0 16px" }}>
+                <div style={{ marginBottom:14 }}><label style={S.lbl}>Exhibit Label</label><input value={eForm.exhibit_label} onChange={updE("exhibit_label")} placeholder="e.g. P-1, D-2" style={{ ...S.inp, fontFamily:"monospace", fontWeight:700 }}/></div>
+                <div style={{ marginBottom:14 }}><label style={S.lbl}>Purpose of Tender</label><input value={eForm.purpose} onChange={updE("purpose")} placeholder="Why is this being tendered?" style={S.inp}/></div>
+              </div>
+              <button type="submit" disabled={saving||!eForm.evidence_id} style={{ width:"100%", height:46, background:(saving||!eForm.evidence_id)?"#94A3B8":"#D97706", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:(saving||!eForm.evidence_id)?"not-allowed":"pointer" }}>
+                {saving?"Attaching...":"Attach as Exhibit"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Record statement modal */}
+      {sModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:101, padding:20 }} onClick={e=>e.target===e.currentTarget&&setSModal(false)}>
+          <div style={{ background:"white", borderRadius:20, padding:28, width:"100%", maxWidth:580, maxHeight:"90vh", overflowY:"auto" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:18 }}>
+              <div>
+                <div style={{ fontSize:17, fontWeight:800, color:"#0D3477" }}>Record Statement · Sajili Maelezo</div>
+                <div style={{ fontSize:11, color:"#94A3B8", marginTop:2 }}>Police Force Act s.33 (Records of Interview) & s.34 (Witness Bonds)</div>
+              </div>
+              <button onClick={()=>setSModal(false)} style={{ width:32, height:32, borderRadius:8, background:"#F1F5F9", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><X size={16}/></button>
+            </div>
+            {err && <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:8, padding:"9px 14px", marginBottom:14, fontSize:12, color:"#B91C1C" }}>{err}</div>}
+            <form onSubmit={submitStatement}>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 16px" }}>
+                <div style={{ marginBottom:14 }}><label style={S.lbl}>Statement Type *</label>
+                  <select value={sForm.statement_type} onChange={updS("statement_type")} style={S.sel}>
+                    {["witness","victim","suspect","accused","expert"].map(t=><option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom:14 }}><label style={S.lbl}>Language</label>
+                  <select value={sForm.language} onChange={updS("language")} style={S.sel}>
+                    <option value="sw">Swahili</option><option value="en">English</option>
+                  </select>
+                </div>
+                <div style={{ marginBottom:14 }}><label style={S.lbl}>Deponent Name *</label><input value={sForm.deponent_name} onChange={updS("deponent_name")} required style={S.inp}/></div>
+                <div style={{ marginBottom:14 }}><label style={S.lbl}>NIDA</label><input value={sForm.deponent_nida} onChange={updS("deponent_nida")} style={S.inp}/></div>
+                <div style={{ marginBottom:14 }}><label style={S.lbl}>Phone</label><input value={sForm.deponent_phone} onChange={updS("deponent_phone")} style={S.inp}/></div>
+                <div style={{ marginBottom:14 }}><label style={S.lbl}>Address</label><input value={sForm.deponent_address} onChange={updS("deponent_address")} style={S.inp}/></div>
+                <div style={{ marginBottom:14, gridColumn:"1/-1" }}>
+                  <label style={S.lbl}>Statement Content *</label>
+                  <textarea value={sForm.content} onChange={updS("content")} rows={6} required placeholder="Record the deponent's statement verbatim..." style={{ ...S.inp, height:"auto", padding:"10px 12px", resize:"vertical", fontFamily:"inherit", lineHeight:1.5 }}/>
+                </div>
+                <div style={{ gridColumn:"1/-1", marginBottom:16, padding:"12px 14px", background:"#F8FAFC", borderRadius:9, border:"1px solid #E2E8F0" }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#64748B", marginBottom:8, letterSpacing:.4 }}>LEGAL FLAGS</div>
+                  <div style={{ display:"flex", gap:14, flexWrap:"wrap" }}>
+                    <label style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#475569", cursor:"pointer" }}>
+                      <input type="checkbox" checked={sForm.sworn} onChange={updS("sworn")} style={{ accentColor:"#059669" }}/>
+                      Sworn on oath
+                    </label>
+                    <label style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#475569", cursor:"pointer" }}>
+                      <input type="checkbox" checked={sForm.cautioned} onChange={updS("cautioned")} style={{ accentColor:"#D97706" }}/>
+                      s.33 caution given (suspect)
+                    </label>
+                    <label style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#475569", cursor:"pointer" }}>
+                      <input type="checkbox" checked={sForm.witness_bond} onChange={updS("witness_bond")} style={{ accentColor:"#0D3477" }}/>
+                      s.34 witness bond executed
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" disabled={saving} style={{ width:"100%", height:46, background:saving?"#94A3B8":"#0D3477", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:saving?"not-allowed":"pointer" }}>
+                {saving?"Recording...":"Record Statement"}
               </button>
             </form>
           </div>
