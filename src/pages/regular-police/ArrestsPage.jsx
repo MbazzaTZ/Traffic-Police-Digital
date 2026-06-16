@@ -18,6 +18,7 @@ export default function ArrestsPage() {
   const { profile, stationId, regionId, districtId } = useCurrentUser();
   const [arrests,  setArrests]  = useState([]);
   const [loading,  setLoading]  = useState(true);
+  const [loadErr,  setLoadErr]  = useState("");
   const [modal,    setModal]    = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [done,     setDone]     = useState(null);
@@ -31,7 +32,7 @@ export default function ArrestsPage() {
     let q = supabase.from("arrests").select("*, profiles!arrests_arrested_by_fkey(full_name,badge)").order("created_at",{ascending:false}).limit(100);
     if (stationId) q = q.eq("station_id", stationId);
     const { data, error } = await q;
-    if (error) console.error(error);
+    if (error) { console.error(error); setLoadErr('Could not load data: ' + error.message); } else setLoadErr('');
     setArrests(data||[]);
     setLoading(false);
   }
@@ -93,6 +94,12 @@ export default function ArrestsPage() {
           style={{ border:"none", outline:"none", fontSize:13, width:"100%", background:"transparent" }}/>
       </div>
 
+      {loadErr && (
+        <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:10, padding:"10px 14px", marginBottom:12, display:"flex", justifyContent:"space-between", gap:10 }}>
+          <span style={{ fontSize:13, color:"#B91C1C" }}>{loadErr}</span>
+          <button onClick={()=>setLoadErr("")} style={{ background:"transparent", border:"none", color:"#B91C1C", cursor:"pointer", fontSize:13, fontWeight:700 }}>×</button>
+        </div>
+      )}
       <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
         {loading ? (
           <div style={{ padding:"50px", textAlign:"center", color:"#94A3B8" }}>Loading...</div>

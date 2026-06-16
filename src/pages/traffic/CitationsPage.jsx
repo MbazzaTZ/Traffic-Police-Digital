@@ -43,7 +43,7 @@ export default function CitationsPage() {
       q,
       supabase.from("fine_schedule").select("*").eq("active", true).order("code"),
     ]);
-    if (cits.error) console.error(cits.error);
+    if (cits.error) { console.error(cits.error); setErr("Could not load citations: " + cits.error.message); }
     setCitations(cits.data||[]);
     setSchedule(sched.data||[]);
     setLoading(false);
@@ -110,6 +110,13 @@ export default function CitationsPage() {
       <div style={{ display:"flex", alignItems:"center", gap:8, background:"white", border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", height:40, marginBottom:14, maxWidth:360 }}>
         <Search size={14} color="#94A3B8"/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search plate, driver, ref..." style={{ border:"none", outline:"none", fontSize:13, width:"100%", background:"transparent" }}/>
       </div>
+
+      {err && !modal && (
+        <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:10, padding:"10px 14px", marginBottom:12, display:"flex", justifyContent:"space-between", gap:10 }}>
+          <span style={{ fontSize:13, color:"#B91C1C" }}>{err}</span>
+          <button onClick={()=>setErr("")} style={{ background:"transparent", border:"none", color:"#B91C1C", cursor:"pointer", fontSize:13, fontWeight:700 }}>×</button>
+        </div>
+      )}
 
       <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
         {loading ? <div style={{ padding:"50px", textAlign:"center", color:"#94A3B8" }}>Loading...</div>

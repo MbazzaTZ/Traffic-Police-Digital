@@ -224,8 +224,20 @@ export function AppDataProvider({ children }) {
     await loadAll(); return profile;
   }
 
-  async function deleteStation(id) { await supabase.from("stations").delete().eq("id",id); await loadAll(); }
-  async function deleteOfficer(id) { await supabase.from("profiles").delete().eq("id",id); await loadAll(); }
+  // Destructive deletes require an explicit confirmation token.
+  // Callers MUST pass { confirm: true } - this is a guardrail so a
+  // future caller that wires a button without thinking can't wipe
+  // a station + cascade FKs by accident.
+  async function deleteStation(id, opts = {}) {
+    if (!opts.confirm) throw new Error("deleteStation requires { confirm: true }");
+    await supabase.from("stations").delete().eq("id", id);
+    await loadAll();
+  }
+  async function deleteOfficer(id, opts = {}) {
+    if (!opts.confirm) throw new Error("deleteOfficer requires { confirm: true }");
+    await supabase.from("profiles").delete().eq("id", id);
+    await loadAll();
+  }
 
   return (
     <Ctx.Provider value={{

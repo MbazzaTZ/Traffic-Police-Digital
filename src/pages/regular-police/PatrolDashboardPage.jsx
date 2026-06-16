@@ -11,6 +11,7 @@ export default function PatrolDashboardPage() {
   const [elapsed,  setElapsed]  = useState("00:00:00");
   const [patrols,  setPatrols]  = useState([]);
   const [loading,  setLoading]  = useState(true);
+  const [err,      setErr]      = useState("");
   const [activeId, setActiveId] = useState(null);
 
   // GPS tracker - runs while on patrol
@@ -39,7 +40,8 @@ export default function PatrolDashboardPage() {
       region_id:regionId||null, district_id:districtId||null,
       start_time:new Date().toISOString(), status:"active",
     }).select().single();
-    if (error) { console.error(error); return; }
+    if (error) { setErr(`Could not start patrol: ${error.message}`); return; }
+    setErr("");
     setActiveId(data.id);
     setActive(true); startRef.current = Date.now();
     timerRef.current = setInterval(()=>{
@@ -71,6 +73,12 @@ export default function PatrolDashboardPage() {
         <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Patrol Dashboard <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Doria</span></h1>
         <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{today.length} patrols today · {Math.floor(totalHrs/60)}h {totalHrs%60}m total logged</p>
       </div>
+      {err && (
+        <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:10, padding:"10px 14px", marginBottom:14, display:"flex", alignItems:"center", justifyContent:"space-between", gap:10 }}>
+          <span style={{ fontSize:13, color:"#B91C1C" }}>{err}</span>
+          <button onClick={()=>setErr("")} style={{ background:"transparent", border:"none", color:"#B91C1C", cursor:"pointer", fontSize:13, fontWeight:700 }}>×</button>
+        </div>
+      )}
 
       {/* Patrol Control */}
       <div style={{ background:"linear-gradient(135deg,#03102B,#082A63,#0D3477)", borderRadius:18, padding:"24px 28px", color:"white", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16, marginBottom:20, boxShadow:"0 8px 28px rgba(3,16,43,.3)" }}>

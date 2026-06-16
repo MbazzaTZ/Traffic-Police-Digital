@@ -35,7 +35,7 @@ export default function IncidentReportsPage() {
     let q = supabase.from("incidents").select("*, profiles!incidents_reported_by_fkey(full_name,badge)").order("created_at", { ascending:false }).limit(100);
     if (stationId) q = q.eq("station_id", stationId);
     const { data, error } = await q;
-    if (error) console.error(error);
+    if (error) { console.error(error); setLoadErr('Could not load data: ' + error.message); } else setLoadErr('');
     setIncidents(data || []);
     setLoading(false);
   }
@@ -118,6 +118,12 @@ export default function IncidentReportsPage() {
         </select>
       </div>
 
+      {loadErr && (
+        <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:10, padding:"10px 14px", marginBottom:12, display:"flex", justifyContent:"space-between", gap:10 }}>
+          <span style={{ fontSize:13, color:"#B91C1C" }}>{loadErr}</span>
+          <button onClick={()=>setLoadErr("")} style={{ background:"transparent", border:"none", color:"#B91C1C", cursor:"pointer", fontSize:13, fontWeight:700 }}>×</button>
+        </div>
+      )}
       {/* Table */}
       <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
         {loading ? (

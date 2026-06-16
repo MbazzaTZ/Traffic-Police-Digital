@@ -25,6 +25,9 @@ export default function CourtCasesPage() {
   const [err, setErr] = useState("");
   const [search, setSearch] = useState("");
   const [fStatus, setFStatus] = useState("");
+  // Inline confirm dialog (replaces window.confirm).
+  // confirmAction = { title, message, onConfirm, danger }
+  const [confirmAction, setConfirmAction] = useState(null);
   const [drawer, setDrawer] = useState(null); // selected case for case-file drawer
   const [drawerTab, setDrawerTab] = useState("hearings"); // hearings | evidence | statements
   const [hearings, setHearings] = useState([]);
@@ -131,10 +134,16 @@ export default function CourtCasesPage() {
   }
 
   async function detachEvidence(ce) {
-    if (!window.confirm(`Remove ${ce.evidence?.ref_number||"this evidence"} from case ${drawer.ref_number}?`)) return;
-    await supabase.from("case_evidence").delete().eq("id", ce.id);
-    logAction({ profile, action:"detach_evidence", entityType:"case_evidence", entityId:ce.id, entityRef:drawer.ref_number, description:`Detached ${ce.evidence?.ref_number||"evidence"} from ${drawer.ref_number}` });
-    await loadBundle(drawer.id);
+    setConfirmAction({
+      title:"Remove evidence from case?",
+      message:`This will remove ${ce.evidence?.ref_number || "this evidence"} from case ${drawer.ref_number}. The evidence record itself remains in the store.`,
+      danger:true,
+      onConfirm: async () => {
+        await supabase.from("case_evidence").delete().eq("id", ce.id);
+        logAction({ profile, action:"detach_evidence", entityType:"case_evidence", entityId:ce.id, entityRef:drawer.ref_number, description:`Detached ${ce.evidence?.ref_number||"evidence"} from ${drawer.ref_number}` });
+        await loadBundle(drawer.id);
+      },
+    });
   }
 
   async function submitStatement(e) {
@@ -297,7 +306,12 @@ export default function CourtCasesPage() {
                 <div style={{ fontSize:12, fontWeight:700, color:"#64748B", marginBottom:8 }}>QUICK VERDICT</div>
                 <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
                   {VERDICTS.filter(v=>v!=="pending").map(v=>(
-                    <button key={v} onClick={()=>{ if(window.confirm(`Set verdict to ${v.replace(/_/g," ")} and conclude case?`)) setVerdict(drawer, v); }}
+                    <button key={v} onClick={()=>setConfirmAction({
+                      title:`Conclude case with verdict: ${v.replace(/_/g," ").toUpperCase()}?`,
+                      message:`This will set the verdict to ${v.replace(/_/g," ")} and close case ${drawer.ref_number}. This is recorded in the audit log and cannot be undone from this screen.`,
+                      danger:v==="guilty",
+                      onConfirm: () => setVerdict(drawer, v),
+                    })}
                       style={{ padding:"6px 12px", borderRadius:7, border:`1px solid ${v==="guilty"?"#DC2626":v==="not_guilty"?"#059669":"#94A3B8"}`, background:"white", color:v==="guilty"?"#DC2626":v==="not_guilty"?"#059669":"#64748B", cursor:"pointer", fontSize:11, fontWeight:700, textTransform:"capitalize" }}>
                       {v.replace(/_/g," ")}
                     </button>
@@ -546,6 +560,30 @@ export default function CourtCasesPage() {
                 {saving?"Recording...":"Record Statement"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation dialog (replaces window.confirm) */}
+      {confirmAction && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:120, padding:20 }} onClick={e=>e.target===e.currentTarget&&setConfirmAction(null)}>
+          <div style={{ background:"white", borderRadius:14, padding:24, width:"100%", maxWidth:420, boxShadow:"0 20px 60px rgba(0,0,0,.3)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+              <div style={{ width:36, height:36, borderRadius:10, background:confirmAction.danger?"#FEF2F2":"#EFF6FF", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <AlertTriangle size={18} color={confirmAction.danger?"#DC2626":"#0D3477"}/>
+              </div>
+              <h3 style={{ margin:0, fontSize:15, fontWeight:800, color:"#0F172A" }}>{confirmAction.title}</h3>
+            </div>
+            <p style={{ fontSize:13, color:"#64748B", lineHeight:1.5, margin:"0 0 18px" }}>{confirmAction.message}</p>
+            <div style={{ display:"flex", justifyContent:"flex-end", gap:8 }}>
+              <button onClick={()=>setConfirmAction(null)} style={{ padding:"8px 16px", borderRadius:8, border:"1px solid #E2E8F0", background:"white", color:"#475569", fontSize:13, fontWeight:600, cursor:"pointer" }}>
+                Cancel
+              </button>
+              <button onClick={()=>{ confirmAction.onConfirm(); setConfirmAction(null); }}
+                style={{ padding:"8px 16px", borderRadius:8, border:"none", background:confirmAction.danger?"#DC2626":"#0D3477", color:"white", fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                Confirm
+              </button>
+            </div>
           </div>
         </div>
       )}
