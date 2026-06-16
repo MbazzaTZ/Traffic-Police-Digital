@@ -167,6 +167,84 @@ export async function exportPF3(f, officerName, stationName) {
   doc.save(`PF3_${f.ref_number}.pdf`);
 }
 
+// ── Firearm License Certificate PDF ──
+export async function exportFirearmLicense(lic, officerName, stationName) {
+  const { jsPDF } = await getJsPDF();
+  const doc = new jsPDF();
+  header(doc, "FIREARM LICENSE CERTIFICATE", lic.license_no || lic.ref_number);
+
+  doc.setFontSize(9);
+  doc.setTextColor(80,80,80);
+  doc.text("Leseni ya Silaha · Issued under the Arms and Ammunition Act", 105, 44, { align: "center" });
+
+  let y = 56;
+  // License number box
+  doc.setFillColor(...GOLD);
+  doc.rect(14, y, 182, 18, "F");
+  doc.setTextColor(255,255,255);
+  doc.setFont("helvetica","bold"); doc.setFontSize(11);
+  doc.text("LICENSE NUMBER", 105, y+7, { align:"center" });
+  doc.setFontSize(16);
+  doc.text(lic.license_no || "—", 105, y+15, { align:"center" });
+  doc.setTextColor(0,0,0);
+  y += 28;
+
+  const row = (label, value) => {
+    doc.setFont("helvetica","bold"); doc.setFontSize(10);
+    doc.text(label, 14, y);
+    doc.setFont("helvetica","normal");
+    doc.text(String(value || "—"), 85, y);
+    y += 8;
+  };
+
+  doc.setFont("helvetica","bold"); doc.setFontSize(11);
+  doc.text("HOLDER · MMILIKI", 14, y); y += 9;
+  doc.setFontSize(10);
+  row("Full Name:", lic.holder_name);
+  row("NIDA:", lic.holder_nida);
+  row("License Type:", (lic.license_type||"").replace(/_/g," ").toUpperCase());
+
+  y += 4;
+  doc.setFont("helvetica","bold"); doc.setFontSize(11);
+  doc.text("AUTHORIZED FIREARM · SILAHA", 14, y); y += 9;
+  doc.setFontSize(10);
+  if (lic.firearms) {
+    row("Serial No:", lic.firearms.serial_number);
+    row("Make / Model:", `${lic.firearms.make || ""} ${lic.firearms.model || ""}`);
+  } else {
+    row("Firearm:", "Not linked to specific weapon");
+  }
+
+  y += 4;
+  doc.setFont("helvetica","bold"); doc.setFontSize(11);
+  doc.text("VALIDITY · UHALALI", 14, y); y += 9;
+  doc.setFontSize(10);
+  row("Issue Date:", lic.issue_date ? new Date(lic.issue_date).toLocaleDateString("en-GB") : "—");
+  row("Expiry Date:", lic.expiry_date ? new Date(lic.expiry_date).toLocaleDateString("en-GB") : "—");
+  row("Issued By:", officerName);
+  row("Station:", stationName || "—");
+  row("Status:", (lic.status || "ACTIVE").toUpperCase());
+
+  // Signature lines
+  y += 14;
+  doc.setDrawColor(150,150,150);
+  doc.line(20, y, 90, y);
+  doc.line(120, y, 190, y);
+  y += 5;
+  doc.setFontSize(9); doc.setTextColor(100,100,100);
+  doc.text("Issuing Officer Signature", 55, y, { align:"center" });
+  doc.text("Holder Signature", 155, y, { align:"center" });
+
+  // Warning footer
+  y += 14;
+  doc.setFontSize(8); doc.setTextColor(150,30,30);
+  doc.text("This license must be presented on demand to any police officer.", 105, y, { align:"center" });
+  doc.text("Loss, theft, or transfer must be reported within 24 hours.", 105, y+5, { align:"center" });
+
+  footer(doc);
+  doc.save(`License_${lic.license_no || lic.ref_number}.pdf`);
+}
+
 // ── Generic table report PDF ──
 export async function exportReport(title, columns, rows, subtitle) {
   const { jsPDF, autoTable } = await getJsPDF();

@@ -27,6 +27,7 @@ import VehicleProfilePage     from "../pages/regular-police/VehicleProfilePage";
 import DetentionsPage         from "../pages/regular-police/DetentionsPage";
 import PF3FormsPage           from "../pages/regular-police/PF3FormsPage";
 import RegistriesPage         from "../pages/regular-police/RegistriesPage";
+import FirearmsPage           from "../pages/regular-police/FirearmsPage";
 
 import TrafficDashboard  from "../pages/traffic/TrafficDashboard";
 import CitationsPage     from "../pages/traffic/CitationsPage";
@@ -127,6 +128,7 @@ export default function AppRoutes() {
       <Route path="/detentions"    element={<Guard roles={OFFICER}><DetentionsPage/></Guard>}/>
       <Route path="/pf3"           element={<Guard roles={OFFICER}><PF3FormsPage/></Guard>}/>
       <Route path="/registries"    element={<Guard roles={OFFICER}><RegistriesPage/></Guard>}/>
+      <Route path="/firearms"      element={<Guard roles={OFFICER}><FirearmsPage/></Guard>}/>
       <Route path="/patrols"       element={<Guard roles={OFFICER}><PatrolDashboardPage/></Guard>}/>
       <Route path="/evidence"      element={<Guard roles={OFFICER}><EvidenceDashboardPage/></Guard>}/>
       <Route path="/messages"      element={<Guard roles={OFFICER}><MessagesPage/></Guard>}/>
