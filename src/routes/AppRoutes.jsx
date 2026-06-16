@@ -47,6 +47,7 @@ import CommandOfficers from "../pages/command/CommandOfficers";
 import CommandReports from "../pages/command/CommandReports";
 import CommandAlerts from "../pages/command/CommandAlerts";
 import AuditLogsPage from "../pages/command/AuditLogsPage";
+import CommandPatrolMap from "../pages/command/CommandPatrolMap";
 import NidaSearchPage from "../pages/cid/NidaSearchPage";
 import ApprovalsPage from "../pages/shared/ApprovalsPage";
 
@@ -115,6 +116,7 @@ export default function AppRoutes() {
       <Route path="/command/officers"  element={<Guard roles={COMMAND}><CommandOfficers/></Guard>}/>
       <Route path="/command/reports"   element={<Guard roles={COMMAND}><CommandReports/></Guard>}/>
       <Route path="/command/audit"     element={<Guard roles={COMMAND}><AuditLogsPage/></Guard>}/>
+      <Route path="/command/patrol-map" element={<Guard roles={COMMAND}><CommandPatrolMap/></Guard>}/>
       <Route path="/command/approvals" element={<Guard roles={COMMAND}><ApprovalsPage/></Guard>}/>
       <Route path="/command/settings"  element={<Guard roles={COMMAND}><CommandCenter/></Guard>}/>
 

@@ -3,6 +3,7 @@ import DashboardLayout from "../../layouts/DashboardLayout";
 import { Play, Square, MapPin, Navigation, Clock } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useGPSTracker } from "../../hooks/useGPSTracker";
 
 export default function PatrolDashboardPage() {
   const { profile, stationId, regionId, districtId, stationName } = useCurrentUser();
@@ -11,6 +12,9 @@ export default function PatrolDashboardPage() {
   const [patrols,  setPatrols]  = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [activeId, setActiveId] = useState(null);
+
+  // GPS tracker - runs while on patrol
+  useGPSTracker({ enabled: active, officerId: profile?.id, patrolId: activeId });
   const timerRef = useRef(null);
   const startRef = useRef(null);
 
