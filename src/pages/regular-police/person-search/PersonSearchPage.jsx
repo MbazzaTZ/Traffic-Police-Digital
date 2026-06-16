@@ -8,6 +8,7 @@ const METHODS = [
   { key:"name",  icon:User,       label:"Full Name",     sw:"Jina Kamili",     ph:"e.g. John Doe Mwangi" },
   { key:"nida",  icon:CreditCard, label:"NIDA",          sw:"Nambari ya NIDA", ph:"19901231-12345-00001-1" },
   { key:"plate", icon:Car,        label:"Vehicle Plate", sw:"Nambari ya Gari", ph:"e.g. T 123 ABC" },
+  { key:"license", icon:CreditCard, label:"Driver License", sw:"Leseni ya Udereva", ph:"e.g. TZ-DL-001234" },
 ];
 
 export default function PersonSearchPage() {
@@ -24,7 +25,10 @@ export default function PersonSearchPage() {
     const q = query.trim();
     const m = METHODS[method].key;
 
-    if (m === "plate") {
+    if (m === "license") {
+      const { data } = await supabase.from("persons").select("*").ilike("driver_license",`%${q}%`);
+      setResults({ kind:"person", query:q, persons:data||[], arrests:[], suspects:[], wanted:[] });
+    } else if (m === "plate") {
       const [veh, cits] = await Promise.all([
         supabase.from("vehicles").select("*").ilike("plate_number",`%${q}%`),
         supabase.from("traffic_citations").select("*").ilike("vehicle_plate",`%${q}%`).order("created_at",{ascending:false}),

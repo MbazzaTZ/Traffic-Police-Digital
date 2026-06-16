@@ -81,12 +81,14 @@ export default function PersonProfilePage() {
               [Calendar, "Date of Birth", person.dob ? new Date(person.dob).toLocaleDateString("en-GB") : "Unknown"],
               [User, "Gender", person.gender],
               [MapPin, "Nationality", person.nationality],
+              [User, "Tribe · Kabila", person.tribe||"—"],
               [Phone, "Phone", person.phone||"—"],
+              [FileText, "Driver License", person.driver_license||"—"],
               [Briefcase, "Occupation", person.occupation||"—"],
               [MapPin, "Region", person.regions?.name||"—"],
               [MapPin, "Address", person.address||"—"],
-            ].map(([Icon,k,v],i)=>(
-              <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:i<6?"1px solid #F8FAFC":"none" }}>
+            ].map(([Icon,k,v],i,arr)=>(
+              <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:i<arr.length-1?"1px solid #F8FAFC":"none" }}>
                 <div style={{ width:30, height:30, borderRadius:8, background:"#EFF6FF", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><Icon size={14} color="#0D3477"/></div>
                 <div style={{ flex:1, minWidth:0 }}><div style={{ fontSize:10, color:"#94A3B8", fontWeight:700 }}>{k.toUpperCase()}</div><div style={{ fontSize:13, fontWeight:600, color:"#1E293B" }}>{v}</div></div>
               </div>
