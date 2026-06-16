@@ -48,7 +48,7 @@ export default function CreateUserPage() {
   const [createdOfficer, setCreatedOfficer] = useState(null);
 
   const [form, setForm] = useState({
-    full_name:"", badge:"", nida:"", phone:"", email:"",
+    full_name:"", badge:"", phone:"", email:"",
     rank:"", role:"", department:"",
     region:"", district:"", station_id:"",
     password:"", confirm_password:"", notes:"",
@@ -84,7 +84,7 @@ export default function CreateUserPage() {
 
   function reset() {
     setDone(false); setStep(1); setErr(""); setCreatedOfficer(null);
-    setForm({ full_name:"", badge:"", nida:"", phone:"", email:"", rank:"", role:"", department:"", region:"", district:"", station_id:"", password:"", confirm_password:"", notes:"" });
+    setForm({ full_name:"", badge:"", phone:"", email:"", rank:"", role:"", department:"", region:"", district:"", station_id:"", password:"", confirm_password:"", notes:"" });
   }
 
   if (done) return (
@@ -154,9 +154,6 @@ export default function CreateUserPage() {
                   </Field>
                   <Field label="Badge Number · Nambari ya Beji">
                     <input value={form.badge} onChange={upd("badge")} placeholder="e.g. TZP-2026-00201" required style={S.inp} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"} />
-                  </Field>
-                  <Field label="NIDA Number" required={false}>
-                    <input value={form.nida} onChange={upd("nida")} placeholder="19xxxxxx-xxxxx-xxxxx-x" style={S.inp} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"} />
                   </Field>
                   <Field label="Phone · Simu">
                     <input value={form.phone} onChange={upd("phone")} placeholder="+255 712 345 678" type="tel" required style={S.inp} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"} />
