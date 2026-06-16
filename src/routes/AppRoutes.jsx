@@ -162,6 +162,7 @@ export default function AppRoutes() {
       <Route path="/traffic/vehicles"    element={<Guard roles={TRAFFIC}><VehicleSearchPage/></Guard>}/>
       <Route path="/traffic/checkpoints" element={<Guard roles={TRAFFIC}><CheckpointsPage/></Guard>}/>
       <Route path="/traffic/payments"    element={<Guard roles={OFFICER}><PaymentsPage/></Guard>}/>
+      <Route path="/payments"            element={<Guard roles={OFFICER}><PaymentsPage/></Guard>}/>
       <Route path="/traffic/settings"    element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
       <Route path="/traffic/profile"     element={<Guard roles={TRAFFIC}><MyProfilePage/></Guard>}/>
       <Route path="/traffic/approvals"   element={<Guard roles={TRAFFIC}><ApprovalsPage/></Guard>}/>

@@ -1,10 +1,19 @@
 import { useState, useEffect } from "react";
 import TrafficLayout from "../../layouts/TrafficLayout";
+import DashboardLayout from "../../layouts/DashboardLayout";
+import CIDLayout from "../../layouts/CIDLayout";
 import { Banknote, Plus, X, CheckCircle, AlertTriangle, Search, Download, Receipt } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
 import { exportPaymentReceipt } from "../../lib/pdfExport";
+
+// Render in the layout that matches the viewing officer's role
+function RoleLayout({ role, children, ...props }) {
+  if (role === "traffic_officer") return <TrafficLayout {...props}>{children}</TrafficLayout>;
+  if (role === "cid_officer" || role === "forensic_officer") return <CIDLayout {...props}>{children}</CIDLayout>;
+  return <DashboardLayout {...props}>{children}</DashboardLayout>;
+}
 
 const METHOD_C = { mpesa:"#16A34A", tigo_pesa:"#0891B2", airtel_money:"#DC2626", halopesa:"#7C3AED", ezypesa:"#D97706", bank_transfer:"#0D3477", cash:"#64748B" };
 const METHODS = ["mpesa","tigo_pesa","airtel_money","halopesa","ezypesa","bank_transfer","cash"];
@@ -108,7 +117,7 @@ export default function PaymentsPage() {
   const totalOutstanding = outstanding.reduce((s,c)=>s+((c.fine_amount||0)-(c.amount_paid||0)),0);
 
   return (
-    <TrafficLayout pageTitle="Payments" pageTitle2="Malipo">
+    <RoleLayout role={profile?.role} pageTitle="Payments" pageTitle2="Malipo">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
         <div>
           <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Fine Payments <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Malipo ya Faini</span></h1>
@@ -281,6 +290,6 @@ export default function PaymentsPage() {
           </div>
         </div>
       )}
-    </TrafficLayout>
+    </RoleLayout>
   );
 }
