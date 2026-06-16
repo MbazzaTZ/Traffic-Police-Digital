@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "../../layouts/DashboardLayout";
-import { Gavel, Plus, X, CheckCircle, AlertTriangle, Search, Calendar, Eye, FileText, MessageSquare, Paperclip, Trash2 } from "lucide-react";
+import { Gavel, Plus, X, CheckCircle, AlertTriangle, Search, Calendar, Eye, FileText, MessageSquare, Paperclip, Trash2, Download } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
+import { exportCourtFile } from "../../lib/pdfExport";
 
 const STATUS_C = { open:"#0891B2", active:"#D97706", concluded:"#059669", appealed:"#7C3AED", withdrawn:"#64748B", dismissed:"#64748B" };
 const VERDICTS = ["pending","guilty","not_guilty","dismissed","withdrawn"];
@@ -16,7 +17,7 @@ const S = {
 };
 
 export default function CourtCasesPage() {
-  const { profile, stationId, regionId } = useCurrentUser();
+  const { profile, stationId, regionId, fullName, stationName } = useCurrentUser();
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
@@ -161,6 +162,24 @@ export default function CourtCasesPage() {
     } catch(err){ setErr(err.message); } finally{ setSaving(false); }
   }
 
+  async function downloadCourtFile() {
+    if (!drawer) return;
+    try {
+      await exportCourtFile(
+        { caseRecord:drawer, hearings, bundle, statements },
+        fullName || "—",
+        stationName || "—"
+      );
+      logAction({
+        profile, action:"export_court_file",
+        entityType:"court_case", entityId:drawer.id, entityRef:drawer.ref_number,
+        description:`Exported court file PDF (${hearings.length}H, ${bundle.length}E, ${statements.length}S)`,
+      });
+    } catch (e) {
+      setErr(`Could not generate court file: ${e.message}`);
+    }
+  }
+
   async function setVerdict(c, verdict) {
     const updates = { verdict, status:"concluded", concluded_date:new Date().toISOString() };
     await supabase.from("court_cases").update(updates).eq("id", c.id);
@@ -298,7 +317,14 @@ export default function CourtCasesPage() {
                 <div style={{ fontSize:13, color:"#475569" }}>{drawer.charges}</div>
                 <div style={{ fontSize:12, color:"#94A3B8", marginTop:4 }}>{drawer.court_name} · {drawer.case_number||"no court no"}</div>
               </div>
-              <button onClick={()=>setDrawer(null)} style={{ width:32, height:32, borderRadius:8, background:"#F1F5F9", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><X size={16}/></button>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <button onClick={downloadCourtFile}
+                  title="Download Court File PDF (prosecution bundle)"
+                  style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 12px", borderRadius:8, border:"1px solid #0D3477", background:"#0D3477", color:"white", cursor:"pointer", fontSize:12, fontWeight:700 }}>
+                  <Download size={13}/> Court File
+                </button>
+                <button onClick={()=>setDrawer(null)} style={{ width:32, height:32, borderRadius:8, background:"#F1F5F9", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><X size={16}/></button>
+              </div>
             </div>
 
             {drawer.status !== "concluded" && (

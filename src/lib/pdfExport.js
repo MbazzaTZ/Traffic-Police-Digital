@@ -326,7 +326,225 @@ export async function exportPaymentReceipt(p, officerName, stationName) {
   doc.save(`Receipt_${p.ref_number}.pdf`);
 }
 
-// ── Generic table report PDF ──
+// ── Court File PDF (full prosecution bundle) ──
+// Compiles charges + hearings + evidence + statements into one
+// official document the IO can hand to the prosecutor.
+export async function exportCourtFile({ caseRecord, hearings = [], bundle = [], statements = [] }, officerName = "—", stationName = "—") {
+  const { jsPDF, autoTable } = await getJsPDF();
+  const doc = new jsPDF();
+  header(doc, "COURT CASE FILE - JALADA LA KESI", caseRecord.ref_number);
+
+  // ── Cover page: case summary ──
+  let y = 50;
+  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...NAVY);
+  doc.text("CASE SUMMARY - MUHTASARI WA KESI", 14, y);
+  y += 7;
+  doc.setDrawColor(...GOLD); doc.setLineWidth(0.6);
+  doc.line(14, y, 196, y); y += 8;
+
+  const row = (label, value) => {
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(80,80,80);
+    doc.text(label, 14, y);
+    doc.setFont("helvetica","normal"); doc.setTextColor(0,0,0); doc.setFontSize(10);
+    const wrapped = doc.splitTextToSize(String(value || "-"), 110);
+    doc.text(wrapped, 70, y);
+    y += Math.max(7, wrapped.length * 5);
+  };
+  row("Internal Ref:",      caseRecord.ref_number);
+  row("Court Case No:",     caseRecord.case_number);
+  row("Accused:",           caseRecord.accused_name);
+  row("Charges:",           caseRecord.charges);
+  row("Court:",             `${caseRecord.court_name || "-"} (${(caseRecord.court_type||"").replace(/_/g," ")})`);
+  row("Filed Date:",        caseRecord.filed_date ? new Date(caseRecord.filed_date).toLocaleDateString("en-GB") : "-");
+  row("Status:",            (caseRecord.status || "-").toUpperCase());
+  row("Verdict:",           caseRecord.verdict ? caseRecord.verdict.replace(/_/g," ").toUpperCase() : "PENDING");
+  row("Sentence:",          caseRecord.sentence);
+  row("Prosecutor:",        caseRecord.prosecutor);
+  row("Defence Counsel:",   caseRecord.defence);
+  row("Investigating Officer:", officerName);
+  row("Station:",           stationName);
+
+  y += 4;
+  // Bundle summary box
+  doc.setFillColor(245, 247, 252);
+  doc.rect(14, y, 182, 22, "F");
+  doc.setDrawColor(...NAVY); doc.setLineWidth(0.3); doc.rect(14, y, 182, 22);
+  doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...NAVY);
+  doc.text("BUNDLE CONTENTS", 18, y + 6);
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(0,0,0);
+  doc.text(`Hearings: ${hearings.length}`,    20, y + 14);
+  doc.text(`Evidence: ${bundle.length}`,      80, y + 14);
+  doc.text(`Statements: ${statements.length}`, 140, y + 14);
+
+  // ── SECTION: Hearings ──
+  doc.addPage();
+  header(doc, "COURT CASE FILE", caseRecord.ref_number);
+  y = 50;
+  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...NAVY);
+  doc.text(`HEARINGS - MASIKILIZO (${hearings.length})`, 14, y);
+  doc.setDrawColor(...GOLD); doc.line(14, y+2, 196, y+2);
+  y += 8;
+
+  if (hearings.length === 0) {
+    doc.setFont("helvetica","italic"); doc.setFontSize(10); doc.setTextColor(120,120,120);
+    doc.text("No hearings recorded for this case.", 14, y);
+  } else {
+    autoTable(doc, {
+      startY: y,
+      head: [["#", "Date", "Type", "Magistrate", "Outcome", "Next"]],
+      body: hearings.map((h, i) => [
+        i + 1,
+        h.hearing_date ? new Date(h.hearing_date).toLocaleString("en-GB") : "-",
+        (h.hearing_type || "").replace(/_/g," "),
+        h.magistrate || "-",
+        h.outcome || "-",
+        h.next_date ? new Date(h.next_date).toLocaleDateString("en-GB") : "-",
+      ]),
+      theme: "grid",
+      headStyles: { fillColor: NAVY, textColor: 255, fontSize: 9, fontStyle: "bold" },
+      bodyStyles: { fontSize: 9, cellPadding: 3 },
+      columnStyles: { 0: { cellWidth: 10 }, 4: { cellWidth: 50 } },
+      margin: { left: 14, right: 14 },
+    });
+  }
+
+  // ── SECTION: Evidence Bundle ──
+  doc.addPage();
+  header(doc, "COURT CASE FILE", caseRecord.ref_number);
+  y = 50;
+  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...NAVY);
+  doc.text(`EVIDENCE BUNDLE - USHAHIDI (${bundle.length})`, 14, y);
+  doc.setDrawColor(...GOLD); doc.line(14, y+2, 196, y+2);
+  y += 8;
+
+  if (bundle.length === 0) {
+    doc.setFont("helvetica","italic"); doc.setFontSize(10); doc.setTextColor(120,120,120);
+    doc.text("No evidence has been tendered for this case.", 14, y);
+  } else {
+    autoTable(doc, {
+      startY: y,
+      head: [["Exhibit", "Ref No", "Type", "Description", "Purpose", "Storage"]],
+      body: bundle.map(ce => {
+        const ev = ce.evidence || {};
+        return [
+          ce.exhibit_label || "-",
+          ev.ref_number || "-",
+          ev.type || "-",
+          ev.description || "-",
+          ce.purpose || "-",
+          ev.storage_location || "-",
+        ];
+      }),
+      theme: "grid",
+      headStyles: { fillColor: GOLD, textColor: 255, fontSize: 9, fontStyle: "bold" },
+      bodyStyles: { fontSize: 9, cellPadding: 3, valign: "top" },
+      columnStyles: {
+        0: { cellWidth: 18, fontStyle: "bold", textColor: GOLD },
+        1: { cellWidth: 24, fontStyle: "bold" },
+        2: { cellWidth: 22 },
+        3: { cellWidth: 50 },
+        4: { cellWidth: 40 },
+        5: { cellWidth: 28 },
+      },
+      margin: { left: 14, right: 14 },
+    });
+  }
+
+  // ── SECTION: Statements ──
+  for (let i = 0; i < statements.length; i++) {
+    const s = statements[i];
+    doc.addPage();
+    header(doc, "COURT CASE FILE", caseRecord.ref_number);
+    y = 50;
+    doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...NAVY);
+    doc.text(`STATEMENT ${i + 1} OF ${statements.length} - MAELEZO`, 14, y);
+    doc.setDrawColor(...GOLD); doc.line(14, y+2, 196, y+2);
+    y += 10;
+
+    doc.setFontSize(10); doc.setTextColor(0,0,0);
+    const sRow = (label, value) => {
+      doc.setFont("helvetica","bold"); doc.text(label, 14, y);
+      doc.setFont("helvetica","normal");
+      const wrapped = doc.splitTextToSize(String(value || "-"), 130);
+      doc.text(wrapped, 60, y);
+      y += Math.max(6, wrapped.length * 5);
+    };
+    sRow("Ref:",      s.ref_number);
+    sRow("Type:",     (s.statement_type || "-").toUpperCase());
+    sRow("Deponent:", s.deponent_name);
+    sRow("NIDA:",     s.deponent_nida);
+    sRow("Phone:",    s.deponent_phone);
+    sRow("Address:",  s.deponent_address);
+    sRow("Language:", (s.language || "sw").toUpperCase());
+    sRow("Taken at:", s.taken_at ? new Date(s.taken_at).toLocaleString("en-GB") : "-");
+    sRow("Taken by:", s.profiles?.full_name ? `${s.profiles.full_name} (${s.profiles.badge || "-"})` : "-");
+
+    // Legal flags row
+    const flags = [];
+    if (s.sworn)        flags.push("SWORN ON OATH");
+    if (s.cautioned)    flags.push("s.33 CAUTIONED");
+    if (s.witness_bond) flags.push("s.34 WITNESS BOND");
+    if (flags.length) {
+      doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...NAVY);
+      doc.text("Legal Flags:", 14, y);
+      doc.setTextColor(150, 100, 0);
+      doc.text(flags.join("   |   "), 60, y);
+      y += 8;
+    }
+
+    // Content block - boxed
+    y += 4;
+    doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor(...NAVY);
+    doc.text("STATEMENT CONTENT - MAUDHUI", 14, y);
+    y += 4;
+    doc.setDrawColor(180, 180, 180); doc.setLineWidth(0.3);
+    const contentLines = doc.splitTextToSize(s.content || "(no content recorded)", 180);
+    const contentHeight = contentLines.length * 5 + 8;
+    doc.rect(14, y, 182, Math.min(contentHeight, 230 - y));
+    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(0,0,0);
+    doc.text(contentLines, 18, y + 6, { maxWidth: 174 });
+
+    // Signature lines at bottom of page
+    const sigY = 250;
+    doc.setDrawColor(150,150,150);
+    doc.line(20, sigY, 90, sigY);
+    doc.line(120, sigY, 190, sigY);
+    doc.setFontSize(8); doc.setTextColor(100,100,100);
+    doc.text("Deponent Signature", 55, sigY + 5, { align: "center" });
+    doc.text("Recording Officer Signature", 155, sigY + 5, { align: "center" });
+  }
+
+  // ── Final certification page ──
+  doc.addPage();
+  header(doc, "COURT CASE FILE", caseRecord.ref_number);
+  y = 60;
+  doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(...NAVY);
+  doc.text("CERTIFICATION OF FILE - UTHIBITISHO WA JALADA", 105, y, { align: "center" });
+  y += 16;
+
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(0,0,0);
+  const cert = `I certify that this case file, comprising ${hearings.length} recorded hearing(s), ${bundle.length} evidence exhibit(s), and ${statements.length} witness/suspect statement(s), is a true and accurate compilation of the records held by the Tanzania Police Force in respect of case ${caseRecord.ref_number} (${caseRecord.accused_name}).`;
+  const certLines = doc.splitTextToSize(cert, 180);
+  doc.text(certLines, 14, y);
+  y += certLines.length * 5 + 14;
+
+  doc.setFont("helvetica","bold");
+  doc.text(`Compiled by: ${officerName}`, 14, y); y += 7;
+  doc.text(`Station: ${stationName}`, 14, y); y += 7;
+  doc.text(`Date compiled: ${new Date().toLocaleString("en-GB")}`, 14, y); y += 20;
+
+  doc.setDrawColor(...NAVY); doc.setLineWidth(0.6);
+  doc.line(14, y, 90, y);
+  doc.line(120, y, 196, y);
+  y += 5;
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(100,100,100);
+  doc.text("Investigating Officer", 52, y, { align: "center" });
+  doc.text("OCS / Station Commander", 158, y, { align: "center" });
+
+  footer(doc);
+  doc.save(`CourtFile_${caseRecord.ref_number}.pdf`);
+}
+
 export async function exportReport(title, columns, rows, subtitle) {
   const { jsPDF, autoTable } = await getJsPDF();
   const doc = new jsPDF();
