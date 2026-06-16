@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { Car, FileText, AlertTriangle, Search, LayoutDashboard, Settings, LogOut, Bell, FileCheck, Lock, Stethoscope, UserX, Target, MessageSquare } from "lucide-react";
+import { Car, FileText, AlertTriangle, Search, LayoutDashboard, Settings, LogOut, Bell, FileCheck, Lock, Stethoscope, UserX, Target, MessageSquare, Users, Gavel } from "lucide-react";
 
 const NAV = [
   { icon:LayoutDashboard, label:"Dashboard",    sw:"Dashibodi",    path:"/traffic" },
@@ -14,6 +14,8 @@ const NAV = [
   { icon:Stethoscope,     label:"PF3 Forms",    sw:"Fomu ya PF3",  path:"/pf3" },
   { icon:UserX,           label:"Registries",   sw:"Daftari",      path:"/registries" },
   { icon:Target,          label:"Firearms",     sw:"Silaha",       path:"/firearms" },
+  { icon:Users,           label:"Prisoners",    sw:"Wafungwa",     path:"/prisoners" },
+  { icon:Gavel,           label:"Court Cases",  sw:"Kesi",         path:"/court-cases" },
   { icon:MessageSquare,   label:"Messages",     sw:"Ujumbe",       path:"/messages" },
   { icon:Bell,            label:"Alerts",       sw:"Tahadhari",    path:"/alerts" },
   { divider:true },
