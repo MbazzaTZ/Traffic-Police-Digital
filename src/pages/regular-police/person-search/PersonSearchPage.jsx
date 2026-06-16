@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../layouts/DashboardLayout";
 import { Search, CreditCard, Car, User, Shield, FileText, AlertTriangle, CheckCircle } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
@@ -10,6 +11,7 @@ const METHODS = [
 ];
 
 export default function PersonSearchPage() {
+  const nav = useNavigate();
   const [method,   setMethod]   = useState(0);
   const [query,    setQuery]    = useState("");
   const [results,  setResults]  = useState(null);
@@ -23,25 +25,29 @@ export default function PersonSearchPage() {
     const m = METHODS[method].key;
 
     if (m === "plate") {
-      const { data } = await supabase.from("traffic_citations").select("*").ilike("vehicle_plate",`%${q}%`).order("created_at",{ascending:false});
-      setResults({ kind:"plate", plate:q.toUpperCase(), citations:data||[] });
+      const [veh, cits] = await Promise.all([
+        supabase.from("vehicles").select("*").ilike("plate_number",`%${q}%`),
+        supabase.from("traffic_citations").select("*").ilike("vehicle_plate",`%${q}%`).order("created_at",{ascending:false}),
+      ]);
+      setResults({ kind:"plate", plate:q.toUpperCase(), vehicles:veh.data||[], citations:cits.data||[] });
     } else {
       // name or nida — search arrests, suspects, wanted
       const col = m === "nida" ? "nida" : "full_name";
       const arrCol = m === "nida" ? "suspect_nida" : "suspect_name";
-      const [arrests, suspects, wanted] = await Promise.all([
+      const [persons, arrests, suspects, wanted] = await Promise.all([
+        supabase.from("persons").select("*").ilike(col==="nida"?"nida":"full_name",`%${q}%`),
         supabase.from("arrests").select("*").ilike(arrCol,`%${q}%`).order("created_at",{ascending:false}),
         supabase.from("suspects").select("*, cid_cases(case_number)").ilike(col,`%${q}%`),
         supabase.from("wanted_persons").select("*").ilike(col,`%${q}%`),
       ]);
-      setResults({ kind:"person", query:q, arrests:arrests.data||[], suspects:suspects.data||[], wanted:wanted.data||[] });
+      setResults({ kind:"person", query:q, persons:persons.data||[], arrests:arrests.data||[], suspects:suspects.data||[], wanted:wanted.data||[] });
     }
     setLoading(false);
   }
 
   const M = METHODS[method];
   const hasWanted = results?.wanted?.length > 0;
-  const total = results ? (results.kind==="plate" ? results.citations.length : results.arrests.length+results.suspects.length+results.wanted.length) : 0;
+  const total = results ? (results.kind==="plate" ? results.vehicles.length+results.citations.length : results.persons.length+results.arrests.length+results.suspects.length+results.wanted.length) : 0;
 
   return (
     <DashboardLayout pageTitle="Person Search" pageTitle2="Tafuta Mtu">
@@ -91,6 +97,22 @@ export default function PersonSearchPage() {
           </div>
 
           {results.kind==="plate" ? (
+            <>
+              {results.vehicles && results.vehicles.length > 0 && (
+                <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden", marginBottom:14 }}>
+                  <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:"#0891B2" }}>Vehicle Records ({results.vehicles.length})</div>
+                  {results.vehicles.map(v=>(
+                    <div key={v.id} onClick={()=>nav(`/vehicle/${v.id}`)} style={{ padding:"12px 18px", borderBottom:"1px solid #F8FAFC", display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"pointer" }}
+                      onMouseEnter={e=>e.currentTarget.style.background="#F8FAFC"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      <div>
+                        <div style={{ fontSize:14, fontWeight:700, color:"#1E293B" }}>{v.plate_number} {v.is_stolen&&<span style={{ color:"#DC2626", fontSize:11 }}>· STOLEN</span>}</div>
+                        <div style={{ fontSize:12, color:"#94A3B8" }}>{v.make} {v.model} · {v.color} · Owner: {v.owner_name||"—"}</div>
+                      </div>
+                      <span style={{ fontSize:12, color:"#0D3477", fontWeight:600 }}>View Profile →</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
               <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:"#0D3477" }}>
                 Citations for {results.plate} ({results.citations.length})
@@ -116,8 +138,28 @@ export default function PersonSearchPage() {
                 </table>
               )}
             </div>
+            </>
           ) : (
             <>
+              {results.persons && results.persons.length > 0 && (
+                <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden", marginBottom:14 }}>
+                  <div style={{ padding:"12px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:"#0D3477", display:"flex", alignItems:"center", gap:8 }}><User size={16}/> Person Records ({results.persons.length})</div>
+                  {results.persons.map(p=>(
+                    <div key={p.id} onClick={()=>nav(`/person/${p.id}`)} style={{ padding:"12px 18px", borderBottom:"1px solid #F8FAFC", display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"pointer" }}
+                      onMouseEnter={e=>e.currentTarget.style.background="#F8FAFC"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                        <div style={{ width:38, height:38, borderRadius:"50%", background:p.is_wanted?"#DC2626":"#0D3477", display:"flex", alignItems:"center", justifyContent:"center", color:"white", fontWeight:800, fontSize:13 }}>{p.full_name?.split(" ").map(n=>n[0]).slice(0,2).join("")}</div>
+                        <div>
+                          <div style={{ fontSize:14, fontWeight:700, color:"#1E293B" }}>{p.full_name} {p.is_wanted&&<span style={{ color:"#DC2626", fontSize:11 }}>· WANTED</span>}</div>
+                          <div style={{ fontSize:12, color:"#94A3B8" }}>{p.nida||"No NIDA"} · {p.phone||"—"}</div>
+                        </div>
+                      </div>
+                      <span style={{ fontSize:12, color:"#0D3477", fontWeight:600 }}>View Profile →</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {hasWanted && (
                 <div style={{ background:"white", borderRadius:14, border:"2px solid #DC2626", overflow:"hidden", marginBottom:14 }}>
                   <div style={{ background:"#FEF2F2", padding:"12px 18px", fontSize:14, fontWeight:800, color:"#DC2626", display:"flex", alignItems:"center", gap:8 }}><Shield size={16}/> WANTED PERSONS</div>

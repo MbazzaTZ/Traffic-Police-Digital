@@ -22,6 +22,8 @@ import MessagesPage           from "../pages/regular-police/MessagesPage";
 import AlertsPage             from "../pages/regular-police/AlertsPage";
 import SettingsPage           from "../pages/regular-police/SettingsPage";
 import MyProfilePage          from "../pages/regular-police/MyProfilePage";
+import PersonProfilePage      from "../pages/regular-police/PersonProfilePage";
+import VehicleProfilePage     from "../pages/regular-police/VehicleProfilePage";
 
 import TrafficDashboard  from "../pages/traffic/TrafficDashboard";
 import CitationsPage     from "../pages/traffic/CitationsPage";
@@ -113,6 +115,8 @@ export default function AppRoutes() {
       {/* Regular Police */}
       <Route path="/dashboard"     element={<Guard roles={OFFICER}><RegularPoliceDashboard/></Guard>}/>
       <Route path="/person-search" element={<Guard roles={OFFICER}><PersonSearchPage/></Guard>}/>
+      <Route path="/person/:id"    element={<Guard roles={OFFICER}><PersonProfilePage/></Guard>}/>
+      <Route path="/vehicle/:id"   element={<Guard roles={OFFICER}><VehicleProfilePage/></Guard>}/>
       <Route path="/incidents"     element={<Guard roles={OFFICER}><IncidentReportsPage/></Guard>}/>
       <Route path="/arrests"       element={<Guard roles={OFFICER}><ArrestsPage/></Guard>}/>
       <Route path="/patrols"       element={<Guard roles={OFFICER}><PatrolDashboardPage/></Guard>}/>
