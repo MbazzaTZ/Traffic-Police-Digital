@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
-import { LayoutDashboard, Search, FileText, Shield, MapPinned, FolderOpen, MessageSquare, Bell, Settings, LogOut, User, FileCheck, Lock, Stethoscope } from "lucide-react";
+import { LayoutDashboard, Search, FileText, Shield, MapPinned, FolderOpen, MessageSquare, Bell, Settings, LogOut, User, FileCheck, Lock, Stethoscope, UserX } from "lucide-react";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 
 const NAV = [
@@ -10,6 +10,7 @@ const NAV = [
   { icon:Shield,          label:"Arrests",       sw:"Kukamatwa",  path:"/arrests" },
   { icon:Lock,            label:"Detentions",    sw:"Vizuizini",  path:"/detentions" },
   { icon:Stethoscope,     label:"PF3 Forms",     sw:"Fomu ya PF3",path:"/pf3" },
+  { icon:UserX,           label:"Registries",    sw:"Daftari",    path:"/registries" },
   { icon:MapPinned,       label:"Patrols",       sw:"Doria",      path:"/patrols" },
   { icon:FolderOpen,      label:"Evidence",      sw:"Ushahidi",   path:"/evidence" },
   { icon:FileCheck,       label:"Approvals",     sw:"Maombi",     path:"/approvals" },
