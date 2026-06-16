@@ -27,6 +27,12 @@ export default function PatrolDashboardPage() {
   }
   useEffect(()=>{ if(profile?.id) load(); },[profile?.id]);
 
+  // Cleanup interval on unmount - prevents leak if user navigates
+  // away mid-patrol without clicking End Patrol
+  useEffect(()=>{
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
+
   async function startPatrol() {
     const { data, error } = await supabase.from("patrols").insert({
       officer_id:profile?.id||null, station_id:stationId||null,

@@ -131,7 +131,7 @@ export default function AppRoutes() {
       <Route path="/command/audit"     element={<Guard roles={COMMAND}><AuditLogsPage/></Guard>}/>
       <Route path="/command/patrol-map" element={<Guard roles={COMMAND}><CommandPatrolMap/></Guard>}/>
       <Route path="/command/approvals" element={<Guard roles={COMMAND}><ApprovalsPage/></Guard>}/>
-      <Route path="/command/settings"  element={<Guard roles={COMMAND}><CommandCenter/></Guard>}/>
+      <Route path="/command/settings"  element={<Guard roles={COMMAND}><SettingsPage/></Guard>}/>
 
       {/* Regular Police */}
       <Route path="/dashboard"     element={<Guard roles={OFFICER}><RegularPoliceDashboard/></Guard>}/>
@@ -163,7 +163,7 @@ export default function AppRoutes() {
       <Route path="/traffic/checkpoints" element={<Guard roles={TRAFFIC}><CheckpointsPage/></Guard>}/>
       <Route path="/traffic/payments"    element={<Guard roles={OFFICER}><PaymentsPage/></Guard>}/>
       <Route path="/payments"            element={<Guard roles={OFFICER}><PaymentsPage/></Guard>}/>
-      <Route path="/traffic/settings"    element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
+      <Route path="/traffic/settings"    element={<Guard roles={TRAFFIC}><SettingsPage/></Guard>}/>
       <Route path="/traffic/profile"     element={<Guard roles={TRAFFIC}><MyProfilePage/></Guard>}/>
       <Route path="/traffic/approvals"   element={<Guard roles={TRAFFIC}><ApprovalsPage/></Guard>}/>
 

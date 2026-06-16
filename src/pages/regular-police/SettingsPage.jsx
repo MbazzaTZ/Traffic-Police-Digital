@@ -1,8 +1,21 @@
 import { useState } from "react";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import TrafficLayout from "../../layouts/TrafficLayout";
+import CIDLayout from "../../layouts/CIDLayout";
+import CommandLayout from "../../layouts/CommandLayout";
 import { User, Bell, Globe, Lock, Smartphone, Save, CheckCircle } from "lucide-react";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
+
+// Render in the layout that matches the viewing officer's role
+function RoleLayout({ role, children, ...props }) {
+  if (role === "traffic_officer") return <TrafficLayout {...props}>{children}</TrafficLayout>;
+  if (role === "cid_officer" || role === "forensic_officer") return <CIDLayout {...props}>{children}</CIDLayout>;
+  if (role === "igp" || role === "digp" || role === "rpc") return <CommandLayout {...props}>{children}</CommandLayout>;
+  return <DashboardLayout {...props}>{children}</DashboardLayout>;
+}
 
 export default function SettingsPage() {
+  const { profile } = useCurrentUser();
   const [lang, setLang]   = useState("en");
   const [notifs, setNotifs] = useState({ alerts:true, messages:true, tasks:true, system:false });
   const [saved, setSaved]   = useState(false);
@@ -12,7 +25,7 @@ export default function SettingsPage() {
   const inp = { width:"100%", height:42, border:"1.5px solid #E2E8F0", borderRadius:10, padding:"0 12px", fontSize:13, outline:"none", boxSizing:"border-box" };
 
   return (
-    <DashboardLayout pageTitle="Settings" pageTitle2="Mipangilio">
+    <RoleLayout role={profile?.role} pageTitle="Settings" pageTitle2="Mipangilio">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:22 }}>
         <div>
           <h1 style={{ fontSize:24, fontWeight:800, color:"#0D3477", margin:0 }}>Settings <span style={{ fontWeight:500, color:"#94A3B8", fontSize:18 }}>· Mipangilio</span></h1>
@@ -126,6 +139,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </RoleLayout>
   );
 }
