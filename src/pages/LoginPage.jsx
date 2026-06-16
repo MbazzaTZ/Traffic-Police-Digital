@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { logAction } from "../lib/audit";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 export default function LoginPage() {
+  const isMobile = useIsMobile();
   const [email,   setEmail]   = useState("");
   const [pw,      setPw]      = useState("");
   const [showPw,  setShowPw]  = useState(false);
@@ -76,30 +78,32 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ minHeight:"100vh", width:"100vw", display:"flex", fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
+    <div style={{ minHeight:"100vh", width:"100vw", display:"flex", flexDirection: isMobile ? "column" : "row", fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
 
-      {/* LEFT */}
-      <div style={{ flex:1, background:"white", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"60px 80px", borderRight:"1px solid #E2E8F0" }}>
-        <p style={{ fontSize:22, fontWeight:800, color:"#082A63", letterSpacing:1.5, textTransform:"uppercase", marginBottom:8, textAlign:"center" }}>
+      {/* LEFT (branding) */}
+      <div style={{ flex: isMobile ? "0 0 auto" : 1, background:"white", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding: isMobile ? "24px 20px 18px" : "60px 80px", borderRight: isMobile ? "none" : "1px solid #E2E8F0", borderBottom: isMobile ? "1px solid #E2E8F0" : "none" }}>
+        <p style={{ fontSize: isMobile ? 13 : 22, fontWeight:800, color:"#082A63", letterSpacing: isMobile ? 0.8 : 1.5, textTransform:"uppercase", marginBottom: isMobile ? 4 : 8, textAlign:"center" }}>
           Jamhuri ya Muungano wa Tanzania
         </p>
-        <p style={{ fontSize:16, fontWeight:600, color:"#64748B", letterSpacing:1.2, textTransform:"uppercase", marginBottom:32, textAlign:"center" }}>
-          Wizara ya Mambo ya Ndani ya Nchi
-        </p>
+        {!isMobile && (
+          <p style={{ fontSize:16, fontWeight:600, color:"#64748B", letterSpacing:1.2, textTransform:"uppercase", marginBottom:32, textAlign:"center" }}>
+            Wizara ya Mambo ya Ndani ya Nchi
+          </p>
+        )}
         <img src="/police-logo-transparent.png" alt="Jeshi la Polisi Tanzania"
-          style={{ width:200, height:200, objectFit:"contain", marginBottom:24 }} />
-        <h1 style={{ fontSize:36, fontWeight:900, color:"#082A63", textTransform:"uppercase", letterSpacing:1, textAlign:"center", margin:"0 0 10px" }}>
+          style={{ width: isMobile ? 80 : 200, height: isMobile ? 80 : 200, objectFit:"contain", marginBottom: isMobile ? 8 : 24 }} />
+        <h1 style={{ fontSize: isMobile ? 16 : 36, fontWeight:900, color:"#082A63", textTransform:"uppercase", letterSpacing: isMobile ? 0.3 : 1, textAlign:"center", margin: isMobile ? "0 0 4px" : "0 0 10px" }}>
           Jeshi la Polisi Tanzania
         </h1>
-        <p style={{ fontSize:14, color:"#64748B", textAlign:"center", marginBottom:0 }}>
-          Tanzania Police Digital Operations Platform
+        <p style={{ fontSize: isMobile ? 11 : 14, color:"#64748B", textAlign:"center", marginBottom:0 }}>
+          {isMobile ? "TPDOP" : "Tanzania Police Digital Operations Platform"}
         </p>
-        <div style={{ width:56, height:3, background:"#082A63", borderRadius:2, marginTop:28 }} />
+        {!isMobile && <div style={{ width:56, height:3, background:"#082A63", borderRadius:2, marginTop:28 }} />}
       </div>
 
-      {/* RIGHT */}
-      <div style={{ width:"42%", minWidth:480, background:"#EEF2F7", display:"flex", alignItems:"center", justifyContent:"center", padding:"48px 60px" }}>
-        <div style={{ width:"100%", maxWidth:420, background:"white", borderRadius:20, padding:"44px 40px", boxShadow:"0 8px 32px rgba(8,42,99,.10),0 2px 8px rgba(0,0,0,.06)", border:"1px solid #E2E8F0" }}>
+      {/* RIGHT (form) */}
+      <div style={{ width: isMobile ? "100%" : "42%", minWidth: isMobile ? "auto" : 480, flex: isMobile ? 1 : "none", background:"#EEF2F7", display:"flex", alignItems: isMobile ? "flex-start" : "center", justifyContent:"center", padding: isMobile ? "18px 14px 24px" : "48px 60px" }}>
+        <div style={{ width:"100%", maxWidth:420, background:"white", borderRadius: isMobile ? 16 : 20, padding: isMobile ? "28px 22px" : "44px 40px", boxShadow:"0 8px 32px rgba(8,42,99,.10),0 2px 8px rgba(0,0,0,.06)", border:"1px solid #E2E8F0" }}>
 
           <div style={{ textAlign:"center", marginBottom:16 }}>
             <img src="/Coat of Arms.png" alt="Coat of Arms" style={{ width:76, height:76, objectFit:"contain" }} />

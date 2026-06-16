@@ -1,7 +1,17 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { Car, FileText, AlertTriangle, Search, LayoutDashboard, Settings, LogOut, Bell, FileCheck, Lock, Stethoscope, UserX, Target, MessageSquare, Users, Gavel, Banknote, Menu, X } from "lucide-react";
+import { Car, FileText, AlertTriangle, Search, LayoutDashboard, Settings, LogOut, Bell, FileCheck, Lock, Stethoscope, UserX, Target, MessageSquare, Users, Gavel, Banknote, Menu, X, MoreHorizontal } from "lucide-react";
 import { useResponsiveSidebar } from "../hooks/useResponsiveSidebar";
+import BottomNav from "../components/mobile/BottomNav";
+
+// 5 most-used traffic-officer destinations on mobile bottom nav
+const TRAFFIC_BOTTOM_NAV = [
+  { icon:LayoutDashboard, label:"Home",       path:"/traffic" },
+  { icon:FileText,        label:"Citations",  path:"/traffic/citations" },
+  { icon:Banknote,        label:"Payments",   path:"/traffic/payments" },
+  { icon:AlertTriangle,   label:"Accidents",  path:"/traffic/accidents" },
+  { icon:MoreHorizontal,  label:"More",       path:"/more" },
+];
 
 const NAV = [
   { icon:LayoutDashboard, label:"Dashboard",    sw:"Dashibodi",    path:"/traffic" },
@@ -111,8 +121,9 @@ export default function TrafficLayout({ children, pageTitle="Traffic", pageTitle
             <button aria-label="Alerts" style={{ width:36, height:36, borderRadius:8, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#64748B" }}><Bell size={16}/></button>
           </div>
         </header>
-        <div style={{ marginTop:60, padding: isMobile ? 14 : 22 }}>{children}</div>
+        <div style={{ marginTop:60, padding: isMobile ? 14 : 22, paddingBottom: isMobile ? 80 : 22 }}>{children}</div>
       </div>
+      <BottomNav items={TRAFFIC_BOTTOM_NAV} color="#D97706"/>
     </div>
   );
 }

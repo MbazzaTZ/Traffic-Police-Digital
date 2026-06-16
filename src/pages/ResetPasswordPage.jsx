@@ -57,8 +57,8 @@ export default function ResetPasswordPage() {
   const inp = { width:"100%", height:48, border:"1.5px solid #D1D5DB", borderRadius:10, fontSize:14, outline:"none", boxSizing:"border-box", padding:"0 42px 0 14px" };
 
   return (
-    <div style={{ minHeight:"100vh", width:"100vw", display:"flex", alignItems:"center", justifyContent:"center", background:"linear-gradient(135deg,#03102B,#082A63)", fontFamily:"'Segoe UI',system-ui,sans-serif", padding:20 }}>
-      <div style={{ width:"100%", maxWidth:440, background:"white", borderRadius:20, padding:"40px 36px", boxShadow:"0 20px 60px rgba(0,0,0,.3)" }}>
+    <div style={{ minHeight:"100vh", width:"100vw", display:"flex", alignItems:"center", justifyContent:"center", background:"linear-gradient(135deg,#03102B,#082A63)", fontFamily:"'Segoe UI',system-ui,sans-serif", padding:14 }}>
+      <div style={{ width:"100%", maxWidth:440, background:"white", borderRadius:16, padding:"clamp(24px,5vw,40px) clamp(20px,4vw,36px)", boxShadow:"0 20px 60px rgba(0,0,0,.3)" }}>
 
         <div style={{ textAlign:"center", marginBottom:24 }}>
           <img src="/Coat of Arms.png" alt="Coat of Arms" style={{ width:64, height:64, objectFit:"contain", marginBottom:10 }}/>
