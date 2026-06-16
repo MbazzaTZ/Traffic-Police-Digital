@@ -3,6 +3,7 @@ import DashboardLayout from "../../layouts/DashboardLayout";
 import { Plus, FileText, X, AlertTriangle, CheckCircle, Search, Filter } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { logAction } from "../../lib/audit";
 
 const TYPES = ["Theft","Assault","Robbery","Burglary","Fraud","Disturbance","Missing Person","Accident","Arson","Drug Offense","Sexual Offense","Kidnapping","Vandalism","Other"];
 const SEVERITY = [{ v:"low",c:"#64748B" },{ v:"medium",c:"#D97706" },{ v:"high",c:"#DC2626" },{ v:"critical",c:"#7C3AED" }];
@@ -58,6 +59,7 @@ export default function IncidentReportsPage() {
         status:        "open",
       }).select().single();
       if (error) throw error;
+      logAction({ profile, action:"create_incident", entityType:"incident", entityId:data.id, entityRef:data.ref_number, description:`Incident: ${data.type} - ${data.severity}` });
       setDone(data);
       await load();
       setTimeout(() => { setModal(false); setDone(null); setForm({ type:"", title:"", description:"", severity:"medium", location_text:"", occurred_at:"" }); }, 2500);

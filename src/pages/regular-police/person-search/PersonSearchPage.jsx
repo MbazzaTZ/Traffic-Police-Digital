@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../layouts/DashboardLayout";
 import { Search, CreditCard, Car, User, Shield, FileText, AlertTriangle, CheckCircle } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
+import { logAction } from "../../../lib/audit";
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
 
 const METHODS = [
   { key:"name",  icon:User,       label:"Full Name",     sw:"Jina Kamili",     ph:"e.g. John Doe Mwangi" },
@@ -13,6 +15,7 @@ const METHODS = [
 
 export default function PersonSearchPage() {
   const nav = useNavigate();
+  const { profile } = useCurrentUser();
   const [method,   setMethod]   = useState(0);
   const [query,    setQuery]    = useState("");
   const [results,  setResults]  = useState(null);
@@ -46,6 +49,7 @@ export default function PersonSearchPage() {
       ]);
       setResults({ kind:"person", query:q, persons:persons.data||[], arrests:arrests.data||[], suspects:suspects.data||[], wanted:wanted.data||[] });
     }
+    logAction({ profile, action:"search_person", entityType:"search", description:`Searched ${METHODS[method].label}: ${q}` });
     setLoading(false);
   }
 

@@ -3,6 +3,7 @@ import DashboardLayout from "../../layouts/DashboardLayout";
 import { Plus, Shield, X, AlertTriangle, CheckCircle, Search } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { logAction } from "../../lib/audit";
 
 const CHARGES = ["Armed Robbery","Theft","Assault","Murder","Drug Trafficking","Drug Possession","Fraud","Forgery","Rape","Kidnapping","Burglary","Vandalism","Drunk Driving","Traffic Offense","Immigration Offense","Other"];
 const STATUS_C = { detained:"#DC2626", charged:"#D97706", released:"#059669", transferred:"#0891B2" };
@@ -51,6 +52,7 @@ export default function ArrestsPage() {
         arrested_at:  new Date().toISOString(),
       }).select().single();
       if (error) throw error;
+      logAction({ profile, action:"create_arrest", entityType:"arrest", entityId:data.id, entityRef:data.ref_number, description:`Arrest recorded: ${data.suspect_name} - ${data.charge}` });
       setDone(data);
       await load();
       setTimeout(()=>{ setModal(false); setDone(null); setForm({suspect_name:"",suspect_nida:"",suspect_dob:"",suspect_gender:"Male",charge:"",charge_details:"",location_text:""}); }, 2500);

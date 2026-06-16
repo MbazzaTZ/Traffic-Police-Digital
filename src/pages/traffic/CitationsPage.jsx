@@ -4,6 +4,7 @@ import { Plus, X, CheckCircle, AlertTriangle, Search, Download, FileText } from 
 import { exportCitation, exportReport } from "../../lib/pdfExport";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { logAction } from "../../lib/audit";
 
 const OFFENSES = ["Speeding","Running Red Light","No Seatbelt","Using Phone While Driving","Drunk Driving","No License","Expired License","No Insurance","Overloading","Wrong Lane","Illegal Parking","No Vehicle Registration","Unroadworthy Vehicle","Reckless Driving","Other"];
 const FINES = { "Speeding":50000,"Running Red Light":30000,"No Seatbelt":20000,"Using Phone While Driving":30000,"Drunk Driving":200000,"No License":100000,"Expired License":50000,"No Insurance":150000,"Overloading":80000,"Wrong Lane":20000,"Illegal Parking":15000,"No Vehicle Registration":100000,"Unroadworthy Vehicle":80000,"Reckless Driving":100000,"Other":20000 };
@@ -52,6 +53,7 @@ export default function CitationsPage() {
         issued_by:profile?.id||null, status:"unpaid", due_date:new Date(Date.now()+30*86400000).toISOString(),
       }).select().single();
       if (error) throw error;
+      logAction({ profile, action:"issue_citation", entityType:"citation", entityId:data.id, entityRef:data.ref_number, description:`Citation: ${data.vehicle_plate} - ${data.offense_type} - TZS ${data.fine_amount}` });
       setDone(data); await load();
       setTimeout(()=>{setModal(false);setDone(null);setForm({driver_name:"",driver_license:"",driver_nida:"",vehicle_plate:"",vehicle_type:"Car",vehicle_make:"",vehicle_color:"",offense_type:"",fine_amount:0,location_text:""});},2500);
     } catch(e){setErr(e.message);} finally{setSaving(false);}

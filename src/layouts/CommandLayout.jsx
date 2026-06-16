@@ -9,6 +9,7 @@ const NAV = [
   { icon:Users,           label:"Officers",       sw:"Maafisa",       path:"/command/officers" },
   { icon:FileText,        label:"Reports",        sw:"Ripoti",        path:"/command/reports" },
   { icon:FileCheck,       label:"Approvals",      sw:"Maombi",        path:"/command/approvals" },
+  { icon:Shield,          label:"Audit Logs",     sw:"Kumbukumbu",    path:"/command/audit" },
   { icon:Settings,        label:"Settings",       sw:"Mipangilio",    path:"/command/settings" },
 ];
 

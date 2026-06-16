@@ -3,6 +3,7 @@
 // regular_officer / inspector / traffic / cid → OCS → OCD → RPC → IGP
 // ============================================================
 import { supabase } from "./supabase";
+import { logAction } from "./audit";
 
 // The chain of approver levels in order
 export const APPROVAL_CHAIN = ["ocs", "ocd", "rpc", "igp"];
@@ -97,6 +98,7 @@ export async function approveRequest(request, profile, note) {
       request_id: request.id, actor_id: profile.id, actor_role: profile.role,
       action: "approved", from_level: request.current_level, note: note || "Final approval granted",
     });
+    logAction({ profile, action:"approve_request", entityType:"request", entityId:request.id, entityRef:request.ref_number, description:`Approved (final): ${request.title}` });
     return "approved";
   }
 
@@ -126,4 +128,5 @@ export async function rejectRequest(request, profile, note) {
     request_id: request.id, actor_id: profile.id, actor_role: profile.role,
     action: "rejected", from_level: request.current_level, note: note || "Request rejected",
   });
+  logAction({ profile, action:"reject_request", entityType:"request", entityId:request.id, entityRef:request.ref_number, description:`Rejected: ${request.title}` });
 }

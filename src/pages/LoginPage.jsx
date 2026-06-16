@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { logAction } from "../lib/audit";
 
 export default function LoginPage() {
   const [email,   setEmail]   = useState("");
@@ -52,6 +53,7 @@ export default function LoginPage() {
       const role = profile?.role || data.user.user_metadata?.role || "";
       const ROLE_HOME = { admin_officer:"/admin", igp:"/admin", digp:"/admin", traffic_officer:"/traffic", cid_officer:"/cid", forensic_officer:"/cid" };
       const dest = ROLE_HOME[role] || "/dashboard";
+      logAction({ profile: { ...profile, id: data.user.id }, action:"login", entityType:"auth", description:`Login: ${data.user.email}` });
       nav(dest);
     } catch (e) {
       let msg = e.message || "Login failed. Check your credentials.";
