@@ -1,10 +1,11 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { Car, FileText, AlertTriangle, Search, LayoutDashboard, Settings, LogOut, Bell, FileCheck, Lock, Stethoscope, UserX, Target, MessageSquare, Users, Gavel } from "lucide-react";
+import { Car, FileText, AlertTriangle, Search, LayoutDashboard, Settings, LogOut, Bell, FileCheck, Lock, Stethoscope, UserX, Target, MessageSquare, Users, Gavel, Banknote } from "lucide-react";
 
 const NAV = [
   { icon:LayoutDashboard, label:"Dashboard",    sw:"Dashibodi",    path:"/traffic" },
   { icon:FileText,        label:"Citations",    sw:"Faini",        path:"/traffic/citations" },
+  { icon:Banknote,        label:"Payments",     sw:"Malipo",       path:"/traffic/payments" },
   { icon:AlertTriangle,   label:"Accidents",    sw:"Ajali",        path:"/traffic/accidents" },
   { icon:Search,          label:"Veh. Search",  sw:"Tafuta Gari",  path:"/traffic/vehicles" },
   { icon:Car,             label:"Checkpoints",  sw:"Vizuizi",      path:"/traffic/checkpoints" },

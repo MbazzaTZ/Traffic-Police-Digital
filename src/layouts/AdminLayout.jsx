@@ -2,7 +2,7 @@ import { supabase } from "../lib/supabase";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, Building2, MapPin,
-  Shield, Settings, LogOut, ChevronRight, Bell, UserCog
+  Shield, Settings, LogOut, ChevronRight, Bell, UserCog, Receipt
 } from "lucide-react";
 
 // ── SINGLE POLICE BLUE THEME ──
@@ -18,6 +18,7 @@ const NAV = [
   { icon:Building2,       label:"Stations",            sw:"Vituo",          path:"/admin/stations" },
   { icon:MapPin,          label:"Regions & Districts", sw:"Mikoa",          path:"/admin/regions" },
   { icon:Shield,          label:"Roles & Access",      sw:"Majukumu",       path:"/admin/roles" },
+  { icon:Receipt,         label:"Fine Schedule",       sw:"Orodha ya Faini", path:"/admin/fines" },
   { icon:Settings,        label:"System Settings",     sw:"Mipangilio",     path:"/admin/settings" },
 ];
 

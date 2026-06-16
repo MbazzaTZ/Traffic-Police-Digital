@@ -245,6 +245,87 @@ export async function exportFirearmLicense(lic, officerName, stationName) {
   doc.save(`License_${lic.license_no || lic.ref_number}.pdf`);
 }
 
+// ── Payment Receipt PDF ──
+export async function exportPaymentReceipt(p, officerName, stationName) {
+  const { jsPDF } = await getJsPDF();
+  const doc = new jsPDF();
+  header(doc, "OFFICIAL PAYMENT RECEIPT", p.ref_number);
+
+  doc.setFontSize(9);
+  doc.setTextColor(80,80,80);
+  doc.text("Risiti Rasmi ya Malipo · Traffic Fine Receipt", 105, 44, { align: "center" });
+
+  // Receipt # plaque (green)
+  let y = 56;
+  doc.setFillColor(22, 163, 74);
+  doc.rect(14, y, 182, 18, "F");
+  doc.setTextColor(255,255,255);
+  doc.setFont("helvetica","bold"); doc.setFontSize(11);
+  doc.text("RECEIPT NUMBER", 105, y+7, { align:"center" });
+  doc.setFontSize(16);
+  doc.text(p.ref_number || "—", 105, y+15, { align:"center" });
+  doc.setTextColor(0,0,0);
+  y += 28;
+
+  const row = (label, value) => {
+    doc.setFont("helvetica","bold"); doc.setFontSize(10);
+    doc.text(label, 14, y);
+    doc.setFont("helvetica","normal");
+    doc.text(String(value || "—"), 85, y);
+    y += 8;
+  };
+
+  const cit = p.traffic_citations || {};
+  doc.setFont("helvetica","bold"); doc.setFontSize(11);
+  doc.text("CITATION", 14, y); y += 9;
+  doc.setFontSize(10);
+  row("Citation Ref:",  cit.ref_number);
+  row("Control No:",    p.control_number);
+  row("Driver:",        cit.driver_name);
+  row("Vehicle Plate:", cit.vehicle_plate);
+  row("Offense:",       cit.offense_type);
+  row("Fine Amount:",   `TZS ${(cit.fine_amount||0).toLocaleString()}`);
+
+  y += 4;
+  doc.setFont("helvetica","bold"); doc.setFontSize(11);
+  doc.text("PAYMENT", 14, y); y += 9;
+  doc.setFontSize(10);
+  row("Amount Paid:",    `TZS ${(p.amount||0).toLocaleString()}`);
+  row("Method:",         (p.method||"").replace(/_/g," ").toUpperCase());
+  row("Transaction Ref:",p.transaction_ref);
+  row("Payer Name:",     p.payer_name);
+  row("Payer Phone:",    p.payer_phone);
+  row("Paid At:",        new Date(p.paid_at).toLocaleString("en-GB"));
+  const balance = (cit.fine_amount||0) - ((cit.amount_paid||0));
+  row("Balance:",        `TZS ${Math.max(0,balance).toLocaleString()}`);
+  row("Status:",         balance <= 0 ? "FULLY PAID" : "PARTIAL");
+
+  y += 4;
+  doc.setFont("helvetica","bold"); doc.setFontSize(11);
+  doc.text("ISSUED BY", 14, y); y += 9;
+  doc.setFontSize(10);
+  row("Officer:",  officerName);
+  row("Station:",  stationName || "—");
+
+  // Signature line
+  y += 14;
+  doc.setDrawColor(150,150,150);
+  doc.line(20, y, 90, y);
+  doc.line(120, y, 190, y);
+  y += 5;
+  doc.setFontSize(9); doc.setTextColor(100,100,100);
+  doc.text("Receiving Officer Signature", 55, y, { align:"center" });
+  doc.text("Payer Signature", 155, y, { align:"center" });
+
+  // Footer note
+  y += 12;
+  doc.setFontSize(8); doc.setTextColor(100,100,100);
+  doc.text("Keep this receipt as proof of payment. Quote the receipt number in case of any query.", 105, y, { align:"center" });
+
+  footer(doc);
+  doc.save(`Receipt_${p.ref_number}.pdf`);
+}
+
 // ── Generic table report PDF ──
 export async function exportReport(title, columns, rows, subtitle) {
   const { jsPDF, autoTable } = await getJsPDF();

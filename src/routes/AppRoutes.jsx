@@ -31,6 +31,8 @@ import FirearmsPage           from "../pages/regular-police/FirearmsPage";
 import PrisonersPage          from "../pages/regular-police/PrisonersPage";
 import CellsPage              from "../pages/regular-police/CellsPage";
 import CourtCasesPage         from "../pages/regular-police/CourtCasesPage";
+import FineSchedulePage       from "../pages/admin/FineSchedulePage";
+import PaymentsPage           from "../pages/traffic/PaymentsPage";
 
 import TrafficDashboard  from "../pages/traffic/TrafficDashboard";
 import CitationsPage     from "../pages/traffic/CitationsPage";
@@ -118,6 +120,7 @@ export default function AppRoutes() {
       <Route path="/admin/regions"     element={<Guard roles={ADMIN}><RegionsPage/></Guard>}/>
       <Route path="/admin/roles"       element={<Guard roles={ADMIN}><RolesPage/></Guard>}/>
       <Route path="/admin/settings"    element={<Guard roles={ADMIN}><AdminSettingsPage/></Guard>}/>
+      <Route path="/admin/fines"       element={<Guard roles={ADMIN}><FineSchedulePage/></Guard>}/>
 
       {/* Command Center */}
       <Route path="/command"           element={<Guard roles={COMMAND}><CommandCenter/></Guard>}/>
@@ -158,6 +161,7 @@ export default function AppRoutes() {
       <Route path="/traffic/accidents"   element={<Guard roles={TRAFFIC}><AccidentsPage/></Guard>}/>
       <Route path="/traffic/vehicles"    element={<Guard roles={TRAFFIC}><VehicleSearchPage/></Guard>}/>
       <Route path="/traffic/checkpoints" element={<Guard roles={TRAFFIC}><CheckpointsPage/></Guard>}/>
+      <Route path="/traffic/payments"    element={<Guard roles={OFFICER}><PaymentsPage/></Guard>}/>
       <Route path="/traffic/settings"    element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
       <Route path="/traffic/profile"     element={<Guard roles={TRAFFIC}><MyProfilePage/></Guard>}/>
       <Route path="/traffic/approvals"   element={<Guard roles={TRAFFIC}><ApprovalsPage/></Guard>}/>

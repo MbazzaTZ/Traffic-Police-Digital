@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import TrafficLayout from "../../layouts/TrafficLayout";
-import { Plus, X, CheckCircle, AlertTriangle, Search, Download, FileText } from "lucide-react";
+import { Plus, X, CheckCircle, AlertTriangle, Search, Download, FileText, Banknote } from "lucide-react";
 import { exportCitation, exportReport } from "../../lib/pdfExport";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
-
-const OFFENSES = ["Speeding","Running Red Light","No Seatbelt","Using Phone While Driving","Drunk Driving","No License","Expired License","No Insurance","Overloading","Wrong Lane","Illegal Parking","No Vehicle Registration","Unroadworthy Vehicle","Reckless Driving","Other"];
-const FINES = { "Speeding":50000,"Running Red Light":30000,"No Seatbelt":20000,"Using Phone While Driving":30000,"Drunk Driving":200000,"No License":100000,"Expired License":50000,"No Insurance":150000,"Overloading":80000,"Wrong Lane":20000,"Illegal Parking":15000,"No Vehicle Registration":100000,"Unroadworthy Vehicle":80000,"Reckless Driving":100000,"Other":20000 };
 
 const S = {
   inp: { width:"100%", height:42, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", fontSize:13, outline:"none", boxSizing:"border-box" },
@@ -16,19 +14,24 @@ const S = {
 };
 
 export default function CitationsPage() {
+  const nav = useNavigate();
   const { profile, stationId, regionId, districtId } = useCurrentUser();
   const [citations, setCitations] = useState([]);
+  const [schedule,  setSchedule]  = useState([]); // live fine_schedule
   const [loading,   setLoading]   = useState(true);
   const [modal,     setModal]     = useState(false);
   const [saving,    setSaving]    = useState(false);
   const [done,      setDone]      = useState(null);
   const [err,       setErr]       = useState("");
   const [search,    setSearch]    = useState("");
-  const [form, setForm] = useState({ driver_name:"", driver_license:"", driver_nida:"", vehicle_plate:"", vehicle_type:"Car", vehicle_make:"", vehicle_color:"", offense_type:"", fine_amount:0, location_text:"" });
+  const [form, setForm] = useState({ driver_name:"", driver_license:"", driver_nida:"", vehicle_plate:"", vehicle_type:"Car", vehicle_make:"", vehicle_color:"", offense_type:"", fine_amount:0, fine_schedule_id:"", location_text:"" });
 
   const upd = k => e => {
     const v = e.target.value;
-    if (k==="offense_type") return setForm(f=>({...f, offense_type:v, fine_amount:FINES[v]||20000}));
+    if (k==="fine_schedule_id") {
+      const it = schedule.find(s=>s.id===v);
+      return setForm(f=>({ ...f, fine_schedule_id:v, offense_type: it?.offense_name||"", fine_amount: it?.fine_amount||0 }));
+    }
     setForm(f=>({...f,[k]:v}));
   };
 
@@ -36,9 +39,13 @@ export default function CitationsPage() {
     setLoading(true);
     let q = supabase.from("traffic_citations").select("*, profiles!traffic_citations_issued_by_fkey(full_name,badge)").order("created_at",{ascending:false}).limit(100);
     if (stationId) q = q.eq("station_id", stationId);
-    const { data, error } = await q;
-    if (error) console.error(error);
-    setCitations(data||[]);
+    const [cits, sched] = await Promise.all([
+      q,
+      supabase.from("fine_schedule").select("*").eq("active", true).order("code"),
+    ]);
+    if (cits.error) console.error(cits.error);
+    setCitations(cits.data||[]);
+    setSchedule(sched.data||[]);
     setLoading(false);
   }
 
@@ -49,19 +56,20 @@ export default function CitationsPage() {
     try {
       const { data, error } = await supabase.from("traffic_citations").insert({
         ...form, fine_amount:parseInt(form.fine_amount)||0, fine_currency:"TZS",
+        fine_schedule_id: form.fine_schedule_id || null,
         station_id:stationId||null, region_id:regionId||null, district_id:districtId||null,
         issued_by:profile?.id||null, status:"unpaid", due_date:new Date(Date.now()+30*86400000).toISOString(),
       }).select().single();
       if (error) throw error;
       logAction({ profile, action:"issue_citation", entityType:"citation", entityId:data.id, entityRef:data.ref_number, description:`Citation: ${data.vehicle_plate} - ${data.offense_type} - TZS ${data.fine_amount}` });
       setDone(data); await load();
-      setTimeout(()=>{setModal(false);setDone(null);setForm({driver_name:"",driver_license:"",driver_nida:"",vehicle_plate:"",vehicle_type:"Car",vehicle_make:"",vehicle_color:"",offense_type:"",fine_amount:0,location_text:""});},2500);
+      setTimeout(()=>{setModal(false);setDone(null);setForm({driver_name:"",driver_license:"",driver_nida:"",vehicle_plate:"",vehicle_type:"Car",vehicle_make:"",vehicle_color:"",offense_type:"",fine_amount:0,fine_schedule_id:"",location_text:""});},2500);
     } catch(e){setErr(e.message);} finally{setSaving(false);}
   }
 
   const filtered = citations.filter(c=> !search || c.driver_name?.toLowerCase().includes(search.toLowerCase()) || c.vehicle_plate?.toLowerCase().includes(search.toLowerCase()) || c.ref_number?.includes(search));
 
-  const STATUS_C = { unpaid:"#DC2626", paid:"#059669", contested:"#D97706", cancelled:"#94A3B8" };
+  const STATUS_C = { unpaid:"#DC2626", partial:"#D97706", paid:"#059669", contested:"#7C3AED", cancelled:"#94A3B8" };
 
   return (
     <TrafficLayout pageTitle="Citations" pageTitle2="Faini za Trafiki">
@@ -114,31 +122,40 @@ export default function CitationsPage() {
         ) : (
           <table style={{ width:"100%", borderCollapse:"collapse" }}>
             <thead><tr style={{ background:"#F8FAFC", borderBottom:"2px solid #E2E8F0" }}>
-              {["Ref #","Driver","Plate","Offense","Fine (TZS)","Status","Issued By","Date",""].map(h=>(
+              {["Ref #","Control No","Driver","Plate","Offense","Fine","Paid","Balance","Status","Date","Actions"].map(h=>(
                 <th key={h} style={{ padding:"11px 14px", textAlign:"left", fontSize:11, fontWeight:700, color:"#64748B", textTransform:"uppercase", letterSpacing:.4, whiteSpace:"nowrap" }}>{h}</th>
               ))}
             </tr></thead>
             <tbody>
               {filtered.map((c)=>{
                 const sc = STATUS_C[c.status]||"#94A3B8";
+                const balance = (c.fine_amount||0)-(c.amount_paid||0);
+                const canPay = c.status!=="paid" && c.status!=="cancelled" && balance>0;
                 return (
                   <tr key={c.id} style={{ borderBottom:"1px solid #F1F5F9" }}
                     onMouseEnter={e=>e.currentTarget.style.background="#F8FAFC"}
                     onMouseLeave={e=>e.currentTarget.style.background="white"}>
                     <td style={{ padding:"11px 14px", fontWeight:700, color:"#D97706", fontSize:12, fontFamily:"monospace" }}>{c.ref_number}</td>
+                    <td style={{ padding:"11px 14px", fontFamily:"monospace", fontSize:11, color:"#64748B" }}>{c.control_number||"—"}</td>
                     <td style={{ padding:"11px 14px", fontSize:13, fontWeight:600, color:"#1E293B" }}>{c.driver_name}</td>
                     <td style={{ padding:"11px 14px" }}><span style={{ background:"#F8FAFC", border:"1px solid #E2E8F0", padding:"2px 8px", borderRadius:6, fontSize:12, fontWeight:700, fontFamily:"monospace" }}>{c.vehicle_plate}</span></td>
                     <td style={{ padding:"11px 14px", fontSize:12, color:"#475569" }}>{c.offense_type}</td>
-                    <td style={{ padding:"11px 14px", fontSize:12, fontWeight:700, color:"#1E293B" }}>{(c.fine_amount||0).toLocaleString()}</td>
+                    <td style={{ padding:"11px 14px", fontSize:12, fontWeight:700, color:"#1E293B", fontFamily:"monospace" }}>{(c.fine_amount||0).toLocaleString()}</td>
+                    <td style={{ padding:"11px 14px", fontSize:12, fontWeight:700, color:"#16A34A", fontFamily:"monospace" }}>{(c.amount_paid||0).toLocaleString()}</td>
+                    <td style={{ padding:"11px 14px", fontSize:12, fontWeight:700, color:balance>0?"#DC2626":"#16A34A", fontFamily:"monospace" }}>{Math.max(0,balance).toLocaleString()}</td>
                     <td style={{ padding:"11px 14px" }}><span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{c.status}</span></td>
-                    <td style={{ padding:"11px 14px", fontSize:12, color:"#475569" }}>{c.profiles?.full_name||"—"}</td>
                     <td style={{ padding:"11px 14px", fontSize:11, color:"#94A3B8" }}>{new Date(c.created_at).toLocaleDateString("en-GB")}</td>
-                    <td style={{ padding:"11px 14px" }}>
-                      <button onClick={()=>exportCitation(c, c.profiles?.full_name||"Officer")}
-                        title="Download PDF"
+                    <td style={{ padding:"11px 14px", display:"flex", gap:6 }}>
+                      <button onClick={()=>exportCitation(c, c.profiles?.full_name||"Officer")} title="Download citation PDF"
                         style={{ width:30, height:30, borderRadius:7, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#D97706" }}>
                         <Download size={14}/>
                       </button>
+                      {canPay && (
+                        <button onClick={()=>nav("/traffic/payments")} title="Record payment"
+                          style={{ width:30, height:30, borderRadius:7, border:"1px solid #BBF7D0", background:"#F0FDF4", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#16A34A" }}>
+                          <Banknote size={14}/>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -180,7 +197,7 @@ export default function CitationsPage() {
                 </div>
                 <div style={{ fontSize:12, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.5, margin:"6px 0 10px" }}>Offense & Fine</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 16px" }}>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Offense Type *</label><select value={form.offense_type} onChange={upd("offense_type")} required style={S.sel} onFocus={e=>e.target.style.borderColor="#D97706"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}><option value="">Select offense...</option>{OFFENSES.map(o=><option key={o}>{o}</option>)}</select></div>
+                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Offense (from schedule) *</label><select value={form.fine_schedule_id} onChange={upd("fine_schedule_id")} required style={S.sel} onFocus={e=>e.target.style.borderColor="#D97706"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}><option value="">Select offense...</option>{schedule.map(s=><option key={s.id} value={s.id}>{s.code} · {s.offense_name} — TZS {s.fine_amount.toLocaleString()}</option>)}</select></div>
                   <div style={{ marginBottom:14 }}><label style={S.lbl}>Fine Amount (TZS) *</label><input type="number" value={form.fine_amount} onChange={upd("fine_amount")} required style={{ ...S.inp, fontWeight:700 }} onFocus={e=>e.target.style.borderColor="#D97706"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}/></div>
                   <div style={{ marginBottom:16, gridColumn:"1/-1" }}><label style={S.lbl}>Location *</label><input value={form.location_text} onChange={upd("location_text")} placeholder="e.g. Uhuru Street, Dar es Salaam" required style={S.inp} onFocus={e=>e.target.style.borderColor="#D97706"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}/></div>
                 </div>
