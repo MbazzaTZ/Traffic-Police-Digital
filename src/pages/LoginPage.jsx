@@ -57,10 +57,10 @@ export default function LoginPage() {
 
       {/* LEFT */}
       <div style={{ flex:1, background:"white", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"60px 80px", borderRight:"1px solid #E2E8F0" }}>
-        <p style={{ fontSize:13, fontWeight:800, color:"#082A63", letterSpacing:1.2, textTransform:"uppercase", marginBottom:4, textAlign:"center" }}>
+        <p style={{ fontSize:22, fontWeight:800, color:"#082A63", letterSpacing:1.5, textTransform:"uppercase", marginBottom:8, textAlign:"center" }}>
           Jamhuri ya Muungano wa Tanzania
         </p>
-        <p style={{ fontSize:11, fontWeight:600, color:"#64748B", letterSpacing:1, textTransform:"uppercase", marginBottom:32, textAlign:"center" }}>
+        <p style={{ fontSize:16, fontWeight:600, color:"#64748B", letterSpacing:1.2, textTransform:"uppercase", marginBottom:32, textAlign:"center" }}>
           Wizara ya Mambo ya Ndani ya Nchi
         </p>
         <img src="/police-logo-transparent.png" alt="Jeshi la Polisi Tanzania"
