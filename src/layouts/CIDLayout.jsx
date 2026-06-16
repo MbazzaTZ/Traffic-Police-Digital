@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { LayoutDashboard, FolderOpen, Users, Search, FileText, Shield, LogOut, Bell, FileCheck, Lock, Stethoscope, UserX, Target, MessageSquare, Gavel, Banknote } from "lucide-react";
+import { LayoutDashboard, FolderOpen, Users, Search, FileText, Shield, LogOut, Bell, FileCheck, Lock, Stethoscope, UserX, Target, MessageSquare, Gavel, Banknote, Menu, X } from "lucide-react";
+import { useResponsiveSidebar } from "../hooks/useResponsiveSidebar";
 
 const NAV = [
   { icon:LayoutDashboard, label:"Dashboard",   sw:"Dashibodi",  path:"/cid" },
@@ -27,10 +28,27 @@ const NAV = [
 export default function CIDLayout({ children, pageTitle="CID", pageTitle2="" }) {
   const nav = useNavigate();
   const loc = useLocation();
+  const { isMobile, open, toggle, close } = useResponsiveSidebar();
+  const W = 220;
+  const sidebarStyle = {
+    width:W, minHeight:"100vh",
+    background:"linear-gradient(180deg,#03102B 0%,#05193E 40%,#082A63 100%)",
+    display:"flex", flexDirection:"column",
+    position:"fixed", top:0, left:0, zIndex:50,
+    boxShadow:"4px 0 24px rgba(0,0,0,.25)",
+    transition:"transform .25s ease",
+    transform: isMobile && !open ? "translateX(-100%)" : "translateX(0)",
+  };
   return (
     <div style={{ display:"flex", minHeight:"100vh", background:"#F4F7FC", fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
-      <aside style={{ width:220, minHeight:"100vh", background:"linear-gradient(180deg,#03102B 0%,#05193E 40%,#082A63 100%)", display:"flex", flexDirection:"column", position:"fixed", top:0, left:0, zIndex:50, boxShadow:"4px 0 24px rgba(0,0,0,.25)" }}>
-        <div style={{ padding:"18px 14px", borderBottom:"1px solid rgba(255,255,255,.07)", textAlign:"center" }}>
+      {isMobile && open && <div onClick={close} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", zIndex:49, backdropFilter:"blur(2px)" }}/>}
+      <aside style={sidebarStyle}>
+        <div style={{ padding:"18px 14px", borderBottom:"1px solid rgba(255,255,255,.07)", textAlign:"center", position:"relative" }}>
+          {isMobile && (
+            <button onClick={close} aria-label="Close menu" style={{ position:"absolute", top:10, right:10, width:30, height:30, borderRadius:8, border:"none", background:"rgba(255,255,255,.08)", color:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <X size={15}/>
+            </button>
+          )}
           <div style={{ width:68, height:68, borderRadius:13, background:"white", border:"2px solid rgba(255,255,255,.15)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 9px", padding:6 }}>
             <img src="/police-logo.png" alt="TPDOP" style={{ width:"100%", height:"100%", objectFit:"contain" }}/>
           </div>
@@ -40,7 +58,7 @@ export default function CIDLayout({ children, pageTitle="CID", pageTitle2="" }) 
             <span style={{ color:"#C4B5FD", fontSize:10, fontWeight:700 }}>🔍 CID OFFICER</span>
           </div>
         </div>
-        <nav style={{ flex:1, padding:"8px 6px" }}>
+        <nav style={{ flex:1, padding:"8px 6px", overflowY:"auto" }}>
           {NAV.map((item, i)=>{
             if (item.divider) {
               return (
@@ -70,20 +88,27 @@ export default function CIDLayout({ children, pageTitle="CID", pageTitle2="" }) 
           </button>
         </div>
       </aside>
-      <div style={{ marginLeft:220, flex:1 }}>
-        <header style={{ position:"fixed", top:0, left:220, right:0, height:60, background:"white", borderBottom:"1px solid #E2E8F0", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 22px", zIndex:40, boxShadow:"0 1px 6px rgba(0,0,0,.06)" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <FolderOpen size={14} color="#7C3AED"/>
-            <span style={{ fontSize:13, color:"#64748B" }}>CID Unit</span>
-            <span style={{ color:"#CBD5E1" }}>·</span>
-            <span style={{ fontSize:14, fontWeight:700, color:"#0D3477" }}>{pageTitle}</span>
-            {pageTitle2&&<span style={{ fontSize:12, color:"#94A3B8" }}>· {pageTitle2}</span>}
+      <div style={{ marginLeft: isMobile ? 0 : W, flex:1, width:"100%" }}>
+        <header style={{ position:"fixed", top:0, left: isMobile ? 0 : W, right:0, height:60, background:"white", borderBottom:"1px solid #E2E8F0", display:"flex", alignItems:"center", justifyContent:"space-between", padding: isMobile ? "0 12px" : "0 22px", zIndex:40, boxShadow:"0 1px 6px rgba(0,0,0,.06)" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, minWidth:0 }}>
+            {isMobile && (
+              <button onClick={toggle} aria-label="Open menu" style={{ width:36, height:36, borderRadius:8, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#7C3AED", flexShrink:0 }}>
+                <Menu size={17}/>
+              </button>
+            )}
+            {!isMobile && <FolderOpen size={14} color="#7C3AED"/>}
+            {!isMobile && <span style={{ fontSize:13, color:"#64748B" }}>CID Unit</span>}
+            {!isMobile && <span style={{ color:"#CBD5E1" }}>·</span>}
+            <span style={{ fontSize:14, fontWeight:700, color:"#0D3477", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{pageTitle}</span>
+            {!isMobile && pageTitle2 && <span style={{ fontSize:12, color:"#94A3B8" }}>· {pageTitle2}</span>}
           </div>
-          <div style={{ padding:"4px 11px", borderRadius:999, background:"#F5F3FF", border:"1px solid #DDD6FE" }}>
-            <span style={{ fontSize:11, fontWeight:700, color:"#6D28D9" }}>🔍 INVESTIGATING</span>
-          </div>
+          {!isMobile && (
+            <div style={{ padding:"4px 11px", borderRadius:999, background:"#F5F3FF", border:"1px solid #DDD6FE" }}>
+              <span style={{ fontSize:11, fontWeight:700, color:"#6D28D9" }}>🔍 INVESTIGATING</span>
+            </div>
+          )}
         </header>
-        <div style={{ marginTop:60, padding:22 }}>{children}</div>
+        <div style={{ marginTop:60, padding: isMobile ? 14 : 22 }}>{children}</div>
       </div>
     </div>
   );

@@ -2,8 +2,9 @@ import { supabase } from "../lib/supabase";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, Building2, MapPin,
-  Shield, Settings, LogOut, ChevronRight, Bell, UserCog, Receipt
+  Shield, Settings, LogOut, ChevronRight, Bell, UserCog, Receipt, Menu, X
 } from "lucide-react";
+import { useResponsiveSidebar } from "../hooks/useResponsiveSidebar";
 
 // ── SINGLE POLICE BLUE THEME ──
 const BLUE = {
@@ -25,20 +26,32 @@ const NAV = [
 export default function AdminLayout({ children, pageTitle = "Admin", pageTitle2 = "" }) {
   const nav = useNavigate();
   const loc = useLocation();
+  const { isMobile, open, toggle, close } = useResponsiveSidebar();
+  const W = 240;
 
   return (
     <div style={{ display:"flex", minHeight:"100vh", background:"#F4F7FC", fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
 
+      {/* Mobile backdrop */}
+      {isMobile && open && <div onClick={close} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", zIndex:49, backdropFilter:"blur(2px)" }}/>}
+
       {/* ── SIDEBAR ── same blue as regular police ── */}
       <aside style={{
-        width:240, minHeight:"100vh",
+        width:W, minHeight:"100vh",
         background:`linear-gradient(180deg, ${BLUE[950]} 0%, ${BLUE[900]} 40%, ${BLUE[800]} 100%)`,
         display:"flex", flexDirection:"column",
         position:"fixed", top:0, left:0, zIndex:50,
         boxShadow:"4px 0 24px rgba(0,0,0,.25)",
+        transition:"transform .25s ease",
+        transform: isMobile && !open ? "translateX(-100%)" : "translateX(0)",
       }}>
         {/* Brand */}
-        <div style={{ padding:"20px 16px 16px", borderBottom:"1px solid rgba(255,255,255,.07)", textAlign:"center" }}>
+        <div style={{ padding:"20px 16px 16px", borderBottom:"1px solid rgba(255,255,255,.07)", textAlign:"center", position:"relative" }}>
+          {isMobile && (
+            <button onClick={close} aria-label="Close menu" style={{ position:"absolute", top:12, right:12, width:32, height:32, borderRadius:8, border:"none", background:"rgba(255,255,255,.08)", color:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <X size={16}/>
+            </button>
+          )}
           {/* White box so logo bg blends perfectly */}
           <div style={{
             width:76, height:76, borderRadius:14,
@@ -109,44 +122,53 @@ export default function AdminLayout({ children, pageTitle = "Admin", pageTitle2 
       </aside>
 
       {/* ── MAIN ── */}
-      <div style={{ marginLeft:240, flex:1 }}>
+      <div style={{ marginLeft: isMobile ? 0 : W, flex:1, width:"100%" }}>
         {/* Topbar */}
         <header style={{
-          position:"fixed", top:0, left:240, right:0, height:64,
+          position:"fixed", top:0, left: isMobile ? 0 : W, right:0, height:64,
           background:"white", borderBottom:"1px solid #E2E8F0",
           boxShadow:"0 1px 8px rgba(0,0,0,.06)",
           display:"flex", alignItems:"center", justifyContent:"space-between",
-          padding:"0 24px", zIndex:40,
+          padding: isMobile ? "0 12px" : "0 24px", zIndex:40,
         }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <Shield size={14} color={BLUE[700]} />
-            <span style={{ fontSize:13, color:"#64748B" }}>Admin Panel</span>
-            <span style={{ color:"#CBD5E1" }}>·</span>
-            <span style={{ fontSize:14, fontWeight:700, color:BLUE[700] }}>{pageTitle}</span>
-            {pageTitle2 && <span style={{ fontSize:13, color:"#94A3B8" }}>· {pageTitle2}</span>}
+          <div style={{ display:"flex", alignItems:"center", gap:8, minWidth:0 }}>
+            {isMobile && (
+              <button onClick={toggle} aria-label="Open menu" style={{ width:38, height:38, borderRadius:8, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:BLUE[700], flexShrink:0 }}>
+                <Menu size={18}/>
+              </button>
+            )}
+            {!isMobile && <Shield size={14} color={BLUE[700]}/>}
+            {!isMobile && <span style={{ fontSize:13, color:"#64748B" }}>Admin Panel</span>}
+            {!isMobile && <span style={{ color:"#CBD5E1" }}>·</span>}
+            <span style={{ fontSize:14, fontWeight:700, color:BLUE[700], whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{pageTitle}</span>
+            {!isMobile && pageTitle2 && <span style={{ fontSize:13, color:"#94A3B8" }}>· {pageTitle2}</span>}
           </div>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 12px", borderRadius:999, background:"#FFF7ED", border:"1px solid #FED7AA" }}>
-              <span style={{ width:7, height:7, borderRadius:"50%", background:"#F97316", display:"inline-block" }} />
-              <span style={{ fontSize:11, fontWeight:700, color:"#C2410C" }}>ADMIN SESSION</span>
-            </div>
-            <button style={{ width:38, height:38, display:"flex", alignItems:"center", justifyContent:"center", borderRadius:8, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", color:"#64748B" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+            {!isMobile && (
+              <div style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 12px", borderRadius:999, background:"#FFF7ED", border:"1px solid #FED7AA" }}>
+                <span style={{ width:7, height:7, borderRadius:"50%", background:"#F97316", display:"inline-block" }} />
+                <span style={{ fontSize:11, fontWeight:700, color:"#C2410C" }}>ADMIN SESSION</span>
+              </div>
+            )}
+            <button aria-label="Alerts" style={{ width:38, height:38, display:"flex", alignItems:"center", justifyContent:"center", borderRadius:8, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", color:"#64748B" }}>
               <Bell size={17} />
             </button>
-            <div style={{ display:"flex", alignItems:"center", gap:8, padding:"5px 14px 5px 6px", borderRadius:999, border:"1px solid #E2E8F0", cursor:"pointer" }}>
-              <div style={{ width:30, height:30, borderRadius:"50%", background:`linear-gradient(135deg,${BLUE[700]},${BLUE[500]})`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <span style={{ color:"white", fontSize:13, fontWeight:800 }}>A</span>
+            {!isMobile && (
+              <div style={{ display:"flex", alignItems:"center", gap:8, padding:"5px 14px 5px 6px", borderRadius:999, border:"1px solid #E2E8F0", cursor:"pointer" }}>
+                <div style={{ width:30, height:30, borderRadius:"50%", background:`linear-gradient(135deg,${BLUE[700]},${BLUE[500]})`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <span style={{ color:"white", fontSize:13, fontWeight:800 }}>A</span>
+                </div>
+                <div>
+                  <div style={{ fontSize:12, fontWeight:700, color:"#0F172A" }}>Admin Officer</div>
+                  <div style={{ fontSize:10, color:"#94A3B8" }}>System Administrator</div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontSize:12, fontWeight:700, color:"#0F172A" }}>Admin Officer</div>
-                <div style={{ fontSize:10, color:"#94A3B8" }}>System Administrator</div>
-              </div>
-            </div>
+            )}
           </div>
         </header>
 
         {/* Content */}
-        <div style={{ marginTop:64, padding:24 }}>
+        <div style={{ marginTop:64, padding: isMobile ? 14 : 24 }}>
           {children}
         </div>
       </div>
