@@ -1,11 +1,19 @@
 // ============================================================
 // TPDOP PDF Export — citations, reports, official documents
+// Uses dynamic import so jsPDF only loads when a PDF is generated
+// (avoids dev-server pre-bundle 500 errors on page load)
 // ============================================================
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 const NAVY = [8, 42, 99];
 const GOLD = [217, 119, 6];
+
+async function getJsPDF() {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
+  return { jsPDF, autoTable };
+}
 
 function header(doc, title, subtitle) {
   doc.setFillColor(...NAVY);
@@ -15,9 +23,9 @@ function header(doc, title, subtitle) {
   doc.setFontSize(16);
   doc.text("JAMHURI YA MUUNGANO WA TANZANIA", 105, 13, { align: "center" });
   doc.setFontSize(11);
-  doc.text("JESHI LA POLISI TANZANIA · TANZANIA POLICE FORCE", 105, 20, { align: "center" });
+  doc.text("JESHI LA POLISI TANZANIA - TANZANIA POLICE FORCE", 105, 20, { align: "center" });
   doc.setFontSize(13);
-  doc.setTextColor(...[252, 211, 77]);
+  doc.setTextColor(252, 211, 77);
   doc.text(title, 105, 30, { align: "center" });
   if (subtitle) {
     doc.setFontSize(9);
@@ -33,16 +41,17 @@ function footer(doc) {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(120, 120, 120);
-    doc.text(`TPDOP · Generated ${new Date().toLocaleString("en-GB")}`, 14, 290);
+    doc.text(`TPDOP - Generated ${new Date().toLocaleString("en-GB")}`, 14, 290);
     doc.text(`Page ${i} of ${pages}`, 196, 290, { align: "right" });
-    doc.text("OFFICIAL DOCUMENT · HATI RASMI", 105, 290, { align: "center" });
+    doc.text("OFFICIAL DOCUMENT - HATI RASMI", 105, 290, { align: "center" });
   }
 }
 
 // ── Single citation PDF ──
-export function exportCitation(c, officerName) {
+export async function exportCitation(c, officerName) {
+  const { jsPDF } = await getJsPDF();
   const doc = new jsPDF();
-  header(doc, "TRAFFIC CITATION · FAINI YA BARABARA", c.ref_number);
+  header(doc, "TRAFFIC CITATION - FAINI YA BARABARA", c.ref_number);
 
   doc.setFontSize(10);
   let y = 50;
@@ -50,16 +59,13 @@ export function exportCitation(c, officerName) {
     doc.setFont("helvetica", "bold");
     doc.text(label, 14, y);
     doc.setFont("helvetica", "normal");
-    doc.text(String(value || "—"), 80, y);
+    doc.text(String(value || "-"), 80, y);
     y += 8;
   };
 
-  doc.setFillColor(245, 247, 250);
-  doc.rect(10, 44, 190, 4, "F");
-
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("DRIVER INFORMATION · TAARIFA YA DEREVA", 14, y); y += 9;
+  doc.text("DRIVER INFORMATION - TAARIFA YA DEREVA", 14, y); y += 9;
   doc.setFontSize(10);
   row("Driver Name:", c.driver_name);
   row("License No:", c.driver_license);
@@ -68,7 +74,7 @@ export function exportCitation(c, officerName) {
   y += 4;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("VEHICLE · GARI", 14, y); y += 9;
+  doc.text("VEHICLE - GARI", 14, y); y += 9;
   doc.setFontSize(10);
   row("Plate Number:", c.vehicle_plate);
   row("Type / Make:", `${c.vehicle_type || ""} ${c.vehicle_make || ""}`);
@@ -77,7 +83,7 @@ export function exportCitation(c, officerName) {
   y += 4;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("OFFENSE & FINE · KOSA NA FAINI", 14, y); y += 9;
+  doc.text("OFFENSE & FINE - KOSA NA FAINI", 14, y); y += 9;
   doc.setFontSize(10);
   row("Offense:", c.offense_type);
   row("Location:", c.location_text);
@@ -85,7 +91,6 @@ export function exportCitation(c, officerName) {
   row("Issued By:", officerName);
   row("Status:", (c.status || "unpaid").toUpperCase());
 
-  // Fine amount box
   y += 6;
   doc.setFillColor(...GOLD);
   doc.rect(14, y, 182, 16, "F");
@@ -106,7 +111,8 @@ export function exportCitation(c, officerName) {
 }
 
 // ── Generic table report PDF ──
-export function exportReport(title, columns, rows, subtitle) {
+export async function exportReport(title, columns, rows, subtitle) {
+  const { jsPDF, autoTable } = await getJsPDF();
   const doc = new jsPDF();
   header(doc, title, subtitle);
   autoTable(doc, {

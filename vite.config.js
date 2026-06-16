@@ -26,6 +26,9 @@ export default defineConfig({
     open: true,
     strictPort: true,
   },
+  optimizeDeps: {
+    include: ['jspdf', 'jspdf-autotable'],
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
