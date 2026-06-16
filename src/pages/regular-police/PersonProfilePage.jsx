@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "../../layouts/DashboardLayout";
-import { User, Shield, Car, FileText, AlertTriangle, ArrowLeft, Phone, MapPin, Calendar, Briefcase } from "lucide-react";
+import { User, Shield, Car, FileText, AlertTriangle, ArrowLeft, Phone, MapPin, Calendar, Briefcase, Hash, Globe } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 const STATUS_C = { detained:"#DC2626", charged:"#D97706", released:"#059669", transferred:"#0891B2" };
@@ -84,6 +84,8 @@ export default function PersonProfilePage() {
               [User, "Tribe · Kabila", person.tribe||"—"],
               [Phone, "Phone", person.phone||"—"],
               [FileText, "Driver License", person.driver_license||"—"],
+              [Hash, "TIN", person.tin||"—"],
+              [Globe, "Passport", person.passport_no ? `${person.passport_no} (${person.passport_country||"TZ"})` : "—"],
               [Briefcase, "Occupation", person.occupation||"—"],
               [MapPin, "Region", person.regions?.name||"—"],
               [MapPin, "Address", person.address||"—"],

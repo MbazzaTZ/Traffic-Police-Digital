@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../layouts/DashboardLayout";
-import { Search, CreditCard, Car, User, Shield, FileText, AlertTriangle, CheckCircle } from "lucide-react";
+import { Search, CreditCard, Car, User, Shield, FileText, AlertTriangle, CheckCircle, Phone, Globe, Fingerprint, ScanFace, Hash } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { logAction } from "../../../lib/audit";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 
+// 9 search methods per blueprint. Each `col` is the persons-table column we ILIKE-match.
+// `biometric:true` methods route to a placeholder (AFIS / face-recognition integration not yet wired).
 const METHODS = [
-  { key:"name",  icon:User,       label:"Full Name",     sw:"Jina Kamili",     ph:"e.g. John Doe Mwangi" },
-  { key:"nida",  icon:CreditCard, label:"NIDA",          sw:"Nambari ya NIDA", ph:"19901231-12345-00001-1" },
-  { key:"plate", icon:Car,        label:"Vehicle Plate", sw:"Nambari ya Gari", ph:"e.g. T 123 ABC" },
-  { key:"license", icon:CreditCard, label:"Driver License", sw:"Leseni ya Udereva", ph:"e.g. TZ-DL-001234" },
+  { key:"name",        icon:User,         label:"Full Name",      sw:"Jina Kamili",      ph:"e.g. John Doe Mwangi",  col:"full_name" },
+  { key:"nida",        icon:CreditCard,   label:"NIDA",           sw:"Nambari ya NIDA",  ph:"19901231-12345-00001-1", col:"nida" },
+  { key:"plate",       icon:Car,          label:"Vehicle Plate",  sw:"Nambari ya Gari",  ph:"e.g. T 123 ABC" },
+  { key:"license",     icon:CreditCard,   label:"Driver License", sw:"Leseni ya Udereva",ph:"e.g. TZ-DL-001234",     col:"driver_license" },
+  { key:"tin",         icon:Hash,         label:"TIN",            sw:"Nambari ya TRA",   ph:"e.g. 123-456-789",      col:"tin" },
+  { key:"passport",    icon:Globe,        label:"Passport",       sw:"Pasipoti",         ph:"e.g. AB123456",         col:"passport_no" },
+  { key:"phone",       icon:Phone,        label:"Phone",          sw:"Simu",             ph:"e.g. 0712 345 678",     col:"phone" },
+  { key:"fingerprint", icon:Fingerprint,  label:"Fingerprint",    sw:"Alama ya Kidole",  ph:"AFIS reference / hash", col:"fingerprint_hash", biometric:true },
+  { key:"face",        icon:ScanFace,     label:"Face Match",     sw:"Picha ya Uso",     ph:"Face-recognition reference", col:"face_hash",     biometric:true },
 ];
 
 export default function PersonSearchPage() {
@@ -26,30 +33,52 @@ export default function PersonSearchPage() {
     if (!query.trim()) return;
     setLoading(true); setResults(null);
     const q = query.trim();
-    const m = METHODS[method].key;
+    const M = METHODS[method];
 
-    if (m === "license") {
-      const { data } = await supabase.from("persons").select("*").ilike("driver_license",`%${q}%`);
-      setResults({ kind:"person", query:q, persons:data||[], arrests:[], suspects:[], wanted:[] });
-    } else if (m === "plate") {
+    // 1) Plate: search vehicles + citations (different shape of result)
+    if (M.key === "plate") {
       const [veh, cits] = await Promise.all([
         supabase.from("vehicles").select("*").ilike("plate_number",`%${q}%`),
         supabase.from("traffic_citations").select("*").ilike("vehicle_plate",`%${q}%`).order("created_at",{ascending:false}),
       ]);
       setResults({ kind:"plate", plate:q.toUpperCase(), vehicles:veh.data||[], citations:cits.data||[] });
-    } else {
-      // name or nida — search arrests, suspects, wanted
-      const col = m === "nida" ? "nida" : "full_name";
-      const arrCol = m === "nida" ? "suspect_nida" : "suspect_name";
+      logAction({ profile, action:"search_person", entityType:"search", description:`Searched ${M.label}: ${q}` });
+      setLoading(false);
+      return;
+    }
+
+    // 2) Biometric placeholders: tell the officer integration is pending, but still try
+    //    a literal hash lookup so manually-set fingerprint/face hashes still work.
+    if (M.biometric) {
+      const { data } = await supabase.from("persons").select("*").ilike(M.col, `%${q}%`);
+      setResults({
+        kind:"person", query:q, biometric:true, method:M.key,
+        persons:data||[], arrests:[], suspects:[], wanted:[],
+      });
+      logAction({ profile, action:"search_person", entityType:"search", description:`Searched ${M.label}: ${q}` });
+      setLoading(false);
+      return;
+    }
+
+    // 3) Name / NIDA — also cross-check arrests / suspects / wanted (officer scenario)
+    if (M.key === "name" || M.key === "nida") {
+      const arrCol = M.key === "nida" ? "suspect_nida" : "suspect_name";
       const [persons, arrests, suspects, wanted] = await Promise.all([
-        supabase.from("persons").select("*").ilike(col==="nida"?"nida":"full_name",`%${q}%`),
-        supabase.from("arrests").select("*").ilike(arrCol,`%${q}%`).order("created_at",{ascending:false}),
-        supabase.from("suspects").select("*, cid_cases(case_number)").ilike(col,`%${q}%`),
-        supabase.from("wanted_persons").select("*").ilike(col,`%${q}%`),
+        supabase.from("persons").select("*").ilike(M.col, `%${q}%`),
+        supabase.from("arrests").select("*").ilike(arrCol, `%${q}%`).order("created_at",{ascending:false}),
+        supabase.from("suspects").select("*, cid_cases(case_number)").ilike(M.col, `%${q}%`),
+        supabase.from("wanted_persons").select("*").ilike(M.col, `%${q}%`),
       ]);
       setResults({ kind:"person", query:q, persons:persons.data||[], arrests:arrests.data||[], suspects:suspects.data||[], wanted:wanted.data||[] });
+      logAction({ profile, action:"search_person", entityType:"search", description:`Searched ${M.label}: ${q}` });
+      setLoading(false);
+      return;
     }
-    logAction({ profile, action:"search_person", entityType:"search", description:`Searched ${METHODS[method].label}: ${q}` });
+
+    // 4) All other persons-only searches: license / tin / passport / phone
+    const { data } = await supabase.from("persons").select("*").ilike(M.col, `%${q}%`);
+    setResults({ kind:"person", query:q, persons:data||[], arrests:[], suspects:[], wanted:[] });
+    logAction({ profile, action:"search_person", entityType:"search", description:`Searched ${M.label}: ${q}` });
     setLoading(false);
   }
 
@@ -61,20 +90,21 @@ export default function PersonSearchPage() {
     <DashboardLayout pageTitle="Person Search" pageTitle2="Tafuta Mtu">
       <div style={{ marginBottom:20 }}>
         <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Person & Vehicle Search <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Tafuta</span></h1>
-        <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>Search records by name, NIDA, or vehicle plate</p>
+        <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>9 search methods: Name · NIDA · Plate · Driver License · TIN · Passport · Phone · Fingerprint · Face</p>
       </div>
 
       <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:24, marginBottom:20 }}>
-        {/* Method tabs */}
-        <div style={{ display:"flex", gap:8, marginBottom:18 }}>
+        {/* Method tabs - 3-col grid handles 9 methods cleanly */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8, marginBottom:18 }}>
           {METHODS.map((mt,i)=>{
             const Icon=mt.icon;
             return (
-              <button key={mt.key} onClick={()=>{setMethod(i);setResults(null);setQuery("");}}
-                style={{ flex:1, padding:"12px", borderRadius:10, border:`2px solid ${method===i?"#0D3477":"#E2E8F0"}`, background:method===i?"#EFF6FF":"white", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:5 }}>
+              <button key={mt.key} type="button" onClick={()=>{setMethod(i);setResults(null);setQuery("");}}
+                style={{ padding:"12px", borderRadius:10, border:`2px solid ${method===i?"#0D3477":"#E2E8F0"}`, background:method===i?"#EFF6FF":"white", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:5, position:"relative" }}>
                 <Icon size={18} color={method===i?"#0D3477":"#94A3B8"}/>
                 <span style={{ fontSize:13, fontWeight:700, color:method===i?"#0D3477":"#475569" }}>{mt.label}</span>
                 <span style={{ fontSize:10, color:"#94A3B8" }}>{mt.sw}</span>
+                {mt.biometric && <span style={{ position:"absolute", top:6, right:8, background:"#FEF3C7", color:"#92400E", fontSize:9, fontWeight:700, padding:"2px 6px", borderRadius:999 }}>BETA</span>}
               </button>
             );
           })}
@@ -97,6 +127,15 @@ export default function PersonSearchPage() {
 
       {results && (
         <>
+          {results.biometric && (
+            <div style={{ background:"#FFFBEB", border:"1px solid #FDE68A", borderRadius:12, padding:"12px 16px", marginBottom:12, display:"flex", alignItems:"center", gap:10 }}>
+              <Fingerprint size={16} color="#92400E"/>
+              <div style={{ fontSize:12, color:"#92400E", lineHeight:1.5 }}>
+                <strong>Biometric search (BETA).</strong> Full AFIS / face-recognition integration is pending — this currently matches stored hashes in the persons registry. Results may be limited until biometric capture is rolled out.
+              </div>
+            </div>
+          )}
+
           <div style={{ background:total>0?(hasWanted?"#FEF2F2":"#FFFBEB"):"#F0FDF4", border:`1px solid ${total>0?(hasWanted?"#FECACA":"#FDE68A"):"#BBF7D0"}`, borderRadius:12, padding:"14px 18px", marginBottom:16, display:"flex", alignItems:"center", gap:10 }}>
             {total>0 ? <AlertTriangle size={18} color={hasWanted?"#DC2626":"#D97706"}/> : <CheckCircle size={18} color="#16A34A"/>}
             <div style={{ fontSize:14, fontWeight:700, color:total>0?(hasWanted?"#B91C1C":"#92400E"):"#166534" }}>
