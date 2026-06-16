@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { Car, FileText, AlertTriangle, Search, LayoutDashboard, Settings, LogOut, Bell, FileCheck } from "lucide-react";
+import { Car, FileText, AlertTriangle, Search, LayoutDashboard, Settings, LogOut, Bell, FileCheck, Lock, Stethoscope, UserX, Target, MessageSquare } from "lucide-react";
 
 const NAV = [
   { icon:LayoutDashboard, label:"Dashboard",    sw:"Dashibodi",    path:"/traffic" },
@@ -8,6 +8,15 @@ const NAV = [
   { icon:AlertTriangle,   label:"Accidents",    sw:"Ajali",        path:"/traffic/accidents" },
   { icon:Search,          label:"Veh. Search",  sw:"Tafuta Gari",  path:"/traffic/vehicles" },
   { icon:Car,             label:"Checkpoints",  sw:"Vizuizi",      path:"/traffic/checkpoints" },
+  { divider:true, label:"Cross-Functional" },
+  { icon:Search,          label:"Person Search", sw:"Tafuta Mtu",  path:"/person-search" },
+  { icon:Lock,            label:"Detentions",   sw:"Vizuizini",    path:"/detentions" },
+  { icon:Stethoscope,     label:"PF3 Forms",    sw:"Fomu ya PF3",  path:"/pf3" },
+  { icon:UserX,           label:"Registries",   sw:"Daftari",      path:"/registries" },
+  { icon:Target,          label:"Firearms",     sw:"Silaha",       path:"/firearms" },
+  { icon:MessageSquare,   label:"Messages",     sw:"Ujumbe",       path:"/messages" },
+  { icon:Bell,            label:"Alerts",       sw:"Tahadhari",    path:"/alerts" },
+  { divider:true },
   { icon:FileCheck,       label:"Approvals",    sw:"Maombi",       path:"/traffic/approvals" },
   { icon:Settings,        label:"Settings",     sw:"Mipangilio",   path:"/traffic/settings" },
 ];
@@ -30,7 +39,14 @@ export default function TrafficLayout({ children, pageTitle="Traffic", pageTitle
           </div>
         </div>
         <nav style={{ flex:1, padding:"8px 6px" }}>
-          {NAV.map(item => {
+          {NAV.map((item, i) => {
+            if (item.divider) {
+              return (
+                <div key={`div-${i}`} style={{ padding:"10px 11px 4px", marginTop:6, borderTop:"1px solid rgba(255,255,255,.06)" }}>
+                  {item.label && <div style={{ fontSize:9, fontWeight:800, color:"rgba(255,255,255,.35)", letterSpacing:1.2, textTransform:"uppercase" }}>{item.label}</div>}
+                </div>
+              );
+            }
             const Icon = item.icon;
             const active = loc.pathname === item.path;
             return (

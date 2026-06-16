@@ -92,7 +92,14 @@ const ADMIN   = ["admin_officer","igp","digp"];
 const COMMAND = ["igp","digp","rpc","admin_officer"];
 const TRAFFIC = ["traffic_officer"];
 const CID     = ["cid_officer","forensic_officer"];
-const OFFICER = ["regular_officer","inspector","ocs","ocd","rpc","igp","digp","admin_officer"];
+// OFFICER = anyone with field/operational duties. All field roles get access to
+// the shared operational tools (Person Search, Profiles, Detentions, PF3,
+// Registries, Firearms, Messages, Alerts, Approvals). Their *home* module
+// (Traffic / CID / Regular dashboard) is still selected by login routing.
+const OFFICER = [
+  "regular_officer","inspector","ocs","ocd","rpc","igp","digp","admin_officer",
+  "traffic_officer","cid_officer","forensic_officer",
+];
 
 export default function AppRoutes() {
   return (
@@ -137,7 +144,7 @@ export default function AppRoutes() {
       <Route path="/alerts"        element={<Guard roles={OFFICER}><AlertsPage/></Guard>}/>
       <Route path="/settings"      element={<Guard roles={OFFICER}><SettingsPage/></Guard>}/>
       <Route path="/profile"       element={<Guard roles={OFFICER}><MyProfilePage/></Guard>}/>
-      <Route path="/approvals"     element={<Guard roles={["regular_officer","inspector","ocs","ocd","rpc","igp","digp","admin_officer"]}><ApprovalsPage/></Guard>}/>
+      <Route path="/approvals"     element={<Guard roles={OFFICER}><ApprovalsPage/></Guard>}/>
 
       {/* Traffic */}
       <Route path="/traffic"             element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
