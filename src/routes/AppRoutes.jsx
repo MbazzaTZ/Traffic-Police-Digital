@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 import LoginPage from "../pages/LoginPage";
+import ResetPasswordPage from "../pages/ResetPasswordPage";
 import AdminDashboard    from "../pages/admin/AdminDashboard";
 import CreateUserPage    from "../pages/admin/CreateUserPage";
 import OfficersPage      from "../pages/admin/OfficersPage";
@@ -89,6 +90,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LoginPage/>}/>
+      <Route path="/reset-password" element={<ResetPasswordPage/>}/>
 
       {/* Admin */}
       <Route path="/admin"             element={<Guard roles={ADMIN}><AdminDashboard/></Guard>}/>

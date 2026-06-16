@@ -8,6 +8,27 @@ export default function LoginPage() {
   const [pw,      setPw]      = useState("");
   const [showPw,  setShowPw]  = useState(false);
   const [loading, setLoading] = useState(false);
+  // Forgot password
+  const [forgot,     setForgot]     = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSent,  setResetSent]  = useState(false);
+  const [resetErr,   setResetErr]   = useState("");
+  const [resetLoad,  setResetLoad]  = useState(false);
+
+  async function sendReset(e) {
+    e.preventDefault(); setResetErr(""); setResetLoad(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setResetSent(true);
+    } catch (e) {
+      setResetErr(e.message || "Could not send reset email.");
+    } finally {
+      setResetLoad(false);
+    }
+  }
   const [error,   setError]   = useState("");
   const nav = useNavigate();
 
@@ -138,7 +159,7 @@ export default function LoginPage() {
               <label style={{ display:"flex", gap:7, alignItems:"center", cursor:"pointer", color:"#64748B" }}>
                 <input type="checkbox" style={{ accentColor:"#082A63", width:15, height:15 }} /> Remember Me
               </label>
-              <a href="#" style={{ color:"#082A63", fontWeight:600, textDecoration:"none" }}>Forgot Password?</a>
+              <a href="#" onClick={e=>{e.preventDefault();setForgot(true);setResetEmail(email);setResetSent(false);setResetErr("");}} style={{ color:"#082A63", fontWeight:600, textDecoration:"none" }}>Forgot Password?</a>
             </div>
 
             <button type="submit" disabled={loading}
@@ -161,6 +182,61 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {forgot && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(3,16,43,.6)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:20 }}
+          onClick={e=>e.target===e.currentTarget&&setForgot(false)}>
+          <div style={{ background:"white", borderRadius:20, padding:32, width:"100%", maxWidth:440, boxShadow:"0 20px 60px rgba(0,0,0,.3)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
+              <div>
+                <h2 style={{ fontSize:20, fontWeight:800, color:"#082A63", margin:0 }}>Reset Password</h2>
+                <p style={{ fontSize:13, color:"#94A3B8", margin:"4px 0 0" }}>Weka upya nenosiri lako</p>
+              </div>
+              <button onClick={()=>setForgot(false)} style={{ width:32, height:32, borderRadius:8, background:"#F1F5F9", border:"none", cursor:"pointer", fontSize:16, color:"#64748B" }}>✕</button>
+            </div>
+
+            {resetSent ? (
+              <div style={{ textAlign:"center", padding:"24px 0 8px" }}>
+                <div style={{ width:60, height:60, borderRadius:"50%", background:"#F0FDF4", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:28 }}>📧</div>
+                <h3 style={{ color:"#16A34A", margin:"0 0 8px" }}>Check Your Email</h3>
+                <p style={{ fontSize:13, color:"#64748B", lineHeight:1.6, margin:0 }}>
+                  We sent a password reset link to <strong style={{ color:"#082A63" }}>{resetEmail}</strong>.
+                  Click the link in the email to set a new password.
+                </p>
+                <p style={{ fontSize:12, color:"#94A3B8", marginTop:12 }}>
+                  Tumetuma kiunga cha kuweka upya nenosiri kwenye barua pepe yako.
+                </p>
+                <button onClick={()=>setForgot(false)} style={{ marginTop:20, width:"100%", height:46, background:"#082A63", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:"pointer" }}>
+                  Back to Login · Rudi
+                </button>
+              </div>
+            ) : (
+              <>
+                <p style={{ fontSize:13, color:"#64748B", lineHeight:1.6, margin:"16px 0 20px" }}>
+                  Enter your registered email and we'll send you a link to reset your password.
+                </p>
+                {resetErr && (
+                  <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:10, padding:"10px 14px", marginBottom:16, display:"flex", gap:8, alignItems:"center" }}>
+                    <AlertTriangle size={15} color="#DC2626" style={{ flexShrink:0 }}/>
+                    <span style={{ fontSize:13, color:"#B91C1C" }}>{resetErr}</span>
+                  </div>
+                )}
+                <form onSubmit={sendReset}>
+                  <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#374151", marginBottom:7 }}>Email Address · Barua Pepe</label>
+                  <input type="email" value={resetEmail} onChange={e=>setResetEmail(e.target.value)} required placeholder="officer@polisi.go.tz"
+                    style={{ width:"100%", height:48, border:"1.5px solid #D1D5DB", borderRadius:10, fontSize:14, outline:"none", boxSizing:"border-box", padding:"0 14px", marginBottom:20 }}
+                    onFocus={e=>e.target.style.borderColor="#082A63"} onBlur={e=>e.target.style.borderColor="#D1D5DB"}/>
+                  <button type="submit" disabled={resetLoad}
+                    style={{ width:"100%", height:48, background:resetLoad?"#94A3B8":"#082A63", color:"white", border:"none", borderRadius:10, fontSize:15, fontWeight:700, cursor:resetLoad?"not-allowed":"pointer" }}>
+                    {resetLoad ? "Sending..." : "Send Reset Link · Tuma Kiunga"}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
