@@ -110,6 +110,63 @@ export async function exportCitation(c, officerName) {
   doc.save(`Citation_${c.ref_number}.pdf`);
 }
 
+// ── PF3 Medical Examination Form PDF ──
+export async function exportPF3(f, officerName, stationName) {
+  const { jsPDF } = await getJsPDF();
+  const doc = new jsPDF();
+  header(doc, "PF.3 - MEDICAL EXAMINATION FORM", f.ref_number);
+
+  doc.setFontSize(9);
+  doc.setTextColor(80, 80, 80);
+  doc.text("Police request for medical examination / Ombi la uchunguzi wa kitabibu", 105, 44, { align: "center" });
+
+  let y = 54;
+  const row = (label, value) => {
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(0,0,0);
+    doc.text(label, 14, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(String(value || "-"), 85, y);
+    y += 8;
+  };
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+  doc.text("SECTION A - POLICE (to be filled by officer)", 14, y); y += 9;
+  row("Patient Name:", f.patient_name);
+  row("NIDA:", f.patient_nida);
+  row("Age / Gender:", `${f.patient_age || "-"} / ${f.patient_gender || "-"}`);
+  row("Phone:", f.patient_phone);
+  row("Patient Type:", (f.patient_type || "").toUpperCase());
+  row("Incident Type:", f.incident_type);
+  row("Incident Date:", f.incident_date ? new Date(f.incident_date).toLocaleDateString("en-GB") : "-");
+  row("Referred To:", f.hospital_name);
+  row("Issued By:", officerName);
+  row("Station:", stationName || f.station_name || "-");
+  row("Date Issued:", new Date(f.created_at).toLocaleString("en-GB"));
+
+  y += 2;
+  doc.setFont("helvetica", "bold");
+  doc.text("Alleged Injuries:", 14, y); y += 6;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+  const injuries = doc.splitTextToSize(f.injuries_alleged || "Not specified", 180);
+  doc.text(injuries, 14, y); y += injuries.length * 5 + 6;
+
+  // Section B - doctor
+  doc.setDrawColor(8, 42, 99); doc.setLineWidth(0.5);
+  doc.line(14, y, 196, y); y += 8;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+  doc.text("SECTION B - MEDICAL OFFICER (to be filled by doctor)", 14, y); y += 12;
+
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  ["Examination findings:", "", "", "", "Nature of injuries (Sec 5 PC):", "", "Probable cause / weapon:", "", "Doctor's Name & Signature:", "Hospital Stamp & Date:"].forEach(line => {
+    if (line) doc.text(line, 14, y);
+    else { doc.setDrawColor(180,180,180); doc.line(14, y, 196, y); }
+    y += 9;
+  });
+
+  footer(doc);
+  doc.save(`PF3_${f.ref_number}.pdf`);
+}
+
 // ── Generic table report PDF ──
 export async function exportReport(title, columns, rows, subtitle) {
   const { jsPDF, autoTable } = await getJsPDF();
