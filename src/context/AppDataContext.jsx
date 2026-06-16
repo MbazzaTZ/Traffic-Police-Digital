@@ -133,12 +133,14 @@ export function AppDataProvider({ children }) {
   }
   function stationsForLocation(regionName, districtName, wardName) {
     let list = stations;
+    let regionObj = null;
     if (regionName) {
-      const r = regions.find(x=>x.name===regionName);
-      if (r) list = list.filter(s=>s.region_id===r.id);
+      regionObj = regions.find(x=>x.name===regionName);
+      if (regionObj) list = list.filter(s=>s.region_id===regionObj.id);
     }
     if (districtName) {
-      const d = districts.find(x=>x.name===districtName);
+      // match district within the selected region (district names repeat across regions)
+      const d = districts.find(x=>x.name===districtName && (!regionObj || x.region_id===regionObj.id));
       if (d) list = list.filter(s=>s.district_id===d.id);
     }
     if (wardName) {

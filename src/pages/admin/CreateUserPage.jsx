@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../layouts/AdminLayout";
 import { UserPlus, CheckCircle, AlertTriangle, Eye, EyeOff, ChevronDown } from "lucide-react";
@@ -37,7 +37,8 @@ function SelWrap({ value, onChange, children, disabled }) {
 
 export default function CreateUserPage() {
   const nav = useNavigate();
-  const { regions, districtsForRegion, stationsForLocation, addOfficer, loading } = useAppData();
+  const { regions, districtsForRegion, stationsForLocation, addOfficer, loading, refresh } = useAppData();
+  useEffect(() => { refresh?.(); }, []);
 
   const [step, setStep]     = useState(1);
   const [saving, setSaving] = useState(false);
@@ -62,7 +63,9 @@ export default function CreateUserPage() {
   };
 
   const availableDistricts = districtsForRegion(form.region);
-  const availableStations  = stationsForLocation(form.region, form.district);
+  // Filter stations by region only — district may not be selected yet, and a
+  // station should be assignable to anyone in the region.
+  const availableStations  = stationsForLocation(form.region);
   const selectedStation    = availableStations.find(s=>s.id===form.station_id);
 
   async function handleSubmit(e) {
