@@ -699,7 +699,13 @@ create index if not exists idx_messages_receiver on public.messages(receiver_id)
 -- ══════════════════════════════════════════════════════════
 -- 19. OFFICER_LATEST_LOCATIONS VIEW
 -- ══════════════════════════════════════════════════════════
-create or replace view public.officer_latest_locations as
+-- DROP first, then CREATE — Postgres refuses to CREATE OR REPLACE
+-- a view if the new column list renames or reorders existing columns
+-- (error 42P16: "cannot change name of view column"). Dropping and
+-- recreating avoids that restriction. Safe because nothing depends
+-- on this view yet (it's brand new in this migration).
+drop view if exists public.officer_latest_locations;
+create view public.officer_latest_locations as
   select distinct on (ol.officer_id)
     ol.id, ol.officer_id, ol.patrol_id,
     ol.lat, ol.lng, ol.accuracy_m, ol.speed_kmh, ol.heading,
