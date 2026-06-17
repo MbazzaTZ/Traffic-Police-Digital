@@ -3,6 +3,7 @@ import CIDLayout from "../../layouts/CIDLayout";
 import { Plus, X, CheckCircle, AlertTriangle, Search, User } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { logAction } from "../../lib/audit";
 
 const STATUS_C = { suspect:"#D97706", charged:"#DC2626", acquitted:"#059669", convicted:"#7C3AED" };
 const S = {
@@ -44,10 +45,11 @@ export default function SuspectsPage() {
   async function submit(e) {
     e.preventDefault(); setErr(""); setSaving(true);
     try {
-      const { error } = await supabase.from("suspects").insert({
+      const { data, error } = await supabase.from("suspects").insert({
         ...form, dob:form.dob||null, case_id:form.case_id||null, added_by:profile?.id||null,
-      });
+      }).select().single();
       if (error) throw error;
+      logAction({ profile, action:"create_suspect", entityType:"suspect", entityId:data.id, entityRef:data.ref_number, description:`Added suspect: ${data.full_name}${data.alias?` (${data.alias})`:""}` });
       setDone(true); await load();
       setTimeout(() => { setModal(false); setDone(false); setForm({ full_name:"", alias:"", nida:"", dob:"", gender:"Male", nationality:"Tanzanian", address:"", phone:"", occupation:"", description:"", status:"suspect", case_id:"" }); }, 2500);
     } catch(e) { setErr(e.message); } finally { setSaving(false); }

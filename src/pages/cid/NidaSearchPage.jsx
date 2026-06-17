@@ -2,8 +2,11 @@ import { useState } from "react";
 import CIDLayout from "../../layouts/CIDLayout";
 import { Search, User, AlertTriangle, FileText, Shield } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { logAction } from "../../lib/audit";
 
 export default function NidaSearchPage() {
+  const { profile } = useCurrentUser();
   const [query,   setQuery]   = useState("");
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -18,10 +21,20 @@ export default function NidaSearchPage() {
       supabase.from("wanted_persons").select("*").or(`full_name.ilike.%${q}%,nida.ilike.%${q}%,alias.ilike.%${q}%`).limit(20),
       supabase.from("cases").select("*").ilike("title",`%${q}%`).limit(10),
     ]);
-    setResults({
+    const r = {
       query:q,
       arrests:arrests.data||[], suspects:suspects.data||[],
       wanted:wanted.data||[], cases:cases.data||[],
+    };
+    setResults(r);
+    // Audit every criminal-record search (security requirement)
+    const hits = r.arrests.length + r.suspects.length + r.wanted.length + r.cases.length;
+    logAction({
+      profile,
+      action: "search_criminal_records",
+      entityType: "search",
+      description: `Searched for "${q}" — ${hits} hits (arrests:${r.arrests.length} suspects:${r.suspects.length} wanted:${r.wanted.length} cases:${r.cases.length})`,
+      metadata: { query: q, hits },
     });
     setLoading(false);
   }

@@ -3,6 +3,7 @@ import CIDLayout from "../../layouts/CIDLayout";
 import { Plus, X, CheckCircle, AlertTriangle, Search, Lock } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { logAction } from "../../lib/audit";
 
 const TYPES=["Physical Object","Photograph","Video Recording","Document","Weapon","Drug Sample","Digital Device","Clothing","Fingerprint","DNA Sample","Other"];
 const STATUS_C={in_custody:"#0D3477",transferred:"#D97706",court:"#7C3AED",destroyed:"#94A3B8"};
@@ -45,6 +46,7 @@ export default function EvidencePage() {
         collected_at:new Date().toISOString(), status:"in_custody", chain_count:1,
       }).select().single();
       if (error) throw error;
+      logAction({ profile, action:"create_evidence", entityType:"evidence", entityId:data.id, entityRef:data.ref_number||data.evidence_no, description:`Evidence collected: ${data.type} — ${data.description?.slice(0,80)||"no description"}` });
       setDone(data); await load();
       setTimeout(()=>{ setModal(false); setDone(null); setForm({type:"Physical Object",description:"",case_id:"",location_found:"",storage_location:""}); },2500);
     } catch(e){ setErr(e.message); } finally{ setSaving(false); }

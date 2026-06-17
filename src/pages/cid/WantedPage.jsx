@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import CIDLayout from "../../layouts/CIDLayout";
-import { Plus, X, CheckCircle, AlertTriangle, Search, Shield } from "lucide-react";
+import { Plus, X, CheckCircle, AlertTriangle, Search, Shield, UserCheck } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { logAction } from "../../lib/audit";
 
 const DANGER={low:"#64748B",medium:"#D97706",high:"#DC2626",armed:"#7C3AED"};
 const S={
@@ -33,11 +34,34 @@ export default function WantedPage() {
   async function submit(e) {
     e.preventDefault(); setErr(""); setSaving(true);
     try {
-      const { error } = await supabase.from("wanted_persons").insert({ ...form, reward:parseInt(form.reward)||0, dob:form.dob||null, added_by:profile?.id||null, status:"wanted" });
+      const { data, error } = await supabase.from("wanted_persons").insert({ ...form, reward:parseInt(form.reward)||0, dob:form.dob||null, added_by:profile?.id||null, status:"wanted" }).select().single();
       if (error) throw error;
+      logAction({ profile, action:"create_wanted_person", entityType:"wanted_person", entityId:data.id, entityRef:data.ref_number, description:`Wanted notice: ${data.full_name} - ${data.offenses || "unknown offenses"}` });
       setDone(true); await load();
       setTimeout(()=>{ setModal(false); setDone(false); setForm({full_name:"",alias:"",nida:"",dob:"",gender:"Male",description:"",last_seen:"",offenses:"",danger_level:"medium",reward:0}); },2500);
     } catch(e){ setErr(e.message); } finally{ setSaving(false); }
+  }
+
+  // ── Mark a wanted person as captured ──
+  async function markCaptured(w) {
+    if (!confirm(`Mark ${w.full_name} as captured? This will update their status and remove them from the active wanted list.`)) return;
+    try {
+      const { error } = await supabase.from("wanted_persons")
+        .update({ status: "captured" })
+        .eq("id", w.id);
+      if (error) throw error;
+      logAction({
+        profile,
+        action: "capture_wanted_person",
+        entityType: "wanted_person",
+        entityId: w.id,
+        entityRef: w.ref_number,
+        description: `Captured: ${w.full_name} (${w.offenses || "unknown offenses"})`,
+      });
+      await load();
+    } catch (e) {
+      setErr(e.message || "Could not update status");
+    }
   }
 
   const filtered = wanted.filter(w=> !search || w.full_name?.toLowerCase().includes(search.toLowerCase()) || w.alias?.toLowerCase().includes(search.toLowerCase()) || w.nida?.includes(search));
@@ -59,7 +83,7 @@ export default function WantedPage() {
           {label:"Active Wanted",  v:wanted.filter(w=>w.status==="wanted").length,   c:"#DC2626"},
           {label:"Armed & Danger", v:wanted.filter(w=>w.danger_level==="armed").length, c:"#7C3AED"},
           {label:"High Priority",  v:wanted.filter(w=>w.danger_level==="high").length,  c:"#D97706"},
-          {label:"Arrested",       v:wanted.filter(w=>w.status==="arrested").length,    c:"#059669"},
+          {label:"Captured",        v:wanted.filter(w=>w.status==="captured").length,     c:"#059669"},
         ].map(k=>(
           <div key={k.label} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
             <div style={{ fontSize:26, fontWeight:900, color:k.c }}>{k.v}</div>
@@ -104,8 +128,13 @@ export default function WantedPage() {
                     ))}
                   </div>
                   {w.offenses && <div style={{ background:"#FEF2F2", borderRadius:8, padding:"8px 10px", fontSize:12, color:"#B91C1C", marginBottom:10 }}>⚖️ {w.offenses}</div>}
-                  <div style={{ display:"flex", gap:8 }}>
+                  <div style={{ display:"flex", gap:8, alignItems:"center", justifyContent:"space-between" }}>
                     <span style={{ background:w.status==="wanted"?"#FEF2F2":"#F0FDF4", color:w.status==="wanted"?"#DC2626":"#16A34A", padding:"4px 12px", borderRadius:999, fontSize:12, fontWeight:700, textTransform:"capitalize" }}>{w.status}</span>
+                    {w.status==="wanted" && (
+                      <button onClick={()=>markCaptured(w)} title="Mark as captured" style={{ padding:"5px 11px", borderRadius:8, border:"none", background:"#059669", color:"white", fontWeight:700, fontSize:11, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
+                        <UserCheck size={12}/> Mark Captured
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

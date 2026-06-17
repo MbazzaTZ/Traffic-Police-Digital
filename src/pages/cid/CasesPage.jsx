@@ -3,6 +3,7 @@ import CIDLayout from "../../layouts/CIDLayout";
 import { Plus, FolderOpen, X, CheckCircle, AlertTriangle, Search } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { logAction } from "../../lib/audit";
 
 const TYPES=["Murder","Manslaughter","Armed Robbery","Kidnapping","Rape","Drug Trafficking","Drug Possession","Fraud","Cybercrime","Money Laundering","Terrorism","Human Trafficking","Burglary","Arson","Forgery","Corruption","Other"];
 const PRIORITY_C={low:"#64748B",medium:"#D97706",high:"#DC2626",critical:"#7C3AED"};
@@ -44,6 +45,7 @@ export default function CasesPage() {
         district_id:districtId||null, lead_officer:profile?.id||null, opened_at:new Date().toISOString(),
       }).select().single();
       if (error) throw error;
+      logAction({ profile, action:"create_case", entityType:"case", entityId:data.id, entityRef:data.ref_number||data.case_number, description:`Opened case: ${data.title} (${data.type})` });
       setDone(data); await load();
       setTimeout(()=>{ setModal(false); setDone(null); setForm({title:"",type:"",description:"",priority:"medium",status:"open"}); },2500);
     } catch(e){ setErr(e.message); } finally{ setSaving(false); }
