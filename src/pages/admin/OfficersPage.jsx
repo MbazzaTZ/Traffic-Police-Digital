@@ -14,7 +14,11 @@ const STATUSES = ["active","pending","suspended"];
 
 export default function OfficersPage() {
   const nav = useNavigate();
-  const { officers, deleteOfficer, refresh } = useAppData();
+  const {
+    officers, deleteOfficer, refresh,
+    regions, districts, wards, stations,
+    regionName, districtName, wardName,
+  } = useAppData();
   const { profile: currentProfile } = useCurrentUser();
   const [search, setSearch]             = useState("");
   const [filterRole, setFilterRole]     = useState("All");
@@ -29,6 +33,17 @@ export default function OfficersPage() {
   const [err,         setErr]         = useState("");
   const [toast,       setToast]       = useState("");
 
+  // Cascading dropdown options derived from selected IDs
+  const editDistricts = editForm.region_id   ? districts.filter(d => d.region_id   === editForm.region_id)   : [];
+  const editWards     = editForm.district_id ? wards.filter(w     => w.district_id === editForm.district_id) : [];
+  const editStations  = editForm.region_id
+    ? stations.filter(s => {
+        if (editForm.ward_id)     return s.ward_id     === editForm.ward_id;
+        if (editForm.district_id) return s.district_id === editForm.district_id;
+        return s.region_id === editForm.region_id;
+      })
+    : stations;
+
   const roles = ["All", ...new Set(officers.map(o => o.role).filter(Boolean))];
   const filtered = officers.filter(o => {
     const ms  = !search || o.full_name?.toLowerCase().includes(search.toLowerCase()) || o.badge?.includes(search);
@@ -40,13 +55,17 @@ export default function OfficersPage() {
   function openEdit(o) {
     setEditOfficer(o);
     setEditForm({
-      full_name: o.full_name || "",
-      email:     o.email     || "",
-      phone:     o.phone     || "",
-      badge:     o.badge     || "",
-      rank:      o.rank      || "",
-      role:      o.role      || "",
-      status:    o.status    || "active",
+      full_name:   o.full_name   || "",
+      email:       o.email       || "",
+      phone:       o.phone       || "",
+      badge:       o.badge       || "",
+      rank:        o.rank        || "",
+      role:        o.role        || "",
+      status:      o.status      || "active",
+      region_id:   o.region_id   || "",
+      district_id: o.district_id || "",
+      ward_id:     o.ward_id     || "",
+      station_id:  o.station_id  || "",
     });
     setErr("");
   }
@@ -54,8 +73,14 @@ export default function OfficersPage() {
   async function saveEdit() {
     setSaving(true); setErr("");
     try {
+      // Empty strings can't be sent to UUID columns - Supabase rejects them.
+      // Convert blanks to null so the column can hold "not set".
+      const payload = { ...editForm };
+      ["region_id","district_id","ward_id","station_id","email","phone"].forEach(k => {
+        if (payload[k] === "") payload[k] = null;
+      });
       const { error } = await supabase.from("profiles")
-        .update(editForm).eq("id", editOfficer.id);
+        .update(payload).eq("id", editOfficer.id);
       if (error) throw error;
       logAction({
         profile: currentProfile, action: "update_officer",
@@ -185,8 +210,8 @@ export default function OfficersPage() {
                   <td style={{ padding:"12px 14px", fontSize:12, color:"#475569" }}>{o.rank||"—"}</td>
                   <td style={{ padding:"12px 14px", fontSize:12, color:"#475569" }}>{ROLE_LABELS[o.role]||o.role||"—"}</td>
                   <td style={{ padding:"12px 14px" }}>
-                    <div style={{ fontSize:12, fontWeight:600, color:"#1E293B" }}>{o.region||"—"}</div>
-                    <div style={{ fontSize:11, color:"#94A3B8" }}>{o.stations?.name||o.station_name||o.district||""}</div>
+                    <div style={{ fontSize:12, fontWeight:600, color:"#1E293B" }}>{regionName(o.region_id) || o.region || "—"}</div>
+                    <div style={{ fontSize:11, color:"#94A3B8" }}>{o.stations?.name || districtName(o.district_id) || ""}</div>
                   </td>
                   <td style={{ padding:"12px 14px" }}>
                     <span style={{ background:"#F0FDF4", color:"#16A34A", padding:"3px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{o.status||"—"}</span>
@@ -241,9 +266,10 @@ export default function OfficersPage() {
               </Section>
 
               <Section title="Posting">
-                <Row icon={MapPin} label="Region"   value={viewOfficer.region}/>
-                <Row icon={MapPin} label="District" value={viewOfficer.district}/>
-                <Row icon={Shield} label="Station"  value={viewOfficer.stations?.name||viewOfficer.station_name}/>
+                <Row icon={MapPin} label="Region"   value={regionName(viewOfficer.region_id)     || viewOfficer.region}/>
+                <Row icon={MapPin} label="District" value={districtName(viewOfficer.district_id) || viewOfficer.district}/>
+                <Row icon={MapPin} label="Ward"     value={wardName(viewOfficer.ward_id)         || viewOfficer.ward}/>
+                <Row icon={Shield} label="Station"  value={viewOfficer.stations?.name            || viewOfficer.station_name}/>
               </Section>
 
               <Section title="System">
@@ -318,6 +344,46 @@ export default function OfficersPage() {
                 <label style={lbl}>Status</label>
                 <select value={editForm.status} onChange={e=>setEditForm({...editForm, status:e.target.value})} style={sel}>
                   {STATUSES.map(s=><option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+
+              {/* ── Posting (cascading: region -> district -> ward -> station) ── */}
+              <div style={{ gridColumn:"1/-1", marginTop:6, marginBottom:8, paddingTop:12, borderTop:"1px solid #E2E8F0" }}>
+                <div style={{ fontSize:11, fontWeight:800, color:"#64748B", textTransform:"uppercase", letterSpacing:0.5 }}>Posting · Kituo</div>
+                <div style={{ fontSize:10, color:"#94A3B8", marginTop:2 }}>Selecting a region narrows the district list, and so on. Leave blank to clear.</div>
+              </div>
+              <div style={{ marginBottom:13 }}>
+                <label style={lbl}>Region</label>
+                <select value={editForm.region_id} onChange={e=>setEditForm({...editForm, region_id:e.target.value, district_id:"", ward_id:"", station_id:""})} style={sel}>
+                  <option value="">— Not set —</option>
+                  {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+              </div>
+              <div style={{ marginBottom:13 }}>
+                <label style={lbl}>District</label>
+                <select value={editForm.district_id} onChange={e=>setEditForm({...editForm, district_id:e.target.value, ward_id:"", station_id:""})}
+                  disabled={!editForm.region_id}
+                  style={{ ...sel, opacity:editForm.region_id?1:0.55, cursor:editForm.region_id?"pointer":"not-allowed" }}>
+                  <option value="">{editForm.region_id ? "— Not set —" : "Select region first"}</option>
+                  {editDistricts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
+              <div style={{ marginBottom:13 }}>
+                <label style={lbl}>Ward</label>
+                <select value={editForm.ward_id} onChange={e=>setEditForm({...editForm, ward_id:e.target.value, station_id:""})}
+                  disabled={!editForm.district_id}
+                  style={{ ...sel, opacity:editForm.district_id?1:0.55, cursor:editForm.district_id?"pointer":"not-allowed" }}>
+                  <option value="">{editForm.district_id ? "— Not set —" : "Select district first"}</option>
+                  {editWards.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                </select>
+              </div>
+              <div style={{ marginBottom:13 }}>
+                <label style={lbl}>Station</label>
+                <select value={editForm.station_id} onChange={e=>setEditForm({...editForm, station_id:e.target.value})}
+                  disabled={!editForm.region_id}
+                  style={{ ...sel, opacity:editForm.region_id?1:0.55, cursor:editForm.region_id?"pointer":"not-allowed" }}>
+                  <option value="">{editForm.region_id ? "— Not set —" : "Select region first"}</option>
+                  {editStations.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
             </div>
