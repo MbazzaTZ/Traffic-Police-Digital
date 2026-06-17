@@ -55,6 +55,7 @@ const PaymentsPage      = lazy(() => import("../pages/traffic/PaymentsPage"));
 const CIDDashboard    = lazy(() => import("../pages/cid/CIDDashboard"));
 const CasesPage       = lazy(() => import("../pages/cid/CasesPage"));
 const WantedPage      = lazy(() => import("../pages/cid/WantedPage"));
+const WarrantsPage    = lazy(() => import("../pages/cid/WarrantsPage"));
 const EvidencePage    = lazy(() => import("../pages/cid/EvidencePage"));
 const SuspectsPage    = lazy(() => import("../pages/cid/SuspectsPage"));
 const NidaSearchPage  = lazy(() => import("../pages/cid/NidaSearchPage"));
@@ -260,6 +261,7 @@ export default function AppRoutes() {
       <Route path="/cid/cases"    element={<Guard roles={CID}><CasesPage/></Guard>}/>
       <Route path="/cid/suspects" element={<Guard roles={CID}><SuspectsPage/></Guard>}/>
       <Route path="/cid/wanted"   element={<Guard roles={CID}><WantedPage/></Guard>}/>
+      <Route path="/cid/warrants" element={<Guard roles={CID}><WarrantsPage/></Guard>}/>
       <Route path="/cid/evidence" element={<Guard roles={CID}><EvidencePage/></Guard>}/>
       <Route path="/cid/search"   element={<Guard roles={CID}><NidaSearchPage/></Guard>}/>
       <Route path="/cid/profile"  element={<Guard roles={CID}><MyProfilePage/></Guard>}/>

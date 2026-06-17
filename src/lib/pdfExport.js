@@ -759,3 +759,179 @@ export async function exportWantedPoster(w, officerName, stationName) {
 
   doc.save(`Wanted_${(w.full_name || "Unknown").replace(/[^a-z0-9]/gi, "_")}_${w.ref_number || (w.id || "").slice(0, 8)}.pdf`);
 }
+
+// ── Warrant PDF ──
+// Generates an official court warrant document for arrest, search, or seizure.
+// Designed to be printable and presentable to the subject upon execution.
+export async function exportWarrant(w, officerName, stationName) {
+  const { jsPDF } = await getJsPDF();
+  const doc = new jsPDF();
+
+  const TYPE_LABELS = {
+    arrest: "WARRANT OF ARREST",
+    search: "SEARCH WARRANT",
+    seizure: "WARRANT OF SEIZURE",
+    bench: "BENCH WARRANT",
+    production: "WARRANT OF PRODUCTION",
+    other: "WARRANT",
+  };
+  const title = TYPE_LABELS[w.type] || "WARRANT";
+
+  // ── Court header (centered, formal) ──
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, 210, 38, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text("UNITED REPUBLIC OF TANZANIA", 105, 12, { align: "center" });
+  doc.setFontSize(11);
+  doc.text("JUDICIARY · MAHAKAMA", 105, 19, { align: "center" });
+  doc.setFontSize(16);
+  doc.setTextColor(252, 211, 77);
+  doc.text(title, 105, 30, { align: "center" });
+
+  // ── Court info ──
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("IN THE DISTRICT COURT OF TANZANIA", 105, 50, { align: "center" });
+  doc.text(`AT ${String(w.court || "—").toUpperCase()}`, 105, 57, { align: "center" });
+
+  // ── Warrant number + dates (right-aligned box) ──
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  const refNo = w.ref_number || w.warrant_no || "—";
+  doc.text(`Warrant No: ${refNo}`, 196, 50, { align: "right" });
+  doc.text(`Issued: ${w.issued_at ? new Date(w.issued_at).toLocaleDateString("en-GB") : new Date().toLocaleDateString("en-GB")}`, 196, 55, { align: "right" });
+  if (w.expires_at) {
+    doc.setTextColor(220, 38, 38);
+    doc.text(`Expires: ${new Date(w.expires_at).toLocaleDateString("en-GB")}`, 196, 60, { align: "right" });
+    doc.setTextColor(0, 0, 0);
+  }
+
+  // ── Divider ──
+  doc.setDrawColor(...NAVY);
+  doc.setLineWidth(0.8);
+  doc.line(14, 65, 196, 65);
+
+  // ── TO: Subject ──
+  let y = 75;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("TO: The Officer in Charge, Tanzania Police Force", 14, y);
+  y += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text("Whereas information has been laid before this Court that the person named below", 14, y);
+  y += 6;
+  doc.text("has committed an offense(s) and is required to be apprehended/brought before this Court:", 14, y);
+  y += 10;
+
+  // ── Subject details box ──
+  doc.setFillColor(245, 247, 252);
+  doc.rect(14, y - 4, 182, 32, "F");
+  doc.setDrawColor(...NAVY);
+  doc.setLineWidth(0.3);
+  doc.rect(14, y - 4, 182, 32);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("SUBJECT · MTUHUMIWA", 18, y + 2);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  const row = (label, value, x) => {
+    doc.setFont("helvetica", "bold");
+    doc.text(label, x, y + 10);
+    doc.setFont("helvetica", "normal");
+    doc.text(String(value || "—"), x + 35, y + 10);
+  };
+  row("Name:", w.person_name, 18);
+  row("NIDA:", w.person_nida, 110);
+  row("Court:", w.court, 18);
+  row("Judge:", w.judge, 110);
+  y += 36;
+
+  // ── Warrant body (grounds) ──
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...NAVY);
+  doc.text("GROUNDS FOR WARRANT · SABABU", 14, y);
+  y += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  const descLines = doc.splitTextToSize(w.description || "The above-named person is suspected of committing a criminal offense and is required to be apprehended and brought before this Court to answer to the charges.", 182);
+  doc.text(descLines, 14, y);
+  y += descLines.length * 5 + 8;
+
+  // ── Directive ──
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...NAVY);
+  doc.text("DIRECTIVE · MAELEKEZO", 14, y);
+  y += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  const directive = `You are hereby directed to ${w.type === "arrest" ? "arrest and bring before this Court" : w.type === "search" ? "search the premises of" : "seize the property of"} the above-named person${w.location ? ` at ${w.location}` : ""}. This warrant shall be executed within the period specified above, or it shall be returned to this Court with a report of execution.`;
+  const directiveLines = doc.splitTextToSize(directive, 182);
+  doc.text(directiveLines, 14, y);
+  y += directiveLines.length * 5 + 12;
+
+  // ── Urgent flag ──
+  if (w.urgent) {
+    doc.setFillColor(220, 38, 38);
+    doc.rect(14, y, 182, 14, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("⚠ THIS WARRANT IS URGENT · HATARI — EXECUTE IMMEDIATELY", 105, y + 9, { align: "center" });
+    y += 20;
+    doc.setTextColor(0, 0, 0);
+  }
+
+  // ── Execution status ──
+  if (w.status === "executed" && w.executed_at) {
+    doc.setFillColor(22, 163, 74);
+    doc.rect(14, y, 182, 14, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text(`✓ EXECUTED on ${new Date(w.executed_at).toLocaleDateString("en-GB")}`, 105, y + 9, { align: "center" });
+    y += 20;
+    doc.setTextColor(0, 0, 0);
+  } else if (w.status === "cancelled") {
+    doc.setFillColor(100, 116, 139);
+    doc.rect(14, y, 182, 14, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("CANCELLED · IMEFUTWA", 105, y + 9, { align: "center" });
+    y += 20;
+    doc.setTextColor(0, 0, 0);
+  }
+
+  // ── Signature lines ──
+  y = Math.max(y, 240);
+  doc.setDrawColor(100, 100, 100);
+  doc.setLineWidth(0.5);
+  doc.line(20, y, 90, y);
+  doc.line(120, y, 190, y);
+  y += 5;
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  doc.text("Judge / Magistrate Signature", 55, y, { align: "center" });
+  doc.text("Executing Officer Signature", 155, y, { align: "center" });
+  y += 8;
+  doc.text(`Issued by: ${officerName || "—"}`, 14, y);
+  y += 5;
+  doc.text(`Station: ${stationName || "—"}`, 14, y);
+
+  // ── Footer ──
+  footer(doc);
+  doc.save(`Warrant_${refNo}.pdf`);
+}

@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { LayoutDashboard, FolderOpen, Users, Search, FileText, Shield, LogOut, Bell, FileCheck, Lock, Stethoscope, UserX, Target, MessageSquare, Gavel, Banknote, Menu, X } from "lucide-react";
+import { LayoutDashboard, FolderOpen, Users, Search, FileText, Shield, LogOut, Bell, FileCheck, Lock, Stethoscope, UserX, Target, MessageSquare, Gavel, Banknote, ScrollText, Menu, X } from "lucide-react";
 import { useResponsiveSidebar } from "../hooks/useResponsiveSidebar";
 
 const NAV = [
@@ -8,6 +8,7 @@ const NAV = [
   { icon:FolderOpen,      label:"Cases",       sw:"Kesi",       path:"/cid/cases" },
   { icon:Users,           label:"Suspects",    sw:"Washukiwa",  path:"/cid/suspects" },
   { icon:Shield,          label:"Wanted",      sw:"Watuhumiwa", path:"/cid/wanted" },
+  { icon:ScrollText,      label:"Warrants",    sw:"Hati",       path:"/cid/warrants" },
   { icon:FileText,        label:"Evidence",    sw:"Ushahidi",   path:"/cid/evidence" },
   { icon:Search,          label:"NIDA Search", sw:"Tafuta NIDA",path:"/cid/search" },
   { divider:true, label:"Cross-Functional" },
