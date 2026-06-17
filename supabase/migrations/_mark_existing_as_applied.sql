@@ -33,10 +33,11 @@ create table if not exists supabase_migrations.schema_migrations (
 );
 
 -- Mark all 7 existing migrations as applied
+-- (00000_drop_all.sql is intentionally excluded — it's destructive and
+-- was removed from the migration sequence. The base schema starts at 00001.)
 -- The "version" column matches the migration filename prefix (without leading zeros stripped)
 -- The "name" column is the full filename
 insert into supabase_migrations.schema_migrations (version, name, statements) values
-  ('00000', '00000_drop_all.sql',           '[]'::jsonb),
   ('00001', '00001_full_schema.sql',        '[]'::jsonb),
   ('00002', '00002_wards.sql',              '[]'::jsonb),
   ('00003', '00003_runtime_tables.sql',     '[]'::jsonb),
@@ -51,4 +52,4 @@ select version, name from supabase_migrations.schema_migrations order by version
 
 -- Done — `supabase db push` will now work cleanly for future migrations
 select 'TPDOP MIGRATIONS MARKED AS APPLIED' as status,
-       '8 migrations recorded in supabase_migrations.schema_migrations' as summary;
+       '7 migrations recorded in supabase_migrations.schema_migrations' as summary;

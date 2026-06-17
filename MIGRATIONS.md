@@ -10,17 +10,19 @@ All migrations live in `supabase/migrations/`. Apply them in **filename order** 
 
 | File | Purpose | Status |
 |---|---|---|
-| `00000_drop_all.sql` | ⚠️ **DESTRUCTIVE** — drops all tables. Only run on a fresh DB or to reset. | Pre-existing |
-| `00001_full_schema.sql` | Base schema: 37 tables, RLS, audit triggers, helper functions | Pre-existing |
-| `00002_wards.sql` | Adds `wards` table | Pre-existing |
+| `00001_full_schema.sql` | Base schema: 37 tables, RLS, audit triggers, helper functions | ✅ Applied |
+| `00002_wards.sql` | Adds `wards` table | ✅ Applied |
 | `00003_runtime_tables.sql` | 12 new tables + ALTERs + RLS + triggers + fine_schedule seeds | ✅ Applied |
 | `00004_column_align.sql` | ~150 columns added to 13 existing tables; 18 NOT NULLs dropped; 8 CHECKs widened | ✅ Applied |
 | `00005_checkpoints_extend.sql` | Counter columns on `checkpoints` + `roadblocks` | ✅ Applied |
 | `00006_final_align.sql` | 10 more CHECKs widened; 62 alias columns; 3 sync triggers | ✅ Applied |
 | `00007_system_settings.sql` | `system_settings` table for AdminSettingsPage | ✅ Applied |
 | `ALL_MIGRATIONS_CONSOLIDATED.sql` | One-shot file combining 00003–00007 (for Dashboard paste-and-run) | ✅ Applied |
+| `_mark_existing_as_applied.sql` | One-shot script to mark existing migrations as applied in CLI tracking table | Run once after Dashboard apply |
 
 > ✅ **All migrations are currently applied** to the production Supabase project (as of the latest session).
+>
+> ⚠️ **`00000_drop_all.sql` was removed** — it was destructive (dropped all tables) and shouldn't have been in the migration sequence. If you ever need to reset the DB, use `supabase db reset` instead.
 
 ---
 
