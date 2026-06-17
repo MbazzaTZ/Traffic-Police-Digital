@@ -176,13 +176,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Admin hint */}
-          <div style={{ marginTop:20, padding:"12px 14px", background:"#F8FAFC", borderRadius:10, border:"1px solid #E2E8F0" }}>
-            <div style={{ fontSize:11, fontWeight:700, color:"#475569", marginBottom:4 }}>ADMIN ACCOUNT</div>
-            <div style={{ fontSize:12, color:"#64748B" }}>Email: <strong style={{ color:"#082A63" }}>admin@tpdp.com</strong></div>
-            <div style={{ fontSize:11, color:"#94A3B8", marginTop:2 }}>Use the password set in Supabase Auth</div>
-          </div>
-
           <p style={{ marginTop:16, textAlign:"center", fontSize:11, color:"#CBD5E1" }}>
             🔒 Mfumo huu uko salama · Matumizi yote yanarekodiwa
           </p>
