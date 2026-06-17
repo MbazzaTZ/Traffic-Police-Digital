@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { Target, FileBadge, Plus, X, CheckCircle, AlertTriangle, Search, Download } from "lucide-react";
+import PhotoUpload from "../../components/PhotoUpload";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
@@ -43,7 +44,7 @@ export default function FirearmsPage() {
   const [err, setErr] = useState("");
   const [search, setSearch] = useState("");
 
-  const [fa, setFA] = useState({ serial_number:"", firearm_type:"Pistol", make:"", model:"", caliber:"", category:"civilian", holder_name:"", holder_nida:"", holder_phone:"" });
+  const [fa, setFA] = useState({ serial_number:"", firearm_type:"Pistol", make:"", model:"", caliber:"", category:"civilian", holder_name:"", holder_nida:"", holder_phone:"", photo_urls:[] });
   const [lic, setLic] = useState({ holder_name:"", holder_nida:"", license_type:"civilian_carry", firearm_id:"", issue_date:"", expiry_date:"" });
   const updFA = k => e => setFA(f=>({...f,[k]:e.target.value}));
   const updLic = k => e => setLic(f=>({...f,[k]:e.target.value}));
@@ -258,6 +259,16 @@ export default function FirearmsPage() {
                   <div style={{ marginBottom:14 }}><label style={S.lbl}>Holder Name</label><input value={fa.holder_name} onChange={updFA("holder_name")} style={S.inp}/></div>
                   <div style={{ marginBottom:14 }}><label style={S.lbl}>Holder NIDA</label><input value={fa.holder_nida} onChange={updFA("holder_nida")} style={S.inp}/></div>
                   <div style={{ marginBottom:14, gridColumn:"1/-1" }}><label style={S.lbl}>Holder Phone</label><input value={fa.holder_phone} onChange={updFA("holder_phone")} style={S.inp}/></div>
+                  <div style={{ marginBottom:16, gridColumn:"1/-1" }}>
+                    <PhotoUpload
+                      folder="firearms"
+                      value={fa.photo_urls}
+                      onChange={(urls)=>setFA(f=>({...f, photo_urls:urls}))}
+                      maxFiles={5}
+                      label="Photos · Picha (firearm + serial close-up)"
+                      hint="Tap to photograph firearm and serial number"
+                    />
+                  </div>
                 </div>
                 <button type="submit" disabled={saving} style={{ width:"100%", height:46, background:saving?"#94A3B8":"#0D3477", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:saving?"not-allowed":"pointer" }}>{saving?"Registering...":"Register Firearm"}</button>
               </form>

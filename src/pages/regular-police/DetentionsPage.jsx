@@ -1,12 +1,36 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "../../layouts/DashboardLayout";
-import { Lock, Plus, X, CheckCircle, AlertTriangle, Clock, UserCheck } from "lucide-react";
+import { Lock, Plus, X, CheckCircle, AlertTriangle, Clock, UserCheck, MapPin, FileSearch } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
 import ResponsiveTable from "../../components/mobile/ResponsiveTable";
+import PhotoUpload from "../../components/PhotoUpload";
 
 const STATUS_C = { in_custody:"#DC2626", released:"#059669", charged:"#D97706", transferred:"#0891B2", bailed:"#7C3AED" };
+
+// Structured grounds for detention - matches Tanzania Police Force Act
+// and CPA categories. "other" reveals a free-text field.
+const DETENTION_REASONS = [
+  { code:"theft",            label:"Theft · Wizi" },
+  { code:"assault",          label:"Assault · Shambulizi" },
+  { code:"robbery",          label:"Robbery · Ujambazi" },
+  { code:"burglary",         label:"Burglary · Uvunjaji" },
+  { code:"drugs",            label:"Drug offense · Kosa la madawa" },
+  { code:"fraud",            label:"Fraud · Udanganyifu" },
+  { code:"murder",           label:"Murder · Mauaji" },
+  { code:"rape",             label:"Rape / Sexual offense · Ubakaji" },
+  { code:"kidnapping",       label:"Kidnapping · Utekaji" },
+  { code:"domestic_violence",label:"Domestic violence · Vurugu za nyumbani" },
+  { code:"public_disorder",  label:"Public disorder · Vurugu hadharani" },
+  { code:"drunk_driving",    label:"Drunk driving · Uendeshaji ulevi" },
+  { code:"traffic_offense",  label:"Traffic offense · Kosa la barabarani" },
+  { code:"immigration",      label:"Immigration offense · Uhamiaji" },
+  { code:"firearm",          label:"Firearm offense · Kosa la silaha" },
+  { code:"warrant",          label:"Outstanding warrant · Hati ya kukamata" },
+  { code:"suspect",          label:"Reasonable suspicion · Mashaka" },
+  { code:"other",             label:"Other · Nyingine" },
+];
 const S = {
   inp:{ width:"100%", height:42, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", fontSize:13, outline:"none", boxSizing:"border-box" },
   sel:{ width:"100%", height:42, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", fontSize:13, outline:"none", background:"white", boxSizing:"border-box" },
@@ -42,8 +66,31 @@ export default function DetentionsPage() {
   const [err, setErr] = useState("");
   const [fStatus, setFStatus] = useState("");
 
-  const [form, setForm] = useState({ detainee_name:"", detainee_nida:"", reason:"", cell_number:"", notes:"" });
+  const [form, setForm] = useState({
+    detainee_name:"", detainee_nida:"", detainee_phone:"", detainee_address:"",
+    reason_code:"", reason:"", cell_number:"",
+    location_text:"", arresting_officer:"",
+    arrest_id:"", notes:"", photo_urls:[],
+  });
   const upd = k => e => setForm(f=>({...f,[k]:e.target.value}));
+
+  // Optional: lookup recent arrests by suspect name to link
+  const [arrestOptions, setArrestOptions] = useState([]);
+  useEffect(() => {
+    if (!modal || !form.detainee_name || form.detainee_name.length < 3) {
+      setArrestOptions([]); return;
+    }
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from("arrests")
+        .select("id, ref_number, suspect_name, charge, created_at")
+        .ilike("suspect_name", `%${form.detainee_name}%`)
+        .order("created_at", { ascending:false })
+        .limit(5);
+      setArrestOptions(data || []);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [form.detainee_name, modal]);
 
   async function load() {
     setLoading(true);
@@ -57,13 +104,44 @@ export default function DetentionsPage() {
   async function submit(e) {
     e.preventDefault(); setErr(""); setSaving(true);
     try {
-      const { data, error } = await supabase.from("detentions").insert({
-        ...form, officer_id:profile?.id||null, station_id:stationId||null, region_id:regionId||null, status:"in_custody",
-      }).select().single();
+      // If a structured reason was picked, use its label for the human-readable
+      // 'reason' column AND keep the code in reason_code. If 'other', use the
+      // typed reason value as-is.
+      const reasonLabel = form.reason_code && form.reason_code !== "other"
+        ? DETENTION_REASONS.find(r => r.code === form.reason_code)?.label || form.reason
+        : form.reason;
+
+      const payload = {
+        detainee_name:     form.detainee_name,
+        detainee_nida:     form.detainee_nida || null,
+        detainee_phone:    form.detainee_phone || null,
+        detainee_address:  form.detainee_address || null,
+        reason:            reasonLabel,
+        reason_code:       form.reason_code || null,
+        cell_number:       form.cell_number || null,
+        location_text:     form.location_text || null,
+        arresting_officer: form.arresting_officer || null,
+        arrest_id:         form.arrest_id || null,
+        notes:             form.notes || null,
+        photo_urls:        form.photo_urls || [],
+        officer_id:        profile?.id || null,
+        station_id:        stationId || null,
+        region_id:         regionId || null,
+        status:            "in_custody",
+      };
+      const { data, error } = await supabase.from("detentions").insert(payload).select().single();
       if (error) throw error;
       logAction({ profile, action:"create_detention", entityType:"detention", entityId:data.id, entityRef:data.ref_number, description:`Detained: ${data.detainee_name} - ${data.reason}` });
       setDone(true); await load();
-      setTimeout(()=>{ setModal(false); setDone(false); setForm({detainee_name:"",detainee_nida:"",reason:"",cell_number:"",notes:""}); },2200);
+      setTimeout(()=>{
+        setModal(false); setDone(false);
+        setForm({
+          detainee_name:"", detainee_nida:"", detainee_phone:"", detainee_address:"",
+          reason_code:"", reason:"", cell_number:"",
+          location_text:"", arresting_officer:"",
+          arrest_id:"", notes:"", photo_urls:[],
+        });
+      },2200);
     } catch(e){ setErr(e.message); } finally{ setSaving(false); }
   }
 
@@ -184,11 +262,76 @@ export default function DetentionsPage() {
             ) : (
               <form onSubmit={submit}>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 16px" }}>
+                  {/* ─ Detainee identity ─ */}
                   <div style={{ marginBottom:14, gridColumn:"1/-1" }}><label style={S.lbl}>Detainee Name · Jina *</label><input value={form.detainee_name} onChange={upd("detainee_name")} required style={S.inp}/></div>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>NIDA</label><input value={form.detainee_nida} onChange={upd("detainee_nida")} style={S.inp}/></div>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Cell Number · Chumba</label><input value={form.cell_number} onChange={upd("cell_number")} placeholder="e.g. C-3" style={S.inp}/></div>
-                  <div style={{ marginBottom:14, gridColumn:"1/-1" }}><label style={S.lbl}>Reason for Detention · Sababu *</label><input value={form.reason} onChange={upd("reason")} required placeholder="Grounds for custody" style={S.inp}/></div>
-                  <div style={{ marginBottom:16, gridColumn:"1/-1" }}><label style={S.lbl}>Notes</label><textarea value={form.notes} onChange={upd("notes")} rows={2} style={{ ...S.inp, height:"auto", padding:"10px 12px", resize:"vertical" }}/></div>
+                  <div style={{ marginBottom:14 }}><label style={S.lbl}>NIDA</label><input value={form.detainee_nida} onChange={upd("detainee_nida")} placeholder="20-digit NIDA" style={S.inp}/></div>
+                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Phone · Simu</label><input value={form.detainee_phone} onChange={upd("detainee_phone")} placeholder="+255..." style={S.inp}/></div>
+                  <div style={{ marginBottom:14, gridColumn:"1/-1" }}><label style={S.lbl}>Address · Anuani</label><input value={form.detainee_address} onChange={upd("detainee_address")} placeholder="Last known residence" style={S.inp}/></div>
+
+                  {/* ─ Reason - structured dropdown + freetext when "other" ─ */}
+                  <div style={{ marginBottom:14, gridColumn:"1/-1" }}>
+                    <label style={S.lbl}>Reason for Detention · Sababu *</label>
+                    <select value={form.reason_code} onChange={upd("reason_code")} required style={S.sel}>
+                      <option value="">— Select reason —</option>
+                      {DETENTION_REASONS.map(r => <option key={r.code} value={r.code}>{r.label}</option>)}
+                    </select>
+                  </div>
+                  {form.reason_code === "other" && (
+                    <div style={{ marginBottom:14, gridColumn:"1/-1" }}>
+                      <label style={S.lbl}>Specify · Eleza *</label>
+                      <input value={form.reason} onChange={upd("reason")} required placeholder="Describe grounds for custody" style={S.inp}/>
+                    </div>
+                  )}
+
+                  {/* ─ Arrest of origin ─ */}
+                  <div style={{ marginBottom:14, gridColumn:"1/-1" }}>
+                    <label style={S.lbl}>Linked Arrest · Kukamatwa (optional)</label>
+                    {arrestOptions.length > 0 ? (
+                      <select value={form.arrest_id} onChange={upd("arrest_id")} style={S.sel}>
+                        <option value="">— Not linked —</option>
+                        {arrestOptions.map(a => (
+                          <option key={a.id} value={a.id}>
+                            {a.ref_number} · {a.suspect_name} · {a.charge} · {new Date(a.created_at).toLocaleDateString("en-GB")}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div style={{ ...S.inp, display:"flex", alignItems:"center", color:"#94A3B8", fontSize:12 }}>
+                        <FileSearch size={13} style={{marginRight:6}}/>
+                        Type detainee name above to search recent arrests…
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ─ Circumstances ─ */}
+                  <div style={{ marginBottom:14 }}>
+                    <label style={S.lbl}><MapPin size={11} style={{display:"inline",marginRight:3}}/>Arrest Location · Eneo</label>
+                    <input value={form.location_text} onChange={upd("location_text")} placeholder="e.g. Kariakoo Market, Plot 14" style={S.inp}/>
+                  </div>
+                  <div style={{ marginBottom:14 }}>
+                    <label style={S.lbl}>Arresting Officer · Afisa Aliyekamata</label>
+                    <input value={form.arresting_officer} onChange={upd("arresting_officer")} placeholder="Name + badge" style={S.inp}/>
+                  </div>
+                  <div style={{ marginBottom:14 }}>
+                    <label style={S.lbl}>Cell Number · Chumba</label>
+                    <input value={form.cell_number} onChange={upd("cell_number")} placeholder="e.g. C-3" style={S.inp}/>
+                  </div>
+                  <div style={{ marginBottom:14, gridColumn:"1/-1" }}>
+                    <label style={S.lbl}>Notes · Maelezo Zaidi</label>
+                    <textarea value={form.notes} onChange={upd("notes")} rows={3} placeholder="Statement, behaviour, items seized, items in possession, identifying marks..." style={{ ...S.inp, height:"auto", padding:"10px 12px", resize:"vertical" }}/>
+                  </div>
+
+                  {/* ─ Photos ─ */}
+                  <div style={{ marginBottom:16, gridColumn:"1/-1" }}>
+                    <PhotoUpload
+                      folder="detentions"
+                      value={form.photo_urls}
+                      onChange={(urls)=>setForm(f=>({...f, photo_urls:urls}))}
+                      maxFiles={6}
+                      label="Photos · Picha (mugshot, injuries, seized items)"
+                      hint="Tap to add photos"
+                    />
+                  </div>
                 </div>
                 <button type="submit" disabled={saving} style={{ width:"100%", height:46, background:saving?"#94A3B8":"#DC2626", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:saving?"not-allowed":"pointer" }}>
                   {saving?"Recording...":"Record Detention · Hifadhi"}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { UserX, Package, Car, Plus, X, CheckCircle, AlertTriangle, Search } from "lucide-react";
+import PhotoUpload from "../../components/PhotoUpload";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
@@ -209,6 +210,16 @@ export default function RegistriesPage() {
                         : <input type={fld.type||"text"} value={form[fld.k]||""} onChange={upd(fld.k)} required={fld.req} style={S.inp}/>}
                     </div>
                   ))}
+                  <div style={{ marginBottom:16, gridColumn:"1/-1" }}>
+                    <PhotoUpload
+                      folder={tab === "missing" ? "missing_persons" : tab === "property" ? "stolen_property" : "stolen_vehicles"}
+                      value={form.photo_urls || []}
+                      onChange={(urls)=>setForm(f=>({...f, photo_urls:urls}))}
+                      maxFiles={6}
+                      label={tab === "missing" ? "Photos of Missing Person · Picha za Aliyepotea" : tab === "property" ? "Photos of Property · Picha za Mali" : "Photos of Vehicle · Picha za Gari"}
+                      hint="Tap to add photos (essential for identification)"
+                    />
+                  </div>
                 </div>
                 <button type="submit" disabled={saving} style={{ width:"100%", height:46, background:saving?"#94A3B8":C.color, color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:saving?"not-allowed":"pointer" }}>
                   {saving?"Filing...":`File Report · Wasilisha`}

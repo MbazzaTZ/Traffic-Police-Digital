@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
 import ResponsiveTable from "../../components/mobile/ResponsiveTable";
+import PhotoUpload from "../../components/PhotoUpload";
 
 const TYPES = ["Theft","Assault","Robbery","Burglary","Fraud","Disturbance","Missing Person","Accident","Arson","Drug Offense","Sexual Offense","Kidnapping","Vandalism","Other"];
 const SEVERITY = [{ v:"low",c:"#64748B" },{ v:"medium",c:"#D97706" },{ v:"high",c:"#DC2626" },{ v:"critical",c:"#7C3AED" }];
@@ -28,7 +29,7 @@ export default function IncidentReportsPage() {
   const [fStatus,   setFStatus]   = useState("");
   const [fSeverity, setFSeverity] = useState("");
 
-  const [form, setForm] = useState({ type:"", title:"", description:"", severity:"medium", location_text:"", occurred_at:"" });
+  const [form, setForm] = useState({ type:"", title:"", description:"", severity:"medium", location_text:"", occurred_at:"", photo_urls:[] });
   const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   async function load() {
@@ -63,7 +64,7 @@ export default function IncidentReportsPage() {
       logAction({ profile, action:"create_incident", entityType:"incident", entityId:data.id, entityRef:data.ref_number, description:`Incident: ${data.type} - ${data.severity}` });
       setDone(data);
       await load();
-      setTimeout(() => { setModal(false); setDone(null); setForm({ type:"", title:"", description:"", severity:"medium", location_text:"", occurred_at:"" }); }, 2500);
+      setTimeout(() => { setModal(false); setDone(null); setForm({ type:"", title:"", description:"", severity:"medium", location_text:"", occurred_at:"", photo_urls:[] }); }, 2500);
     } catch(e) { setErr(e.message); } finally { setSaving(false); }
   }
 
@@ -223,6 +224,16 @@ export default function IncidentReportsPage() {
                   <div style={{ marginBottom:16, gridColumn:"1/-1" }}>
                     <label style={S.lbl}>Full Description · Maelezo Kamili *</label>
                     <textarea value={form.description} onChange={upd("description")} rows={4} required placeholder="Describe what happened in detail..." style={{ ...S.inp, height:"auto", padding:"10px 12px", resize:"vertical" }} onFocus={e=>e.target.style.borderColor="#0D3477"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}/>
+                  </div>
+                  <div style={{ marginBottom:16, gridColumn:"1/-1" }}>
+                    <PhotoUpload
+                      folder="incidents"
+                      value={form.photo_urls}
+                      onChange={(urls)=>setForm(f=>({...f, photo_urls:urls}))}
+                      maxFiles={8}
+                      label="Photos / Evidence · Picha za Ushahidi"
+                      hint="Tap to capture scene, evidence, damage"
+                    />
                   </div>
                 </div>
                 <button type="submit" disabled={saving}

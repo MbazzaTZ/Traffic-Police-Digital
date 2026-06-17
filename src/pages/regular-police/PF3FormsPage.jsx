@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { FileText, Plus, X, CheckCircle, AlertTriangle, Download, Stethoscope } from "lucide-react";
+import PhotoUpload from "../../components/PhotoUpload";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
@@ -28,6 +29,7 @@ export default function PF3FormsPage() {
     patient_name:"", patient_nida:"", patient_age:"", patient_gender:"Male",
     patient_phone:"", patient_type:"victim", incident_type:"Assault",
     incident_date:"", injuries_alleged:"", hospital_name:"", notes:"",
+    photo_urls:[],
   });
   const upd = k => e => setForm(f=>({...f,[k]:e.target.value}));
 
@@ -53,7 +55,7 @@ export default function PF3FormsPage() {
       setDone(true); await load();
       // auto-download the form
       exportPF3({ ...data }, fullName, stationName);
-      setTimeout(()=>{ setModal(false); setDone(false); setForm({ patient_name:"", patient_nida:"", patient_age:"", patient_gender:"Male", patient_phone:"", patient_type:"victim", incident_type:"Assault", incident_date:"", injuries_alleged:"", hospital_name:"", notes:"" }); },2500);
+      setTimeout(()=>{ setModal(false); setDone(false); setForm({ patient_name:"", patient_nida:"", patient_age:"", patient_gender:"Male", patient_phone:"", patient_type:"victim", incident_type:"Assault", incident_date:"", injuries_alleged:"", hospital_name:"", notes:"", photo_urls:[] }); },2500);
     } catch(e){ setErr(e.message); } finally{ setSaving(false); }
   }
 
@@ -150,6 +152,16 @@ export default function PF3FormsPage() {
                   <div style={{ marginBottom:14 }}><label style={S.lbl}>Incident Date · Tarehe</label><input type="date" value={form.incident_date} onChange={upd("incident_date")} style={S.inp}/></div>
                   <div style={{ marginBottom:14 }}><label style={S.lbl}>Hospital · Hospitali</label><input value={form.hospital_name} onChange={upd("hospital_name")} placeholder="Referred to..." style={S.inp}/></div>
                   <div style={{ marginBottom:14, gridColumn:"1/-1" }}><label style={S.lbl}>Alleged Injuries · Majeraha Yanayodaiwa</label><textarea value={form.injuries_alleged} onChange={upd("injuries_alleged")} rows={3} placeholder="Describe alleged injuries to be examined..." style={{ ...S.inp, height:"auto", padding:"10px 12px", resize:"vertical" }}/></div>
+                  <div style={{ marginBottom:14, gridColumn:"1/-1" }}>
+                    <PhotoUpload
+                      folder="pf3"
+                      value={form.photo_urls}
+                      onChange={(urls)=>setForm(f=>({...f, photo_urls:urls}))}
+                      maxFiles={6}
+                      label="Photos of Injuries · Picha za Majeraha"
+                      hint="Tap to add photos (use camera)"
+                    />
+                  </div>
                 </div>
                 <button type="submit" disabled={saving} style={{ width:"100%", height:46, background:saving?"#94A3B8":"#0D3477", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:saving?"not-allowed":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
                   <FileText size={16}/> {saving?"Issuing...":"Issue & Download PF3"}
