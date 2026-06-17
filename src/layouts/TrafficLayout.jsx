@@ -16,6 +16,7 @@ const TRAFFIC_BOTTOM_NAV = [
 const NAV = [
   { icon:LayoutDashboard, label:"Dashboard",    sw:"Dashibodi",    path:"/traffic" },
   { icon:FileText,        label:"Citations",    sw:"Faini",        path:"/traffic/citations" },
+  { icon:FileCheck,       label:"Citation Requests", sw:"Maombi ya Faini", path:"/citation-requests" },
   { icon:Banknote,        label:"Payments",     sw:"Malipo",       path:"/traffic/payments" },
   { icon:AlertTriangle,   label:"Accidents",    sw:"Ajali",        path:"/traffic/accidents" },
   { icon:Search,          label:"Veh. Search",  sw:"Tafuta Gari",  path:"/traffic/vehicles" },

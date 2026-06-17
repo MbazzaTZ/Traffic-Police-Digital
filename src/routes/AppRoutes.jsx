@@ -71,6 +71,7 @@ const CommandPatrolMap  = lazy(() => import("../pages/command/CommandPatrolMap")
 // Shared
 const ApprovalsPage = lazy(() => import("../pages/shared/ApprovalsPage"));
 const MorePage      = lazy(() => import("../pages/shared/MorePage"));
+const CitationRequestsPage = lazy(() => import("../pages/shared/CitationRequestsPage"));
 
 const ROLE_HOME = {
   admin_officer:"/admin", igp:"/command", digp:"/command",
@@ -185,12 +186,14 @@ export default function AppRoutes() {
       <Route path="/profile"       element={<Guard roles={OFFICER}><MyProfilePage/></Guard>}/>
       <Route path="/approvals"     element={<Guard roles={OFFICER}><ApprovalsPage/></Guard>}/>
       <Route path="/more"          element={<Guard roles={OFFICER}><MorePage/></Guard>}/>
+      <Route path="/citation-requests" element={<Guard roles={OFFICER}><CitationRequestsPage/></Guard>}/>
 
       {/* Traffic */}
       <Route path="/traffic"             element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
       <Route path="/traffic/citations"   element={<Guard roles={TRAFFIC}><CitationsPage/></Guard>}/>
       <Route path="/traffic/accidents"   element={<Guard roles={TRAFFIC}><AccidentsPage/></Guard>}/>
       <Route path="/traffic/vehicles"    element={<Guard roles={TRAFFIC}><VehicleSearchPage/></Guard>}/>
+      <Route path="/vehicle-search"      element={<Guard roles={OFFICER}><VehicleSearchPage/></Guard>}/>
       <Route path="/traffic/checkpoints" element={<Guard roles={TRAFFIC}><CheckpointsPage/></Guard>}/>
       <Route path="/traffic/payments"    element={<Guard roles={OFFICER}><PaymentsPage/></Guard>}/>
       <Route path="/payments"            element={<Guard roles={OFFICER}><PaymentsPage/></Guard>}/>

@@ -1,9 +1,19 @@
 import { useState } from "react";
 import TrafficLayout from "../../layouts/TrafficLayout";
+import DashboardLayout from "../../layouts/DashboardLayout";
+import CIDLayout from "../../layouts/CIDLayout";
 import { Search, Car, AlertTriangle } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
+
+function RoleLayout({ role, children, ...props }) {
+  if (role === "traffic_officer") return <TrafficLayout {...props}>{children}</TrafficLayout>;
+  if (role === "cid_officer" || role === "forensic_officer") return <CIDLayout {...props}>{children}</CIDLayout>;
+  return <DashboardLayout {...props}>{children}</DashboardLayout>;
+}
 
 export default function VehicleSearchPage() {
+  const { profile } = useCurrentUser();
   const [plate,   setPlate]   = useState("");
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -24,7 +34,7 @@ export default function VehicleSearchPage() {
   const STATUS_C = { unpaid:"#DC2626", paid:"#059669", contested:"#D97706", cancelled:"#94A3B8" };
 
   return (
-    <TrafficLayout pageTitle="Vehicle Search" pageTitle2="Tafuta Gari">
+    <RoleLayout role={profile?.role} pageTitle="Vehicle Search" pageTitle2="Tafuta Gari">
       <div style={{ marginBottom:20 }}>
         <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Vehicle Search <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Tafuta Gari</span></h1>
         <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>Search by plate number to view citation and accident history</p>
@@ -111,6 +121,6 @@ export default function VehicleSearchPage() {
           <div style={{ fontSize:13, marginTop:6 }}>Weka nambari ya gari kutafuta historia ya faini na ajali</div>
         </div>
       )}
-    </TrafficLayout>
+    </RoleLayout>
   );
 }

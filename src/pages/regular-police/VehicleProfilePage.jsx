@@ -1,12 +1,22 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "../../layouts/DashboardLayout";
-import { Car, User, FileText, AlertTriangle, ArrowLeft, Shield, Calendar } from "lucide-react";
+import TrafficLayout from "../../layouts/TrafficLayout";
+import CIDLayout from "../../layouts/CIDLayout";
+import { Car, User, FileText, AlertTriangle, ArrowLeft, Shield, Calendar, Flag } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
+
+function RoleLayout({ role, children, ...props }) {
+  if (role === "traffic_officer") return <TrafficLayout {...props}>{children}</TrafficLayout>;
+  if (role === "cid_officer" || role === "forensic_officer") return <CIDLayout {...props}>{children}</CIDLayout>;
+  return <DashboardLayout {...props}>{children}</DashboardLayout>;
+}
 
 export default function VehicleProfilePage() {
   const { id } = useParams();
   const nav = useNavigate();
+  const { profile } = useCurrentUser();
   const [vehicle,   setVehicle]   = useState(null);
   const [owner,     setOwner]     = useState(null);
   const [citations, setCitations] = useState([]);
@@ -29,23 +39,51 @@ export default function VehicleProfilePage() {
     load();
   }, [id]);
 
-  if (loading) return <DashboardLayout pageTitle="Vehicle Profile"><div style={{ padding:"80px", textAlign:"center", color:"#94A3B8" }}>Loading...</div></DashboardLayout>;
+  if (loading) return <RoleLayout role={profile?.role} pageTitle="Vehicle Profile"><div style={{ padding:"80px", textAlign:"center", color:"#94A3B8" }}>Loading...</div></RoleLayout>;
   if (!vehicle) return (
-    <DashboardLayout pageTitle="Vehicle Profile">
+    <RoleLayout role={profile?.role} pageTitle="Vehicle Profile">
       <div style={{ padding:"80px 20px", textAlign:"center", color:"#94A3B8" }}>
         <Car size={44} style={{ opacity:.2, marginBottom:14 }}/>
         <div style={{ fontSize:16, fontWeight:600, color:"#64748B" }}>Vehicle not found</div>
       </div>
-    </DashboardLayout>
+    </RoleLayout>
   );
 
   const unpaidFines = citations.filter(c=>c.status==="unpaid").reduce((t,c)=>t+(c.fine_amount||0),0);
 
   return (
-    <DashboardLayout pageTitle="Vehicle Profile" pageTitle2="Wasifu wa Gari">
-      <button onClick={()=>nav(-1)} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", color:"#64748B", cursor:"pointer", fontSize:13, fontWeight:600, marginBottom:16 }}>
-        <ArrowLeft size={15}/> Back
-      </button>
+    <RoleLayout role={profile?.role} pageTitle="Vehicle Profile" pageTitle2="Wasifu wa Gari">
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, gap:10, flexWrap:"wrap" }}>
+        <button onClick={()=>nav(-1)} style={{ display:"flex", alignItems:"center", gap:6, background:"none", border:"none", color:"#64748B", cursor:"pointer", fontSize:13, fontWeight:600 }}>
+          <ArrowLeft size={15}/> Back
+        </button>
+
+        {/* Role-aware action buttons */}
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          {/* Regular officer: can flag for citation (escalates to traffic) */}
+          {(profile?.role === "regular_officer" || profile?.role === "inspector") && vehicle && (
+            <button
+              onClick={() => nav("/citation-requests", { state: { prefill: {
+                vehicle_plate: vehicle.plate_number,
+                vehicle_id:    vehicle.id,
+              }}})}
+              style={{ padding:"9px 16px", borderRadius:9, border:"none", background:"#D97706", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+              <Flag size={14}/> Flag for Citation
+            </button>
+          )}
+          {/* Traffic officer: can issue citation directly */}
+          {profile?.role === "traffic_officer" && vehicle && (
+            <button
+              onClick={() => nav("/traffic/citations", { state: { prefill: {
+                vehicle_plate: vehicle.plate_number,
+                vehicle_id:    vehicle.id,
+              }}})}
+              style={{ padding:"9px 16px", borderRadius:9, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+              <FileText size={14}/> Issue Citation
+            </button>
+          )}
+        </div>
+      </div>
 
       {vehicle.is_stolen && (
         <div style={{ background:"#FEF2F2", border:"2px solid #DC2626", borderRadius:12, padding:"14px 18px", marginBottom:16, display:"flex", alignItems:"center", gap:10 }}>
@@ -139,6 +177,6 @@ export default function VehicleProfilePage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </RoleLayout>
   );
 }

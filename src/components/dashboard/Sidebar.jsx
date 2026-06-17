@@ -1,11 +1,13 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
-import { LayoutDashboard, Search, FileText, Shield, MapPinned, FolderOpen, MessageSquare, Bell, Settings, LogOut, User, FileCheck, Lock, Stethoscope, UserX, Target, Users, Home, Gavel, Banknote, X } from "lucide-react";
+import { LayoutDashboard, Search, FileText, Shield, MapPinned, FolderOpen, MessageSquare, Bell, Settings, LogOut, User, FileCheck, Lock, Stethoscope, UserX, Target, Users, Home, Gavel, Banknote, Car, X } from "lucide-react";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 
 const NAV = [
   { icon:LayoutDashboard, label:"Dashboard",     sw:"Dashibodi",  path:"/dashboard" },
   { icon:Search,          label:"Person Search", sw:"Tafuta Mtu", path:"/person-search" },
+  { icon:Car,             label:"Vehicle Search",sw:"Tafuta Gari",path:"/vehicle-search" },
+  { icon:FileCheck,       label:"Citation Requests", sw:"Maombi ya Faini", path:"/citation-requests" },
   { icon:FileText,        label:"Incidents",     sw:"Ripoti",     path:"/incidents" },
   { icon:Shield,          label:"Arrests",       sw:"Kukamatwa",  path:"/arrests" },
   { icon:Lock,            label:"Detentions",    sw:"Vizuizini",  path:"/detentions" },
