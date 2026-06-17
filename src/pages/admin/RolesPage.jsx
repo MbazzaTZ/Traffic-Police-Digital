@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import AdminLayout from "../../layouts/AdminLayout";
-import { Shield, Check, X } from "lucide-react";
+import { Shield, Check, X, RefreshCw } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 
 const ROLES = [
   { name:"admin_officer",   label:"Admin Officer",    sw:"Msimamizi wa Mfumo",      color:"#FFD700", bg:"#FFF9E6",
@@ -36,33 +38,76 @@ const ACCESS = {
 };
 
 export default function RolesPage() {
+  const [counts,  setCounts]  = useState({});   // { role_name: officer_count }
+  const [loading, setLoading] = useState(true);
+  const [err,     setErr]     = useState("");
+
+  async function load() {
+    setLoading(true); setErr("");
+    try {
+      // Count officers grouped by role — only active ones
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("role, status")
+        .eq("status", "active");
+      if (error) throw error;
+      const tally = {};
+      (data || []).forEach(p => { tally[p.role] = (tally[p.role] || 0) + 1; });
+      setCounts(tally);
+    } catch (e) {
+      setErr(e.message || "Could not load officer counts");
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { load(); }, []);
+
+  const totalActive = Object.values(counts).reduce((a, b) => a + b, 0);
+
   return (
     <AdminLayout pageTitle="Roles & Access" pageTitle2="Majukumu na Ruhusa">
-      <div style={{ marginBottom:22 }}>
-        <h1 style={{ fontSize:24, fontWeight:800, color:"#03102B", margin:0 }}>Roles & Access Control</h1>
-        <p style={{ color:"#64748B", marginTop:3 }}>Majukumu na Udhibiti wa Ufikiaji · {ROLES.length} system roles defined</p>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:22, flexWrap:"wrap", gap:10 }}>
+        <div>
+          <h1 style={{ fontSize:24, fontWeight:800, color:"#03102B", margin:0 }}>Roles & Access Control</h1>
+          <p style={{ color:"#64748B", marginTop:3 }}>Majukumu na Udhibiti wa Ufikiaji · {ROLES.length} system roles · {totalActive} active officers</p>
+        </div>
+        <button onClick={load} disabled={loading}
+          style={{ padding:"9px 14px", borderRadius:10, border:"1px solid #E2E8F0", background:"white", color:"#0D3477", fontWeight:700, fontSize:13, cursor:"pointer", display:"flex", alignItems:"center", gap:7, opacity:loading?.6:1 }}>
+          <RefreshCw size={14}/> Refresh
+        </button>
       </div>
 
+      {err && (
+        <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:10, padding:"10px 14px", marginBottom:16, color:"#B91C1C", fontSize:13 }}>
+          {err}
+        </div>
+      )}
+
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14, marginBottom:24 }}>
-        {ROLES.map((r, i) => (
-          <div key={i} style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
-            <div style={{ height:4, background:r.color }} />
-            <div style={{ padding:16 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
-                <div>
-                  <div style={{ fontSize:14, fontWeight:800, color:"#03102B" }}>{r.label}</div>
-                  <div style={{ fontSize:11, color:"#94A3B8" }}>{r.sw}</div>
+        {ROLES.map((r, i) => {
+          const count = counts[r.name] || 0;
+          return (
+            <div key={i} style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+              <div style={{ height:4, background:r.color }} />
+              <div style={{ padding:16 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
+                  <div>
+                    <div style={{ fontSize:14, fontWeight:800, color:"#03102B" }}>{r.label}</div>
+                    <div style={{ fontSize:11, color:"#94A3B8" }}>{r.sw}</div>
+                  </div>
+                  <span style={{ background:count > 0 ? r.bg : "#F1F5F9", color:count > 0 ? r.color : "#94A3B8", padding:"2px 8px", borderRadius:999, fontSize:10, fontWeight:700 }}>
+                    {loading ? "…" : `${count} ${count === 1 ? "officer" : "officers"}`}
+                  </span>
                 </div>
-                <span style={{ background:r.bg, color:r.color, padding:"2px 8px", borderRadius:999, fontSize:10, fontWeight:700 }}>0 officers</span>
-              </div>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
-                {r.perms.map(p => (
-                  <span key={p} style={{ background:r.bg, color:r.color, padding:"2px 7px", borderRadius:999, fontSize:10, fontWeight:600 }}>{p}</span>
-                ))}
+                <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
+                  {r.perms.map(p => (
+                    <span key={p} style={{ background:r.bg, color:r.color, padding:"2px 7px", borderRadius:999, fontSize:10, fontWeight:600 }}>{p}</span>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Access Matrix */}
@@ -87,7 +132,7 @@ export default function RolesPage() {
                 onMouseLeave={e => e.currentTarget.style.background="white"}>
                 <td style={{ padding:"10px 14px", whiteSpace:"nowrap" }}>
                   <div style={{ fontWeight:700, color:"#1E293B" }}>{r.label}</div>
-                  <div style={{ fontSize:10, color:"#94A3B8" }}>{r.sw}</div>
+                  <div style={{ fontSize:10, color:"#94A3B8" }}>{r.sw} · {counts[r.name] || 0} active</div>
                 </td>
                 {(ACCESS[r.name] || []).map((has, j) => (
                   <td key={j} style={{ padding:"10px 7px", textAlign:"center" }}>
