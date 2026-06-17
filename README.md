@@ -33,6 +33,17 @@ See **[MIGRATIONS.md](./MIGRATIONS.md)** for the complete guide — CLI setup, c
 
 > ✅ All migrations (00001–00007) are currently applied to production.
 
+## 🧪 Testing
+
+See **[TEST_PLAN.md](./TEST_PLAN.md)** for a comprehensive ~250-item end-to-end test checklist covering:
+- Authentication & RBAC
+- All 6 modules (Admin, Regular Police, Traffic, CID, Command, Shared)
+- PDF exports (6 generators)
+- Realtime subscriptions
+- Mobile/PWA
+- Security verification (RLS, audit trail, GPS)
+- Sign-off section for production rollout
+
 ## 📁 Complete Folder Structure
 
 ```
