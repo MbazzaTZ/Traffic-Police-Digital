@@ -25,7 +25,7 @@ export default function PersonProfilePage() {
         const [arr, veh, cit, wnt] = await Promise.all([
           supabase.from("arrests").select("*").or(`person_id.eq.${id},suspect_nida.eq.${p.nida||"___"}`).order("created_at",{ascending:false}),
           supabase.from("vehicles").select("*").eq("owner_id", id),
-          supabase.from("traffic_citations").select("*").eq("person_id", id).order("created_at",{ascending:false}),
+          supabase.from("citations").select("*").eq("person_id", id).order("created_at",{ascending:false}),
           supabase.from("wanted_persons").select("*").eq("nida", p.nida||"___").maybeSingle(),
         ]);
         setArrests(arr.data||[]); setVehicles(veh.data||[]); setCitations(cit.data||[]); setWanted(wnt.data);

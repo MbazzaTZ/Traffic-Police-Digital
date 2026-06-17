@@ -13,8 +13,8 @@ export default function CIDDashboard() {
   useEffect(()=>{
     async function load() {
       const [cases, open, wanted, evidence] = await Promise.all([
-        supabase.from("cid_cases").select("id",{count:"exact"}).then(r=>r.count||0),
-        supabase.from("cid_cases").select("id",{count:"exact"}).eq("status","open").then(r=>r.count||0),
+        supabase.from("cases").select("id",{count:"exact"}).then(r=>r.count||0),
+        supabase.from("cases").select("id",{count:"exact"}).eq("status","open").then(r=>r.count||0),
         supabase.from("wanted_persons").select("id",{count:"exact"}).eq("status","wanted").then(r=>r.count||0),
         supabase.from("evidence").select("id",{count:"exact"}).then(r=>r.count||0),
       ]);

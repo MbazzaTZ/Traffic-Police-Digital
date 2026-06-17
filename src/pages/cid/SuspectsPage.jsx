@@ -35,7 +35,7 @@ export default function SuspectsPage() {
     setLoading(true);
     const [sRes, cRes] = await Promise.all([
       supabase.from("suspects").select("*, cid_cases(case_number,title), profiles!suspects_added_by_fkey(full_name)").order("created_at",{ascending:false}),
-      supabase.from("cid_cases").select("id,case_number,title").in("status",["open","active"]).order("created_at",{ascending:false}),
+      supabase.from("cases").select("id,case_number,title").in("status",["open","active"]).order("created_at",{ascending:false}),
     ]);
     setSuspects(sRes.data||[]); setCases(cRes.data||[]); setLoading(false);
   }

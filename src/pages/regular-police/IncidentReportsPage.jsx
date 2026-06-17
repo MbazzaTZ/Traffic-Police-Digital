@@ -35,7 +35,7 @@ export default function IncidentReportsPage() {
 
   async function load() {
     setLoading(true);
-    let q = supabase.from("incidents").select("*, profiles!incidents_reported_by_fkey(full_name,badge)").order("created_at", { ascending:false }).limit(100);
+    let q = supabase.from("incident_reports").select("*, profiles!incident_reports_reported_by_fkey(full_name,badge)").order("created_at", { ascending:false }).limit(100);
     if (stationId) q = q.eq("station_id", stationId);
     const { data, error } = await q;
     if (error) { console.error(error); setLoadErr('Could not load data: ' + error.message); } else setLoadErr('');
@@ -48,7 +48,7 @@ export default function IncidentReportsPage() {
   async function submit(e) {
     e.preventDefault(); setErr(""); setSaving(true);
     try {
-      const { data, error } = await supabase.from("incidents").insert({
+      const { data, error } = await supabase.from("incident_reports").insert({
         type:          form.type,
         title:         form.title || form.type,
         description:   form.description,

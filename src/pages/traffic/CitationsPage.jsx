@@ -38,7 +38,7 @@ export default function CitationsPage() {
 
   async function load() {
     setLoading(true);
-    let q = supabase.from("traffic_citations").select("*, profiles!traffic_citations_issued_by_fkey(full_name,badge)").order("created_at",{ascending:false}).limit(100);
+    let q = supabase.from("citations").select("*, profiles!citations_issued_by_fkey(full_name,badge)").order("created_at",{ascending:false}).limit(100);
     if (stationId) q = q.eq("station_id", stationId);
     const [cits, sched] = await Promise.all([
       q,
@@ -55,7 +55,7 @@ export default function CitationsPage() {
   async function submit(e) {
     e.preventDefault(); setErr(""); setSaving(true);
     try {
-      const { data, error } = await supabase.from("traffic_citations").insert({
+      const { data, error } = await supabase.from("citations").insert({
         ...form, fine_amount:parseInt(form.fine_amount)||0, fine_currency:"TZS",
         fine_schedule_id: form.fine_schedule_id || null,
         station_id:stationId||null, region_id:regionId||null, district_id:districtId||null,

@@ -24,8 +24,8 @@ export default function VehicleSearchPage() {
     setErr(""); setLoading(true); setResults(null);
     try {
       const [citations, accidents] = await Promise.all([
-        supabase.from("traffic_citations").select("*").ilike("vehicle_plate", `%${plate.trim()}%`).order("created_at",{ascending:false}),
-        supabase.from("traffic_accidents").select("*").ilike("location_text", `%${plate.trim()}%`).limit(5),
+        supabase.from("citations").select("*").ilike("vehicle_plate", `%${plate.trim()}%`).order("created_at",{ascending:false}),
+        supabase.from("accident_reports").select("*").ilike("location_text", `%${plate.trim()}%`).limit(5),
       ]);
       setResults({ citations: citations.data||[], accidents: accidents.data||[], plate: plate.trim().toUpperCase() });
     } catch(e){ setErr(e.message); } finally{ setLoading(false); }

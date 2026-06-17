@@ -158,7 +158,7 @@ export default function CitationRequestsPage() {
     try {
       // 1. Create the actual traffic_citation
       const sched = schedule.find(s => s.id === drawer.fine_schedule_id);
-      const { data: cit, error: cErr } = await supabase.from("traffic_citations").insert({
+      const { data: cit, error: cErr } = await supabase.from("citations").insert({
         vehicle_plate:    drawer.vehicle_plate,
         vehicle_id:       drawer.vehicle_id || null,
         driver_name:      drawer.driver_name,

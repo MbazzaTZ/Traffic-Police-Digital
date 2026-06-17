@@ -14,10 +14,10 @@ export default function TrafficDashboard() {
     async function load() {
       const today = new Date().toISOString().split("T")[0];
       const [c, a, u, t] = await Promise.all([
-        supabase.from("traffic_citations").select("id", {count:"exact"}).then(r=>r.count||0),
-        supabase.from("traffic_accidents").select("id", {count:"exact"}).then(r=>r.count||0),
-        supabase.from("traffic_citations").select("id", {count:"exact"}).eq("status","unpaid").then(r=>r.count||0),
-        supabase.from("traffic_citations").select("id", {count:"exact"}).gte("created_at", today).then(r=>r.count||0),
+        supabase.from("citations").select("id", {count:"exact"}).then(r=>r.count||0),
+        supabase.from("accident_reports").select("id", {count:"exact"}).then(r=>r.count||0),
+        supabase.from("citations").select("id", {count:"exact"}).eq("status","unpaid").then(r=>r.count||0),
+        supabase.from("citations").select("id", {count:"exact"}).gte("created_at", today).then(r=>r.count||0),
       ]);
       setStats({ citations:c, accidents:a, unpaid:u, today:t });
     }

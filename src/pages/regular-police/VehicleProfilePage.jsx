@@ -30,7 +30,7 @@ export default function VehicleProfilePage() {
       if (v) {
         const [own, cit] = await Promise.all([
           v.owner_id ? supabase.from("persons").select("*").eq("id", v.owner_id).maybeSingle() : Promise.resolve({data:null}),
-          supabase.from("traffic_citations").select("*").ilike("vehicle_plate", v.plate_number).order("created_at",{ascending:false}),
+          supabase.from("citations").select("*").ilike("vehicle_plate", v.plate_number).order("created_at",{ascending:false}),
         ]);
         setOwner(own.data); setCitations(cit.data||[]);
       }

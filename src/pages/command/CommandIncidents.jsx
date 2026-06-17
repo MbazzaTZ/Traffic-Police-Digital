@@ -16,8 +16,8 @@ export default function CommandIncidents() {
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from("incidents")
-      .select("*, profiles!incidents_reported_by_fkey(full_name,badge), regions(name), districts(name)")
+    const { data } = await supabase.from("incident_reports")
+      .select("*, profiles!incident_reports_reported_by_fkey(full_name,badge), regions(name), districts(name)")
       .order("created_at",{ascending:false}).limit(200);
     setIncidents(data||[]); setLoading(false);
   }

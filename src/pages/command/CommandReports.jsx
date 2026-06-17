@@ -13,10 +13,10 @@ export default function CommandReports() {
   useEffect(() => {
     async function load() {
       const [inc, arr, cit, cas] = await Promise.all([
-        supabase.from("incidents").select("type,severity,status,created_at"),
+        supabase.from("incident_reports").select("type,severity,status,created_at"),
         supabase.from("arrests").select("charge,status,created_at"),
-        supabase.from("traffic_citations").select("offense_type,fine_amount,status,created_at"),
-        supabase.from("cid_cases").select("type,status,created_at"),
+        supabase.from("citations").select("offense_type,fine_amount,status,created_at"),
+        supabase.from("cases").select("type,status,created_at"),
       ]);
       setData({ incidents:inc.data||[], arrests:arr.data||[], citations:cit.data||[], cases:cas.data||[] });
       setLoading(false);

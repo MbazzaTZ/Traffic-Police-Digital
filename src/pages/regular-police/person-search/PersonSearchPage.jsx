@@ -106,7 +106,7 @@ export default function PersonSearchPage() {
     if (M.key === "plate") {
       const [veh, cits] = await Promise.all([
         supabase.from("vehicles").select("*").ilike("plate_number",`%${q}%`),
-        supabase.from("traffic_citations").select("*").ilike("vehicle_plate",`%${q}%`).order("created_at",{ascending:false}),
+        supabase.from("citations").select("*").ilike("vehicle_plate",`%${q}%`).order("created_at",{ascending:false}),
       ]);
       setResults({ kind:"plate", plate:q.toUpperCase(), vehicles:veh.data||[], citations:cits.data||[] });
       logAction({ profile, action:"search_person", entityType:"search", description:`Searched ${M.label}: ${q}` });

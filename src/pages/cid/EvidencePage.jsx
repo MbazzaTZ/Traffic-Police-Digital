@@ -30,7 +30,7 @@ export default function EvidencePage() {
     setLoading(true);
     const [ev, cs] = await Promise.all([
       supabase.from("evidence").select("*, profiles!evidence_collected_by_fkey(full_name), cid_cases(case_number,title)").order("created_at",{ascending:false}).limit(100),
-      supabase.from("cid_cases").select("id,case_number,title").eq("status","open").order("created_at",{ascending:false}),
+      supabase.from("cases").select("id,case_number,title").eq("status","open").order("created_at",{ascending:false}),
     ]);
     setEvidence(ev.data||[]); setCases(cs.data||[]); setLoading(false);
   }

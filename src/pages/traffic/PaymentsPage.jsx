@@ -51,7 +51,7 @@ export default function PaymentsPage() {
     setLoading(true);
     const [pay, out] = await Promise.all([
       supabase.from("payments").select("*, traffic_citations(ref_number, driver_name, vehicle_plate, offense_type)").order("paid_at",{ascending:false}).limit(300),
-      supabase.from("traffic_citations").select("id, ref_number, control_number, driver_name, vehicle_plate, offense_type, fine_amount, amount_paid, status, issued_at").in("status",["unpaid","partial"]).order("issued_at",{ascending:false}).limit(100),
+      supabase.from("citations").select("id, ref_number, control_number, driver_name, vehicle_plate, offense_type, fine_amount, amount_paid, status, issued_at").in("status",["unpaid","partial"]).order("issued_at",{ascending:false}).limit(100),
     ]);
     setPayments(pay.data||[]); setOutstanding(out.data||[]); setLoading(false);
   }
@@ -60,7 +60,7 @@ export default function PaymentsPage() {
   async function doLookup() {
     if (!lookupCtl.trim()) return;
     setLookingUp(true); setLookupResult(null);
-    const { data } = await supabase.from("traffic_citations")
+    const { data } = await supabase.from("citations")
       .select("*")
       .eq("control_number", lookupCtl.trim())
       .maybeSingle();

@@ -29,7 +29,7 @@ export default function CasesPage() {
 
   async function load() {
     setLoading(true);
-    let q = supabase.from("cid_cases").select("*, profiles!cid_cases_lead_officer_fkey(full_name,badge)").order("created_at",{ascending:false}).limit(100);
+    let q = supabase.from("cases").select("*, profiles!cases_lead_officer_fkey(full_name,badge)").order("created_at",{ascending:false}).limit(100);
     if (stationId) q = q.eq("station_id", stationId);
     const { data } = await q;
     setCases(data||[]); setLoading(false);
@@ -39,7 +39,7 @@ export default function CasesPage() {
   async function submit(e) {
     e.preventDefault(); setErr(""); setSaving(true);
     try {
-      const { data, error } = await supabase.from("cid_cases").insert({
+      const { data, error } = await supabase.from("cases").insert({
         ...form, station_id:stationId||null, region_id:regionId||null,
         district_id:districtId||null, lead_officer:profile?.id||null, opened_at:new Date().toISOString(),
       }).select().single();

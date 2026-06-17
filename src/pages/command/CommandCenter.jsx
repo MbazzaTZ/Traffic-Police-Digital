@@ -23,12 +23,12 @@ export default function CommandCenter() {
     const today = new Date().toISOString().split("T")[0];
     const [officers, incidents, arrests, patrols, alerts, cases, recentInc, recentAlerts, activePatrols] = await Promise.all([
       supabase.from("profiles").select("id",{count:"exact"}).eq("status","active").then(r=>r.count||0),
-      supabase.from("incidents").select("id",{count:"exact"}).eq("status","open").then(r=>r.count||0),
+      supabase.from("incident_reports").select("id",{count:"exact"}).eq("status","open").then(r=>r.count||0),
       supabase.from("arrests").select("id",{count:"exact"}).eq("status","detained").then(r=>r.count||0),
       supabase.from("patrols").select("id",{count:"exact"}).eq("status","active").then(r=>r.count||0),
       supabase.from("alerts").select("id",{count:"exact"}).then(r=>r.count||0),
-      supabase.from("cid_cases").select("id",{count:"exact"}).eq("status","open").then(r=>r.count||0),
-      supabase.from("incidents").select("ref_number,type,severity,status,location_text,created_at").order("created_at",{ascending:false}).limit(8),
+      supabase.from("cases").select("id",{count:"exact"}).eq("status","open").then(r=>r.count||0),
+      supabase.from("incident_reports").select("ref_number,type,severity,status,location_text,created_at").order("created_at",{ascending:false}).limit(8),
       supabase.from("alerts").select("*,profiles!alerts_issued_by_fkey(full_name)").order("created_at",{ascending:false}).limit(5),
       supabase.from("patrols").select("*,profiles!patrols_officer_id_fkey(full_name,badge)").eq("status","active").limit(10),
     ]);

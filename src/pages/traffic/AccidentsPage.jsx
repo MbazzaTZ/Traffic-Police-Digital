@@ -25,7 +25,7 @@ export default function AccidentsPage() {
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from("traffic_accidents").select("*, profiles!traffic_accidents_reported_by_fkey(full_name,badge)").order("created_at",{ascending:false}).limit(100);
+    const { data } = await supabase.from("accident_reports").select("*, profiles!accident_reports_reported_by_fkey(full_name,badge)").order("created_at",{ascending:false}).limit(100);
     setAccidents(data||[]); setLoading(false);
   }
   useEffect(()=>{ if(profile!==undefined) load(); },[profile]);
@@ -33,7 +33,7 @@ export default function AccidentsPage() {
   async function submit(e) {
     e.preventDefault(); setErr(""); setSaving(true);
     try {
-      const { data, error } = await supabase.from("traffic_accidents").insert({
+      const { data, error } = await supabase.from("accident_reports").insert({
         ...form, vehicles_count:parseInt(form.vehicles_count)||0,
         casualties:parseInt(form.casualties)||0, fatalities:parseInt(form.fatalities)||0,
         station_id:stationId||null, region_id:regionId||null, district_id:districtId||null,

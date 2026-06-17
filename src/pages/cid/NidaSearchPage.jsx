@@ -16,7 +16,7 @@ export default function NidaSearchPage() {
       supabase.from("arrests").select("*").or(`suspect_name.ilike.%${q}%,suspect_nida.ilike.%${q}%`).limit(20),
       supabase.from("suspects").select("*, cid_cases(case_number)").or(`full_name.ilike.%${q}%,nida.ilike.%${q}%,alias.ilike.%${q}%`).limit(20),
       supabase.from("wanted_persons").select("*").or(`full_name.ilike.%${q}%,nida.ilike.%${q}%,alias.ilike.%${q}%`).limit(20),
-      supabase.from("cid_cases").select("*").ilike("title",`%${q}%`).limit(10),
+      supabase.from("cases").select("*").ilike("title",`%${q}%`).limit(10),
     ]);
     setResults({
       query:q,
