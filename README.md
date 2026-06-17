@@ -14,6 +14,25 @@ npm run dev        # http://localhost:3000
 npm run build      # production build
 ```
 
+## 🗄️ Database Setup
+
+This project uses Supabase (PostgreSQL). Schema migrations live in `supabase/migrations/`.
+
+**One-time setup** (link your Supabase project):
+```bash
+npm install -g supabase
+supabase link --project-ref YOUR_PROJECT_REF
+```
+
+**Apply all migrations**:
+```bash
+supabase db push
+```
+
+See **[MIGRATIONS.md](./MIGRATIONS.md)** for the complete guide — CLI setup, creating new migrations, troubleshooting, and a Dashboard fallback for non-CLI users.
+
+> ✅ All migrations (00001–00007) are currently applied to production.
+
 ## 📁 Complete Folder Structure
 
 ```
