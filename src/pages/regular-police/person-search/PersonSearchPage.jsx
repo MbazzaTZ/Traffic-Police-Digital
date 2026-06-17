@@ -116,7 +116,8 @@ export default function PersonSearchPage() {
               <M.icon size={20} color="#94A3B8"/>
               <input value={query} onChange={e=>setQuery(M.key==="plate"?e.target.value.toUpperCase():e.target.value)} placeholder={M.ph}
                 style={{ border:"none", outline:"none", fontSize:16, fontWeight:600, width:"100%", background:"transparent", color:"#1E293B", fontFamily:M.key==="plate"?"monospace":"inherit" }}
-                onFocus={e=>e.parentElement.style.borderColor="#0D3477"} onBlur={e=>e.parentElement.style.borderColor="#E2E8F0"}/>
+                onFocus={e=>{ if(e.target.parentElement) e.target.parentElement.style.borderColor="#0D3477"; }}
+                onBlur={e=>{ if(e.target.parentElement) e.target.parentElement.style.borderColor="#E2E8F0"; }}/>
             </div>
             <button type="submit" disabled={loading} style={{ padding:"0 32px", height:52, background:loading?"#94A3B8":"#0D3477", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:loading?"not-allowed":"pointer", display:"flex", alignItems:"center", gap:8 }}>
               <Search size={17}/> {loading?"Searching...":"Search"}

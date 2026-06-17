@@ -25,6 +25,7 @@ export default function IncidentReportsPage() {
   const [saving,    setSaving]    = useState(false);
   const [done,      setDone]      = useState(null);
   const [err,       setErr]       = useState("");
+  const [loadErr,   setLoadErr]   = useState("");
   const [search,    setSearch]    = useState("");
   const [fStatus,   setFStatus]   = useState("");
   const [fSeverity, setFSeverity] = useState("");
