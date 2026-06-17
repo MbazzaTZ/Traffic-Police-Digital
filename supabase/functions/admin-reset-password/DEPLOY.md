@@ -51,8 +51,16 @@ label). Copy it.
 Then set it as a function secret:
 
 ```powershell
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<paste_the_key_here>
+supabase secrets set SERVICE_ROLE_KEY=<paste_the_key_here>
 ```
+
+> **Important:** the env var is called `SERVICE_ROLE_KEY` (without the
+> `SUPABASE_` prefix). The Supabase CLI reserves env names that start
+> with `SUPABASE_` for its own automatic injection, so trying to set
+> `SUPABASE_SERVICE_ROLE_KEY` from the CLI will fail with "Env name
+> cannot start with SUPABASE_, skipping". The function code reads
+> from `SERVICE_ROLE_KEY` and also accepts `SUPABASE_SERVICE_ROLE_KEY`
+> if you set it via the dashboard UI.
 
 Verify it's set:
 
@@ -60,8 +68,29 @@ Verify it's set:
 supabase secrets list
 ```
 
-You should see `SUPABASE_SERVICE_ROLE_KEY` in the output (the value
-itself is redacted, which is correct).
+You should see `SERVICE_ROLE_KEY` in the output (the value itself is
+redacted, which is correct).
+
+### ⚠️ Troubleshooting: `.env` file parse error
+
+If you get this error during `supabase link` or `supabase functions deploy`:
+
+```
+failed to parse environment file: .env (unexpected character '\x00' in variable name)
+```
+
+The CLI is trying to auto-load a `.env` file in your project directory
+that has bad encoding (usually a null byte from Notepad saving as UTF-16).
+
+`.env` is **separate from** `.env.local`. Your app uses `.env.local`
+for its Supabase URL; `.env` is something else - probably leftover.
+Delete it:
+
+```powershell
+Remove-Item .env -ErrorAction SilentlyContinue
+```
+
+Then re-run the supabase command.
 
 ### 4. Deploy the function
 

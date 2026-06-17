@@ -14,10 +14,16 @@
 // The service_role key NEVER leaves this function. The browser only
 // ever holds the anon key.
 //
-// ENVIRONMENT VARIABLES (set in Supabase dashboard -> Edge Functions):
-//   SUPABASE_URL              - automatic
-//   SUPABASE_ANON_KEY         - automatic
-//   SUPABASE_SERVICE_ROLE_KEY - must be added manually for this function
+// ENVIRONMENT VARIABLES (set in Supabase dashboard -> Edge Functions -> Secrets,
+// or via CLI: `supabase secrets set SERVICE_ROLE_KEY=<value>`):
+//   SUPABASE_URL       - auto-injected by Supabase
+//   SUPABASE_ANON_KEY  - auto-injected by Supabase
+//   SERVICE_ROLE_KEY   - must be added manually for this function
+//
+// NOTE: env names cannot start with SUPABASE_ when set via CLI, so we use
+// SERVICE_ROLE_KEY (without the SUPABASE_ prefix). The dashboard UI allows
+// the prefix, so we also fall back to SUPABASE_SERVICE_ROLE_KEY for
+// compatibility with secrets set through the dashboard.
 //
 // DEPLOY:
 //   supabase functions deploy admin-reset-password --no-verify-jwt
@@ -60,7 +66,10 @@ Deno.serve(async (req: Request) => {
 
     const supabaseUrl  = Deno.env.get("SUPABASE_URL")!;
     const anonKey      = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const serviceKey   = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    // SERVICE_ROLE_KEY (NOT prefixed with SUPABASE_ - the CLI reserves that
+    // prefix and blocks `supabase secrets set SUPABASE_*`). Falls back to
+    // the Supabase-prefixed name if it ever becomes settable again.
+    const serviceKey   = Deno.env.get("SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     // Client authenticated as the caller - used only to verify their identity
     const callerClient = createClient(supabaseUrl, anonKey, {
