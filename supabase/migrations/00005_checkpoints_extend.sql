@@ -40,7 +40,8 @@ create index if not exists idx_checkpoints_status  on public.checkpoints(status)
 alter table public.roadblocks add column if not exists passed_count   int default 0;
 alter table public.roadblocks add column if not exists checked_count  int default 0;
 alter table public.roadblocks add column if not exists cited_count    int default 0;
--- arrests_count already exists on roadblocks
+alter table public.roadblocks add column if not exists arrested_count int default 0;  -- alias for arrests_count
+-- arrests_count already exists on roadblocks (from 00001) — kept for backwards compat
 alter table public.roadblocks add column if not exists region_id      uuid references public.regions;
 alter table public.roadblocks add column if not exists district_id    uuid references public.districts;
 alter table public.roadblocks add column if not exists ward_id        uuid references public.wards;
@@ -55,8 +56,28 @@ create index if not exists idx_roadblocks_officer on public.roadblocks(officer_i
 create index if not exists idx_roadblocks_station on public.roadblocks(station_id);
 
 -- Backfill: try to derive passed/checked from existing checks_count
-update public.checkpoints set checked_count = checks_count where checked_count = 0 and checks_count > 0;
-update public.roadblocks set checked_count = checks_count where checked_count = 0 and checks_count > 0;
-update public.roadblocks set arrested_count = arrests_count where arrested_count = 0 and arrests_count > 0;
+-- Use DO blocks to guard against the case where the source column doesn't exist
+-- (defensive — should always exist after the ALTERs above, but a previous
+-- partial run may have left the table in a weird state).
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='checkpoints' and column_name='checks_count')
+     and exists (select 1 from information_schema.columns where table_schema='public' and table_name='checkpoints' and column_name='checked_count') then
+    update public.checkpoints set checked_count = checks_count where checked_count = 0 and checks_count > 0;
+  end if;
+end $$;
+
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='roadblocks' and column_name='checks_count')
+     and exists (select 1 from information_schema.columns where table_schema='public' and table_name='roadblocks' and column_name='checked_count') then
+    update public.roadblocks set checked_count = checks_count where checked_count = 0 and checks_count > 0;
+  end if;
+end $$;
+
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='roadblocks' and column_name='arrests_count')
+     and exists (select 1 from information_schema.columns where table_schema='public' and table_name='roadblocks' and column_name='arrested_count') then
+    update public.roadblocks set arrested_count = arrests_count where arrested_count = 0 and arrests_count > 0;
+  end if;
+end $$;
 
 select 'TPDOP CHECKPOINTS EXTENDED' as status;
