@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../layouts/AdminLayout";
-import { UserPlus, Search, Users, Eye, Edit, Trash2, X, Save, Phone, Mail, Shield, MapPin, Calendar, AlertTriangle, CheckCircle } from "lucide-react";
+import { UserPlus, Search, Users, Eye, Edit, Trash2, X, Save, Phone, Mail, Shield, MapPin, Calendar, AlertTriangle, CheckCircle, KeyRound, Copy } from "lucide-react";
 import { useAppData } from "../../context/AppDataContext";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
@@ -28,6 +28,10 @@ export default function OfficersPage() {
   const [viewOfficer, setViewOfficer] = useState(null);
   const [editOfficer, setEditOfficer] = useState(null);
   const [confirmDel,  setConfirmDel]  = useState(null);
+  const [resetOfficer, setResetOfficer] = useState(null);
+  const [resetForm,    setResetForm]    = useState({ new_password:"", confirm:"" });
+  const [resetShown,   setResetShown]   = useState(false);
+  const [resetDone,    setResetDone]    = useState(null);
   const [editForm,    setEditForm]    = useState({});
   const [saving,      setSaving]      = useState(false);
   const [err,         setErr]         = useState("");
@@ -96,6 +100,90 @@ export default function OfficersPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function openReset(o) {
+    setResetOfficer(o);
+    setResetForm({ new_password:"", confirm:"" });
+    setResetShown(false);
+    setResetDone(null);
+    setErr("");
+  }
+
+  async function doResetPassword() {
+    if (!resetOfficer) return;
+    setErr("");
+    if (resetForm.new_password.length < 6) {
+      setErr("Password must be at least 6 characters."); return;
+    }
+    if (resetForm.new_password !== resetForm.confirm) {
+      setErr("Passwords don't match."); return;
+    }
+    if (resetOfficer.id === currentProfile?.id) {
+      setErr("Use the Forgot Password flow to reset your own password."); return;
+    }
+    setSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Your session expired - please sign in again.");
+
+      const resp = await supabase.functions.invoke("admin-reset-password", {
+        body: {
+          target_user_id: resetOfficer.id,
+          new_password:   resetForm.new_password,
+        },
+      });
+
+      if (resp.error) {
+        const ctx = resp.error.context;
+        let msg = resp.error.message;
+        if (ctx && typeof ctx.json === "function") {
+          try { const j = await ctx.json(); if (j?.error) msg = j.error; } catch {}
+        }
+        throw new Error(msg);
+      }
+      if (resp.data?.error) throw new Error(resp.data.error);
+
+      setResetDone({
+        email:    resp.data?.target_email || resetOfficer.email,
+        password: resetForm.new_password,
+      });
+      logAction({
+        profile: currentProfile, action: "admin_password_reset",
+        entityType:"profile", entityId: resetOfficer.id, entityRef: resetOfficer.badge,
+        description: `Reset password for ${resetOfficer.full_name}`,
+      });
+    } catch (e) {
+      setErr(e.message || "Password reset failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function generatePassword() {
+    const lower = "abcdefghjkmnpqrstuvwxyz";
+    const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const digit = "23456789";
+    const sym   = "!@#$%&*";
+    const all   = lower + upper + digit + sym;
+    let p = "";
+    p += lower[Math.floor(Math.random() * lower.length)];
+    p += upper[Math.floor(Math.random() * upper.length)];
+    p += digit[Math.floor(Math.random() * digit.length)];
+    p += sym[Math.floor(Math.random() * sym.length)];
+    for (let i = 0; i < 8; i++) p += all[Math.floor(Math.random() * all.length)];
+    p = p.split("").sort(() => Math.random() - 0.5).join("");
+    setResetForm({ new_password: p, confirm: p });
+    setResetShown(true);
+  }
+
+  async function copyPassword() {
+    if (!resetDone) return;
+    try {
+      await navigator.clipboard.writeText(`Email: ${resetDone.email}\nPassword: ${resetDone.password}`);
+      setToast("Credentials copied to clipboard");
+      setTimeout(()=>setToast(""), 3000);
+    } catch { /* ignore */ }
   }
 
   async function doDelete() {
@@ -222,6 +310,8 @@ export default function OfficersPage() {
                         style={{ width:30, height:30, borderRadius:8, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#64748B" }}><Eye size={14}/></button>
                       <button onClick={()=>openEdit(o)} title="Edit officer"
                         style={{ width:30, height:30, borderRadius:8, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#0D3477" }}><Edit size={14}/></button>
+                      <button onClick={()=>openReset(o)} title="Reset password"
+                        style={{ width:30, height:30, borderRadius:8, border:"1px solid #FED7AA", background:"#FFF7ED", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#D97706" }}><KeyRound size={14}/></button>
                       <button onClick={()=>setConfirmDel(o)} title="Delete officer"
                         style={{ width:30, height:30, borderRadius:8, border:"1px solid #FEE2E2", background:"#FEF2F2", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#DC2626" }}><Trash2 size={14}/></button>
                     </div>
@@ -278,10 +368,14 @@ export default function OfficersPage() {
                 <Row icon={Shield}   label="User ID"     value={viewOfficer.id} mono/>
               </Section>
 
-              <div style={{ display:"flex", gap:8, marginTop:14 }}>
+              <div style={{ display:"flex", gap:8, marginTop:14, flexWrap:"wrap" }}>
                 <button onClick={()=>{ openEdit(viewOfficer); setViewOfficer(null); }}
-                  style={{ flex:1, padding:"10px 14px", borderRadius:10, border:"1px solid #0D3477", background:"#0D3477", color:"white", fontWeight:700, fontSize:13, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
+                  style={{ flex:"1 1 140px", padding:"10px 14px", borderRadius:10, border:"1px solid #0D3477", background:"#0D3477", color:"white", fontWeight:700, fontSize:13, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
                   <Edit size={14}/> Edit Officer
+                </button>
+                <button onClick={()=>{ openReset(viewOfficer); setViewOfficer(null); }}
+                  style={{ padding:"10px 14px", borderRadius:10, border:"1px solid #FED7AA", background:"#FFF7ED", color:"#D97706", fontWeight:700, fontSize:13, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
+                  <KeyRound size={14}/> Reset Password
                 </button>
                 <button onClick={()=>{ setConfirmDel(viewOfficer); setViewOfficer(null); }}
                   style={{ padding:"10px 14px", borderRadius:10, border:"1px solid #FECACA", background:"#FEF2F2", color:"#DC2626", fontWeight:700, fontSize:13, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
@@ -423,6 +517,112 @@ export default function OfficersPage() {
                 {saving ? "Deleting..." : "Delete officer"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── RESET PASSWORD ─── */}
+      {resetOfficer && (
+        <div onClick={e=>e.target===e.currentTarget && !saving && setResetOfficer(null)}
+          style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", zIndex:110, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+          <div style={{ background:"white", borderRadius:14, padding:24, maxWidth:460, width:"100%", boxShadow:"0 20px 60px rgba(0,0,0,.3)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+              <div style={{ width:42, height:42, borderRadius:10, background:"#FFF7ED", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <KeyRound size={20} color="#D97706"/>
+              </div>
+              <div style={{ flex:1 }}>
+                <h3 style={{ margin:0, fontSize:16, fontWeight:800, color:"#0F172A" }}>Reset Password</h3>
+                <div style={{ fontSize:12, color:"#64748B", marginTop:1 }}>{resetOfficer.full_name} · {resetOfficer.badge}</div>
+              </div>
+            </div>
+
+            {!resetDone ? (
+              <>
+                <p style={{ fontSize:12, color:"#64748B", lineHeight:1.5, margin:"0 0 14px", padding:"10px 12px", background:"#FFFBEB", borderLeft:"3px solid #D97706", borderRadius:6 }}>
+                  The officer's password will be replaced immediately. They will be signed out of any active sessions and must use the new password to sign in.
+                </p>
+
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:5 }}>
+                    <label style={lbl}>New Password</label>
+                    <button onClick={generatePassword} type="button"
+                      style={{ background:"transparent", border:"none", color:"#0D3477", fontSize:11, fontWeight:700, cursor:"pointer", padding:0 }}>
+                      Generate Strong Password
+                    </button>
+                  </div>
+                  <div style={{ position:"relative" }}>
+                    <input
+                      type={resetShown?"text":"password"}
+                      value={resetForm.new_password}
+                      onChange={e=>setResetForm({...resetForm, new_password:e.target.value})}
+                      placeholder="At least 6 characters"
+                      style={{ ...inp, padding:"0 70px 0 12px", fontFamily:"monospace" }}
+                      autoFocus
+                    />
+                    <button type="button" onClick={()=>setResetShown(!resetShown)}
+                      style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"transparent", border:"none", color:"#64748B", fontSize:11, fontWeight:700, cursor:"pointer" }}>
+                      {resetShown ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                </div>
+                <div style={{ marginBottom:14 }}>
+                  <label style={lbl}>Confirm Password</label>
+                  <input
+                    type={resetShown?"text":"password"}
+                    value={resetForm.confirm}
+                    onChange={e=>setResetForm({...resetForm, confirm:e.target.value})}
+                    placeholder="Type it again"
+                    style={{ ...inp, fontFamily:"monospace" }}
+                  />
+                </div>
+
+                {err && (
+                  <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:8, padding:"8px 12px", marginBottom:14, fontSize:12, color:"#B91C1C", display:"flex", gap:7, alignItems:"flex-start" }}>
+                    <AlertTriangle size={14} style={{ flexShrink:0, marginTop:1 }}/>{err}
+                  </div>
+                )}
+
+                <div style={{ display:"flex", justifyContent:"flex-end", gap:8 }}>
+                  <button onClick={()=>setResetOfficer(null)} disabled={saving}
+                    style={{ padding:"8px 16px", borderRadius:8, border:"1px solid #E2E8F0", background:"white", color:"#475569", fontSize:13, fontWeight:600, cursor:saving?"not-allowed":"pointer" }}>
+                    Cancel
+                  </button>
+                  <button onClick={doResetPassword} disabled={saving||!resetForm.new_password||!resetForm.confirm}
+                    style={{ padding:"8px 18px", borderRadius:8, border:"none", background:(saving||!resetForm.new_password||!resetForm.confirm)?"#94A3B8":"#D97706", color:"white", fontSize:13, fontWeight:700, cursor:(saving||!resetForm.new_password||!resetForm.confirm)?"not-allowed":"pointer" }}>
+                    {saving ? "Resetting..." : "Reset Password"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              // Success state - show the credentials once with a copy button
+              <>
+                <div style={{ background:"#F0FDF4", border:"1px solid #BBF7D0", borderRadius:10, padding:"12px 14px", marginBottom:14, display:"flex", gap:10, alignItems:"flex-start" }}>
+                  <CheckCircle size={18} color="#16A34A" style={{ flexShrink:0, marginTop:1 }}/>
+                  <div style={{ fontSize:13, color:"#166534" }}>
+                    <div style={{ fontWeight:700 }}>Password reset successful.</div>
+                    <div style={{ fontSize:11, marginTop:2, color:"#15803D" }}>Share these credentials with the officer. They are shown ONCE.</div>
+                  </div>
+                </div>
+
+                <div style={{ background:"#F8FAFC", border:"1px solid #E2E8F0", borderRadius:9, padding:"12px 14px", marginBottom:12 }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:"#94A3B8", textTransform:"uppercase", letterSpacing:0.5, marginBottom:3 }}>Email</div>
+                  <div style={{ fontSize:13, color:"#1E293B", fontFamily:"monospace", marginBottom:10, wordBreak:"break-all" }}>{resetDone.email || "—"}</div>
+                  <div style={{ fontSize:10, fontWeight:700, color:"#94A3B8", textTransform:"uppercase", letterSpacing:0.5, marginBottom:3 }}>New Password</div>
+                  <div style={{ fontSize:14, color:"#1E293B", fontFamily:"monospace", fontWeight:700, wordBreak:"break-all" }}>{resetDone.password}</div>
+                </div>
+
+                <div style={{ display:"flex", justifyContent:"flex-end", gap:8 }}>
+                  <button onClick={copyPassword}
+                    style={{ padding:"8px 14px", borderRadius:8, border:"1px solid #0D3477", background:"white", color:"#0D3477", fontSize:13, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
+                    <Copy size={13}/> Copy
+                  </button>
+                  <button onClick={()=>{ setResetOfficer(null); setResetDone(null); }}
+                    style={{ padding:"8px 18px", borderRadius:8, border:"none", background:"#16A34A", color:"white", fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                    Done
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
