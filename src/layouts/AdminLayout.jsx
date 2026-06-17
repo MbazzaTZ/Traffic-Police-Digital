@@ -2,7 +2,7 @@ import { supabase } from "../lib/supabase";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, Building2, MapPin,
-  Shield, Settings, LogOut, ChevronRight, Bell, UserCog, Receipt, Menu, X
+  Shield, Settings, LogOut, ChevronRight, Bell, UserCog, Receipt, Briefcase, Menu, X
 } from "lucide-react";
 import { useResponsiveSidebar } from "../hooks/useResponsiveSidebar";
 
@@ -20,6 +20,7 @@ const NAV = [
   { icon:MapPin,          label:"Regions & Districts", sw:"Mikoa",          path:"/admin/regions" },
   { icon:Shield,          label:"Roles & Access",      sw:"Majukumu",       path:"/admin/roles" },
   { icon:Receipt,         label:"Fine Schedule",       sw:"Orodha ya Faini", path:"/admin/fines" },
+  { icon:Briefcase,       label:"HR Records",          sw:"Wafanyakazi",     path:"/admin/hr" },
   { icon:Settings,        label:"System Settings",     sw:"Mipangilio",     path:"/admin/settings" },
 ];
 

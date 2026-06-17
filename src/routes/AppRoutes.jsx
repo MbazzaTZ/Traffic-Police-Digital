@@ -21,6 +21,7 @@ const RegionsPage       = lazy(() => import("../pages/admin/RegionsPage"));
 const RolesPage         = lazy(() => import("../pages/admin/RolesPage"));
 const AdminSettingsPage = lazy(() => import("../pages/admin/AdminSettingsPage"));
 const FineSchedulePage  = lazy(() => import("../pages/admin/FineSchedulePage"));
+const HRPage            = lazy(() => import("../pages/admin/HRPage"));
 
 // Regular Officer
 const RegularPoliceDashboard = lazy(() => import("../pages/regular-police/dashboard/RegularPoliceDashboard"));
@@ -208,6 +209,7 @@ export default function AppRoutes() {
       <Route path="/admin/roles"       element={<Guard roles={ADMIN}><RolesPage/></Guard>}/>
       <Route path="/admin/settings"    element={<Guard roles={ADMIN}><AdminSettingsPage/></Guard>}/>
       <Route path="/admin/fines"       element={<Guard roles={ADMIN}><FineSchedulePage/></Guard>}/>
+      <Route path="/admin/hr"          element={<Guard roles={ADMIN}><HRPage/></Guard>}/>
 
       {/* Command Center */}
       <Route path="/command"           element={<Guard roles={COMMAND}><CommandCenter/></Guard>}/>
