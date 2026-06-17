@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
 import { exportPaymentReceipt } from "../../lib/pdfExport";
+import ResponsiveTable from "../../components/mobile/ResponsiveTable";
 
 // Render in the layout that matches the viewing officer's role
 function RoleLayout({ role, children, ...props }) {
@@ -166,40 +167,48 @@ export default function PaymentsPage() {
             <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>No payments recorded yet</div>
           </div>
         ) : (
-          <table style={{ width:"100%", borderCollapse:"collapse" }}>
-            <thead><tr style={{ background:"#F8FAFC", borderBottom:"2px solid #E2E8F0" }}>
-              {["Receipt #","Control No","Driver/Plate","Offense","Method","Txn Ref","Amount (TZS)","Paid","Status","PDF"].map(h=>(
-                <th key={h} style={{ padding:"11px 14px", textAlign:"left", fontSize:11, fontWeight:700, color:"#64748B", textTransform:"uppercase", letterSpacing:.4, whiteSpace:"nowrap" }}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>
-              {filtered.map(p=>{
-                const mc=METHOD_C[p.method]||"#64748B";
-                const sc=STATUS_C[p.status]||"#94A3B8";
-                return (
-                  <tr key={p.id} style={{ borderBottom:"1px solid #F1F5F9" }}>
-                    <td style={{ padding:"11px 14px", fontFamily:"monospace", fontWeight:700, color:"#16A34A", fontSize:12 }}>{p.ref_number}</td>
-                    <td style={{ padding:"11px 14px", fontFamily:"monospace", fontSize:11, color:"#64748B" }}>{p.control_number||"—"}</td>
-                    <td style={{ padding:"11px 14px" }}>
-                      <div style={{ fontSize:13, fontWeight:600, color:"#1E293B" }}>{p.traffic_citations?.driver_name||p.payer_name||"—"}</div>
-                      <div style={{ fontSize:11, color:"#94A3B8", fontFamily:"monospace" }}>{p.traffic_citations?.vehicle_plate||""}</div>
-                    </td>
-                    <td style={{ padding:"11px 14px", fontSize:12, color:"#475569" }}>{p.traffic_citations?.offense_type||"—"}</td>
-                    <td style={{ padding:"11px 14px" }}><span style={{ background:`${mc}18`, color:mc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{p.method?.replace(/_/g," ")}</span></td>
-                    <td style={{ padding:"11px 14px", fontFamily:"monospace", fontSize:11, color:"#64748B" }}>{p.transaction_ref||"—"}</td>
-                    <td style={{ padding:"11px 14px", fontWeight:700, fontFamily:"monospace", color:"#16A34A" }}>{(p.amount||0).toLocaleString()}</td>
-                    <td style={{ padding:"11px 14px", fontSize:11, color:"#94A3B8", whiteSpace:"nowrap" }}>{new Date(p.paid_at).toLocaleString("en-GB")}</td>
-                    <td style={{ padding:"11px 14px" }}><span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{p.status}</span></td>
-                    <td style={{ padding:"11px 14px" }}>
-                      <button onClick={()=>exportPaymentReceipt(p, fullName, stationName)} title="Download receipt" style={{ width:30, height:30, borderRadius:7, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#0D3477" }}>
-                        <Download size={14}/>
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <ResponsiveTable
+            rows={filtered}
+            emptyText="No payments recorded yet"
+            columns={[
+              { key:"_payer", label:"Payer", primary:true,
+                render:(_, p) => (
+                  <div>
+                    <div style={{ fontWeight:700, color:"#1E293B" }}>{p.traffic_citations?.driver_name || p.payer_name || "—"}</div>
+                    <div style={{ fontSize:11, color:"#94A3B8", fontFamily:"monospace", marginTop:2 }}>{p.traffic_citations?.vehicle_plate || ""}</div>
+                  </div>
+                ) },
+              { key:"ref_number", label:"Receipt",
+                render:v => <span style={{ fontFamily:"monospace", fontWeight:700, color:"#16A34A", fontSize:12 }}>{v}</span> },
+              { key:"control_number", label:"Control No",
+                render:v => v ? <span style={{ fontFamily:"monospace", fontSize:11, color:"#64748B" }}>{v}</span> : "—" },
+              { key:"_offense", label:"Offense",
+                render:(_, p) => p.traffic_citations?.offense_type || "—" },
+              { key:"method", label:"Method",
+                render:v => {
+                  const mc = METHOD_C[v] || "#64748B";
+                  return <span style={{ background:`${mc}18`, color:mc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{v?.replace(/_/g," ")}</span>;
+                } },
+              { key:"transaction_ref", label:"Txn Ref",
+                render:v => v ? <span style={{ fontFamily:"monospace", fontSize:11, color:"#64748B" }}>{v}</span> : "—" },
+              { key:"amount", label:"Amount (TZS)",
+                render:v => <span style={{ fontWeight:700, fontFamily:"monospace", color:"#16A34A" }}>{(v||0).toLocaleString()}</span> },
+              { key:"paid_at", label:"Paid",
+                render:v => <span style={{ fontSize:11, color:"#94A3B8" }}>{new Date(v).toLocaleString("en-GB")}</span> },
+              { key:"status", label:"Status",
+                render:v => {
+                  const sc = STATUS_C[v] || "#94A3B8";
+                  return <span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{v}</span>;
+                } },
+              { key:"_pdf", label:"PDF",
+                render:(_, p) => (
+                  <button onClick={(e)=>{e.stopPropagation();exportPaymentReceipt(p, fullName, stationName);}} title="Download receipt"
+                    style={{ width:30, height:30, borderRadius:7, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#0D3477" }}>
+                    <Download size={14}/>
+                  </button>
+                ) },
+            ]}
+          />
         )}
       </div>
 

@@ -6,6 +6,7 @@ import { exportCitation, exportReport } from "../../lib/pdfExport";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
+import ResponsiveTable from "../../components/mobile/ResponsiveTable";
 
 const S = {
   inp: { width:"100%", height:42, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", fontSize:13, outline:"none", boxSizing:"border-box" },
@@ -127,48 +128,56 @@ export default function CitationsPage() {
             <button onClick={()=>setModal(true)} style={{ marginTop:14, padding:"8px 20px", borderRadius:9, border:"none", background:"#D97706", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>Issue First Citation</button>
           </div>
         ) : (
-          <table style={{ width:"100%", borderCollapse:"collapse" }}>
-            <thead><tr style={{ background:"#F8FAFC", borderBottom:"2px solid #E2E8F0" }}>
-              {["Ref #","Control No","Driver","Plate","Offense","Fine","Paid","Balance","Status","Date","Actions"].map(h=>(
-                <th key={h} style={{ padding:"11px 14px", textAlign:"left", fontSize:11, fontWeight:700, color:"#64748B", textTransform:"uppercase", letterSpacing:.4, whiteSpace:"nowrap" }}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>
-              {filtered.map((c)=>{
-                const sc = STATUS_C[c.status]||"#94A3B8";
-                const balance = (c.fine_amount||0)-(c.amount_paid||0);
-                const canPay = c.status!=="paid" && c.status!=="cancelled" && balance>0;
-                return (
-                  <tr key={c.id} style={{ borderBottom:"1px solid #F1F5F9" }}
-                    onMouseEnter={e=>e.currentTarget.style.background="#F8FAFC"}
-                    onMouseLeave={e=>e.currentTarget.style.background="white"}>
-                    <td style={{ padding:"11px 14px", fontWeight:700, color:"#D97706", fontSize:12, fontFamily:"monospace" }}>{c.ref_number}</td>
-                    <td style={{ padding:"11px 14px", fontFamily:"monospace", fontSize:11, color:"#64748B" }}>{c.control_number||"—"}</td>
-                    <td style={{ padding:"11px 14px", fontSize:13, fontWeight:600, color:"#1E293B" }}>{c.driver_name}</td>
-                    <td style={{ padding:"11px 14px" }}><span style={{ background:"#F8FAFC", border:"1px solid #E2E8F0", padding:"2px 8px", borderRadius:6, fontSize:12, fontWeight:700, fontFamily:"monospace" }}>{c.vehicle_plate}</span></td>
-                    <td style={{ padding:"11px 14px", fontSize:12, color:"#475569" }}>{c.offense_type}</td>
-                    <td style={{ padding:"11px 14px", fontSize:12, fontWeight:700, color:"#1E293B", fontFamily:"monospace" }}>{(c.fine_amount||0).toLocaleString()}</td>
-                    <td style={{ padding:"11px 14px", fontSize:12, fontWeight:700, color:"#16A34A", fontFamily:"monospace" }}>{(c.amount_paid||0).toLocaleString()}</td>
-                    <td style={{ padding:"11px 14px", fontSize:12, fontWeight:700, color:balance>0?"#DC2626":"#16A34A", fontFamily:"monospace" }}>{Math.max(0,balance).toLocaleString()}</td>
-                    <td style={{ padding:"11px 14px" }}><span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{c.status}</span></td>
-                    <td style={{ padding:"11px 14px", fontSize:11, color:"#94A3B8" }}>{new Date(c.created_at).toLocaleDateString("en-GB")}</td>
-                    <td style={{ padding:"11px 14px", display:"flex", gap:6 }}>
-                      <button onClick={()=>exportCitation(c, c.profiles?.full_name||"Officer")} title="Download citation PDF"
+          <ResponsiveTable
+            rows={filtered}
+            onRowClick={null}
+            emptyText="No citations issued yet"
+            columns={[
+              { key:"driver_name", label:"Driver", primary:true },
+              { key:"ref_number",   label:"Ref",
+                render:v => <span style={{ fontFamily:"monospace", fontSize:12, fontWeight:700, color:"#D97706" }}>{v}</span> },
+              { key:"control_number", label:"Control No",
+                render:v => v ? <span style={{ fontFamily:"monospace", fontSize:11, color:"#64748B" }}>{v}</span> : "—" },
+              { key:"vehicle_plate",  label:"Plate",
+                render:v => <span style={{ background:"#F8FAFC", border:"1px solid #E2E8F0", padding:"2px 8px", borderRadius:6, fontSize:12, fontWeight:700, fontFamily:"monospace" }}>{v}</span> },
+              { key:"offense_type",   label:"Offense" },
+              { key:"fine_amount",    label:"Fine (TZS)",
+                render:v => <span style={{ fontFamily:"monospace", fontWeight:700 }}>{(v||0).toLocaleString()}</span> },
+              { key:"amount_paid",    label:"Paid (TZS)",
+                render:v => <span style={{ fontFamily:"monospace", fontWeight:700, color:"#16A34A" }}>{(v||0).toLocaleString()}</span> },
+              { key:"balance",        label:"Balance",
+                render:(_, row) => {
+                  const balance = (row.fine_amount||0) - (row.amount_paid||0);
+                  return <span style={{ fontFamily:"monospace", fontWeight:700, color:balance>0?"#DC2626":"#16A34A" }}>{Math.max(0,balance).toLocaleString()}</span>;
+                } },
+              { key:"status",         label:"Status",
+                render:v => {
+                  const sc = STATUS_C[v]||"#94A3B8";
+                  return <span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{v}</span>;
+                } },
+              { key:"created_at",     label:"Date",
+                render:v => <span style={{ fontSize:11, color:"#94A3B8" }}>{new Date(v).toLocaleDateString("en-GB")}</span> },
+              { key:"_actions",       label:"Actions",
+                render:(_, c) => {
+                  const balance = (c.fine_amount||0) - (c.amount_paid||0);
+                  const canPay = c.status!=="paid" && c.status!=="cancelled" && balance>0;
+                  return (
+                    <div style={{ display:"flex", gap:6 }}>
+                      <button onClick={(e)=>{e.stopPropagation();exportCitation(c, c.profiles?.full_name||"Officer");}} title="Download citation PDF"
                         style={{ width:30, height:30, borderRadius:7, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#D97706" }}>
                         <Download size={14}/>
                       </button>
                       {canPay && (
-                        <button onClick={()=>nav("/traffic/payments")} title="Record payment"
+                        <button onClick={(e)=>{e.stopPropagation();nav("/traffic/payments");}} title="Record payment"
                           style={{ width:30, height:30, borderRadius:7, border:"1px solid #BBF7D0", background:"#F0FDF4", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#16A34A" }}>
                           <Banknote size={14}/>
                         </button>
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                  );
+                } },
+            ]}
+          />
         )}
       </div>
 

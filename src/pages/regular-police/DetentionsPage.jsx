@@ -4,6 +4,7 @@ import { Lock, Plus, X, CheckCircle, AlertTriangle, Clock, UserCheck } from "luc
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
+import ResponsiveTable from "../../components/mobile/ResponsiveTable";
 
 const STATUS_C = { in_custody:"#DC2626", released:"#059669", charged:"#D97706", transferred:"#0891B2", bailed:"#7C3AED" };
 const S = {
@@ -126,41 +127,47 @@ export default function DetentionsPage() {
             <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>No detention records</div>
           </div>
         ) : (
-          <table style={{ width:"100%", borderCollapse:"collapse" }}>
-            <thead><tr style={{ background:"#F8FAFC", borderBottom:"2px solid #E2E8F0" }}>
-              {["Ref #","Detainee","Reason","Cell","Detained","24h Clock","Status","Action"].map(h=>(
-                <th key={h} style={{ padding:"11px 14px", textAlign:"left", fontSize:11, fontWeight:700, color:"#64748B", textTransform:"uppercase", letterSpacing:.4, whiteSpace:"nowrap" }}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>
-              {filtered.map(d=>{
-                const sc=STATUS_C[d.status]||"#94A3B8";
-                return (
-                  <tr key={d.id} style={{ borderBottom:"1px solid #F1F5F9" }}>
-                    <td style={{ padding:"11px 14px", fontFamily:"monospace", fontWeight:700, color:"#DC2626", fontSize:12 }}>{d.ref_number}</td>
-                    <td style={{ padding:"11px 14px" }}><div style={{ fontSize:13, fontWeight:700, color:"#1E293B" }}>{d.detainee_name}</div><div style={{ fontSize:11, color:"#94A3B8" }}>{d.detainee_nida||"—"}</div></td>
-                    <td style={{ padding:"11px 14px", fontSize:12, color:"#475569", maxWidth:180 }}>{d.reason}</td>
-                    <td style={{ padding:"11px 14px", fontSize:12, color:"#475569" }}>{d.cell_number||"—"}</td>
-                    <td style={{ padding:"11px 14px", fontSize:11, color:"#94A3B8", whiteSpace:"nowrap" }}>{new Date(d.detained_at).toLocaleString("en-GB")}</td>
-                    <td style={{ padding:"11px 14px" }}>{d.status==="in_custody" ? <CustodyClock mustChargeBy={d.must_charge_by}/> : <span style={{ color:"#94A3B8", fontSize:12 }}>closed</span>}</td>
-                    <td style={{ padding:"11px 14px" }}><span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{d.status?.replace(/_/g," ")}</span></td>
-                    <td style={{ padding:"11px 14px" }}>
-                      {d.status==="in_custody" && (
-                        <select onChange={e=>e.target.value&&updateStatus(d,e.target.value)} defaultValue=""
-                          style={{ height:32, border:"1px solid #E2E8F0", borderRadius:7, fontSize:12, padding:"0 8px", background:"white", cursor:"pointer" }}>
-                          <option value="">Update...</option>
-                          <option value="charged">Charge</option>
-                          <option value="released">Release</option>
-                          <option value="bailed">Bail</option>
-                          <option value="transferred">Transfer</option>
-                        </select>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <ResponsiveTable
+            rows={filtered}
+            emptyText="No detentions on record"
+            columns={[
+              { key:"detainee_name", label:"Detainee", primary:true,
+                render:(v,d) => (
+                  <div>
+                    <div style={{ fontWeight:700, color:"#1E293B" }}>{v}</div>
+                    <div style={{ fontSize:11, color:"#94A3B8" }}>{d.detainee_nida || "—"}</div>
+                  </div>
+                ) },
+              { key:"ref_number", label:"Ref",
+                render:v => <span style={{ fontFamily:"monospace", fontWeight:700, color:"#DC2626", fontSize:12 }}>{v}</span> },
+              { key:"reason",      label:"Reason" },
+              { key:"cell_number", label:"Cell",
+                render:v => v || "—" },
+              { key:"detained_at", label:"Detained",
+                render:v => <span style={{ fontSize:11, color:"#94A3B8" }}>{new Date(v).toLocaleString("en-GB")}</span> },
+              { key:"_clock", label:"24h Clock",
+                render:(_, d) => d.status==="in_custody"
+                  ? <CustodyClock mustChargeBy={d.must_charge_by}/>
+                  : <span style={{ color:"#94A3B8", fontSize:12 }}>closed</span> },
+              { key:"status", label:"Status",
+                render:v => {
+                  const sc = STATUS_C[v]||"#94A3B8";
+                  return <span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{v?.replace(/_/g," ")}</span>;
+                } },
+              { key:"_action", label:"Action",
+                render:(_, d) => d.status==="in_custody" && (
+                  <select onChange={e=>e.target.value&&updateStatus(d,e.target.value)} defaultValue=""
+                    onClick={e=>e.stopPropagation()}
+                    style={{ height:32, border:"1px solid #E2E8F0", borderRadius:7, fontSize:12, padding:"0 8px", background:"white", cursor:"pointer" }}>
+                    <option value="">Update...</option>
+                    <option value="charged">Charge</option>
+                    <option value="released">Release</option>
+                    <option value="bailed">Bail</option>
+                    <option value="transferred">Transfer</option>
+                  </select>
+                ) },
+            ]}
+          />
         )}
       </div>
 

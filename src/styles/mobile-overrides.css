@@ -1,0 +1,90 @@
+/* ============================================================
+   MOBILE OVERRIDES
+   ------------------------------------------------------------
+   Global tweaks that make inline-styled grids and tables behave
+   on phones without having to edit each page individually.
+   Loaded once in main.jsx.
+
+   Inline styles normally beat external CSS, but with !important
+   we can override them. We only do this in the mobile media
+   query so desktop is unchanged.
+   ============================================================ */
+
+@media (max-width: 767px) {
+  /* ── Multi-column grids: stack to single column ── */
+  /* Targets any div whose inline style contains the most common
+     grid-template-columns values used across the codebase. */
+  div[style*="gridTemplateColumns:\"1fr 1fr\""],
+  div[style*="grid-template-columns: 1fr 1fr"],
+  div[style*="gridTemplateColumns:\"repeat(4"],
+  div[style*="grid-template-columns: repeat(4"],
+  div[style*="gridTemplateColumns:\"repeat(3"],
+  div[style*="grid-template-columns: repeat(3"],
+  div[style*="gridTemplateColumns:\"repeat(5"],
+  div[style*="grid-template-columns: repeat(5"],
+  div[style*="gridTemplateColumns:\"340px 1fr\""],
+  div[style*="grid-template-columns: 340px 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Tables: horizontal scroll instead of broken layout ── */
+  /* Catches HTML tables on pages that haven't been migrated to
+     <ResponsiveTable>. They scroll horizontally inside their
+     parent, no layout breakage. */
+  table {
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  table th, table td {
+    white-space: nowrap;
+  }
+
+  /* ── Big text that breaks small screens ── */
+  /* Page H1s often hardcoded to 22-28px - cap at 18px on mobile. */
+  h1 { font-size: clamp(16px, 5vw, 20px) !important; }
+
+  /* ── Drawer / panel widths that won't fit on phone ── */
+  /* Drawers commonly hardcoded to 400-560px - force full-width. */
+  div[style*="width:560"][style*="position:\"fixed\""],
+  div[style*="width:500"][style*="position:\"fixed\""],
+  div[style*="width:480"][style*="position:\"fixed\""],
+  div[style*="width:460"][style*="position:\"fixed\""],
+  div[style*="width:440"][style*="position:\"fixed\""],
+  div[style*="width:420"][style*="position:\"fixed\""],
+  div[style*="width:400"][style*="position:\"fixed\""] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* ── Big modal padding that wastes mobile space ── */
+  div[style*="padding:\"28px\""],
+  div[style*="padding:\"32px\""],
+  div[style*="padding: 28px"],
+  div[style*="padding: 32px"] {
+    padding: 18px !important;
+  }
+
+  /* ── Long horizontal flex rows on small screens ── */
+  /* Filter/action bars often pack 4-6 elements horizontally - wrap. */
+  div[style*="display:\"flex\""][style*="gap:1"] {
+    flex-wrap: wrap;
+  }
+}
+
+/* ── Always-on improvements (desktop + mobile) ── */
+/* iOS Safari: prevent over-scroll bounce on the body */
+html, body {
+  overscroll-behavior-y: none;
+}
+/* Better tap feedback on iOS */
+button {
+  -webkit-tap-highlight-color: rgba(13, 52, 119, 0.1);
+}
+/* Tables always allow horizontal scroll via their wrapper - prevents
+   overflow:hidden parents from clipping data */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}

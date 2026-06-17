@@ -4,6 +4,7 @@ import { Plus, FileText, X, AlertTriangle, CheckCircle, Search, Filter } from "l
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
+import ResponsiveTable from "../../components/mobile/ResponsiveTable";
 
 const TYPES = ["Theft","Assault","Robbery","Burglary","Fraud","Disturbance","Missing Person","Accident","Arson","Drug Offense","Sexual Offense","Kidnapping","Vandalism","Other"];
 const SEVERITY = [{ v:"low",c:"#64748B" },{ v:"medium",c:"#D97706" },{ v:"high",c:"#DC2626" },{ v:"critical",c:"#7C3AED" }];
@@ -135,38 +136,37 @@ export default function IncidentReportsPage() {
             <button onClick={()=>setModal(true)} style={{ marginTop:14, padding:"8px 20px", borderRadius:9, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>Record First Incident</button>
           </div>
         ) : (
-          <table style={{ width:"100%", borderCollapse:"collapse" }}>
-            <thead>
-              <tr style={{ background:"#F8FAFC", borderBottom:"2px solid #E2E8F0" }}>
-                {["Ref #","Type","Severity","Status","Location","Reported By","Date"].map(h=>(
-                  <th key={h} style={{ padding:"11px 14px", textAlign:"left", fontSize:11, fontWeight:700, color:"#64748B", textTransform:"uppercase", letterSpacing:.4, whiteSpace:"nowrap" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((inc,i) => {
-                const sc = STATUS_COLORS[inc.status] || "#94A3B8";
-                const sv = SEVERITY.find(s=>s.v===inc.severity);
-                return (
-                  <tr key={inc.id} style={{ borderBottom:"1px solid #F1F5F9" }}
-                    onMouseEnter={e=>e.currentTarget.style.background="#F8FAFC"}
-                    onMouseLeave={e=>e.currentTarget.style.background="white"}>
-                    <td style={{ padding:"11px 14px", fontWeight:700, color:"#0D3477", fontSize:12, fontFamily:"monospace" }}>{inc.ref_number}</td>
-                    <td style={{ padding:"11px 14px", fontSize:13, fontWeight:600, color:"#1E293B" }}>{inc.type}</td>
-                    <td style={{ padding:"11px 14px" }}>
-                      <span style={{ background:`${sv?.c||"#94A3B8"}18`, color:sv?.c||"#94A3B8", padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{inc.severity}</span>
-                    </td>
-                    <td style={{ padding:"11px 14px" }}>
-                      <span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{inc.status}</span>
-                    </td>
-                    <td style={{ padding:"11px 14px", fontSize:12, color:"#475569", maxWidth:160, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{inc.location_text||"—"}</td>
-                    <td style={{ padding:"11px 14px", fontSize:12, color:"#475569" }}>{inc.profiles?.full_name||"—"}</td>
-                    <td style={{ padding:"11px 14px", fontSize:11, color:"#94A3B8", whiteSpace:"nowrap" }}>{new Date(inc.created_at).toLocaleDateString("en-GB")}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <ResponsiveTable
+            rows={filtered}
+            emptyText="No incidents reported yet"
+            columns={[
+              { key:"type", label:"Type", primary:true,
+                render:(v,inc) => (
+                  <div>
+                    <div style={{ fontWeight:700, color:"#1E293B" }}>{v}</div>
+                    <div style={{ fontSize:11, color:"#0D3477", fontFamily:"monospace", marginTop:2 }}>{inc.ref_number}</div>
+                  </div>
+                ) },
+              { key:"ref_number", label:"Ref",
+                render:v => <span style={{ fontWeight:700, color:"#0D3477", fontSize:12, fontFamily:"monospace" }}>{v}</span> },
+              { key:"severity",   label:"Severity",
+                render:v => {
+                  const sv = SEVERITY.find(s=>s.v===v);
+                  const c = sv?.c || "#94A3B8";
+                  return <span style={{ background:`${c}18`, color:c, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{v}</span>;
+                } },
+              { key:"status",     label:"Status",
+                render:v => {
+                  const sc = STATUS_COLORS[v] || "#94A3B8";
+                  return <span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{v}</span>;
+                } },
+              { key:"location_text", label:"Location" },
+              { key:"profiles",      label:"Reported By",
+                render:v => v?.full_name || "—" },
+              { key:"created_at",    label:"Date",
+                render:v => <span style={{ fontSize:11, color:"#94A3B8" }}>{new Date(v).toLocaleDateString("en-GB")}</span> },
+            ]}
+          />
         )}
       </div>
 

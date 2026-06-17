@@ -70,6 +70,7 @@ const CommandPatrolMap  = lazy(() => import("../pages/command/CommandPatrolMap")
 
 // Shared
 const ApprovalsPage = lazy(() => import("../pages/shared/ApprovalsPage"));
+const MorePage      = lazy(() => import("../pages/shared/MorePage"));
 
 const ROLE_HOME = {
   admin_officer:"/admin", igp:"/command", digp:"/command",
@@ -183,6 +184,7 @@ export default function AppRoutes() {
       <Route path="/settings"      element={<Guard roles={OFFICER}><SettingsPage/></Guard>}/>
       <Route path="/profile"       element={<Guard roles={OFFICER}><MyProfilePage/></Guard>}/>
       <Route path="/approvals"     element={<Guard roles={OFFICER}><ApprovalsPage/></Guard>}/>
+      <Route path="/more"          element={<Guard roles={OFFICER}><MorePage/></Guard>}/>
 
       {/* Traffic */}
       <Route path="/traffic"             element={<Guard roles={TRAFFIC}><TrafficDashboard/></Guard>}/>
