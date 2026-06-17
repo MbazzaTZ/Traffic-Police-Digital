@@ -23,7 +23,7 @@ alter table public.intelligence_files add column if not exists station_id     uu
 alter table public.intelligence_files add column if not exists location_text  text;
 alter table public.intelligence_files add column if not exists subject_name   text;
 alter table public.intelligence_files add column if not exists subject_nida   text;
-alter table public.intelligence_files add column if not expires_at            timestamptz;
+alter table public.intelligence_files add column if not exists expires_at            timestamptz;
 alter table public.intelligence_files add column if not exists reviewed_at    timestamptz;
 alter table public.intelligence_files add column if not exists reviewed_by    uuid references public.profiles;
 alter table public.intelligence_files add column if not exists source_reliability text check (source_reliability in ('a','b','c','d','f','unverified'));
