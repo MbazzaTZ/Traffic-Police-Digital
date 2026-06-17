@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import CIDLayout from "../../layouts/CIDLayout";
-import { Plus, X, CheckCircle, AlertTriangle, Search, Shield, UserCheck } from "lucide-react";
+import { Plus, X, CheckCircle, AlertTriangle, Search, Shield, UserCheck, Download } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
+import { exportWantedPoster } from "../../lib/pdfExport";
 
 const DANGER={low:"#64748B",medium:"#D97706",high:"#DC2626",armed:"#7C3AED"};
 const S={
@@ -61,6 +62,23 @@ export default function WantedPage() {
       await load();
     } catch (e) {
       setErr(e.message || "Could not update status");
+    }
+  }
+
+  // ── Download wanted poster as PDF ──
+  async function downloadPoster(w) {
+    try {
+      await exportWantedPoster(w, profile?.full_name, profile?.stations?.name);
+      logAction({
+        profile,
+        action: "export_wanted_poster",
+        entityType: "wanted_person",
+        entityId: w.id,
+        entityRef: w.ref_number,
+        description: `Downloaded wanted poster: ${w.full_name}`,
+      });
+    } catch (e) {
+      setErr(`Could not generate poster: ${e.message}`);
     }
   }
 
@@ -130,11 +148,16 @@ export default function WantedPage() {
                   {w.offenses && <div style={{ background:"#FEF2F2", borderRadius:8, padding:"8px 10px", fontSize:12, color:"#B91C1C", marginBottom:10 }}>⚖️ {w.offenses}</div>}
                   <div style={{ display:"flex", gap:8, alignItems:"center", justifyContent:"space-between" }}>
                     <span style={{ background:w.status==="wanted"?"#FEF2F2":"#F0FDF4", color:w.status==="wanted"?"#DC2626":"#16A34A", padding:"4px 12px", borderRadius:999, fontSize:12, fontWeight:700, textTransform:"capitalize" }}>{w.status}</span>
-                    {w.status==="wanted" && (
-                      <button onClick={()=>markCaptured(w)} title="Mark as captured" style={{ padding:"5px 11px", borderRadius:8, border:"none", background:"#059669", color:"white", fontWeight:700, fontSize:11, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
-                        <UserCheck size={12}/> Mark Captured
+                    <div style={{ display:"flex", gap:6 }}>
+                      <button onClick={()=>downloadPoster(w)} title="Download wanted poster (PDF)" style={{ padding:"5px 11px", borderRadius:8, border:"1px solid #E2E8F0", background:"white", color:"#0D3477", fontWeight:700, fontSize:11, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
+                        <Download size={12}/> Poster
                       </button>
-                    )}
+                      {w.status==="wanted" && (
+                        <button onClick={()=>markCaptured(w)} title="Mark as captured" style={{ padding:"5px 11px", borderRadius:8, border:"none", background:"#059669", color:"white", fontWeight:700, fontSize:11, cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>
+                          <UserCheck size={12}/> Captured
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

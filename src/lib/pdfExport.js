@@ -562,3 +562,200 @@ export async function exportReport(title, columns, rows, subtitle) {
   footer(doc);
   doc.save(`${title.replace(/[^a-z0-9]/gi, "_")}_${Date.now()}.pdf`);
 }
+
+// ── Wanted Person Poster PDF ──
+// Generates a single-page "WANTED" poster suitable for printing and
+// posting at police stations, checkpoints, and public notice boards.
+// Designed to be visually striking — red header, large name, photo
+// placeholder, danger-level badge, and key identifying details.
+export async function exportWantedPoster(w, officerName, stationName) {
+  const { jsPDF } = await getJsPDF();
+  const doc = new jsPDF();
+
+  const DANGER_COLORS = {
+    low:      [100, 116, 139],   // slate
+    medium:   [217, 119, 6],     // amber
+    high:     [220, 38, 38],     // red
+    armed:    [124, 58, 237],    // purple
+    critical: [220, 38, 38],     // red
+  };
+  const dc = DANGER_COLORS[w.danger_level] || DANGER_COLORS.medium;
+  const isArmed = w.danger_level === "armed";
+
+  // ── Top red banner ──
+  doc.setFillColor(220, 38, 38);
+  doc.rect(0, 0, 210, 35, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(36);
+  doc.text("WANTED", 105, 22, { align: "center" });
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.text("MTUHUMIWA ANAYETAFUTWA · Tanzania Police Force", 105, 30, { align: "center" });
+
+  // ── Ref number ──
+  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(9);
+  doc.text(`Ref: ${w.ref_number || "WRT-" + (w.id || "").slice(0, 8)}`, 14, 45);
+  doc.text(`Issued: ${new Date(w.created_at || Date.now()).toLocaleDateString("en-GB")}`, 196, 45, { align: "right" });
+
+  // ── Photo placeholder (left side) ──
+  const photoX = 14, photoY = 52, photoW = 70, photoH = 90;
+  doc.setDrawColor(...dc);
+  doc.setLineWidth(1.5);
+  doc.rect(photoX, photoY, photoW, photoH);
+
+  if (w.photo_url) {
+    try {
+      // Try to embed the photo (jsPDF supports JPEG/PNG via addImage)
+      doc.addImage(w.photo_url, "JPEG", photoX + 2, photoY + 2, photoW - 4, photoH - 4);
+    } catch {
+      // If image fails to load, show placeholder
+      doc.setFontSize(11);
+      doc.setTextColor(150, 150, 150);
+      doc.text("PHOTO", photoX + photoW / 2, photoY + photoH / 2, { align: "center" });
+    }
+  } else {
+    // No photo — show silhouette placeholder
+    doc.setFontSize(48);
+    doc.setTextColor(220, 220, 220);
+    doc.text("\u25A0", photoX + photoW / 2, photoY + photoH / 2 + 10, { align: "center" }); // square as silhouette stand-in
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text("NO PHOTO AVAILABLE", photoX + photoW / 2, photoY + photoH / 2 + 25, { align: "center" });
+  }
+
+  // ── Name + danger badge (right side) ──
+  const detailsX = 92;
+  let y = 60;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.setTextColor(...NAVY);
+  const nameLines = doc.splitTextToSize(w.full_name || "UNKNOWN", 110);
+  doc.text(nameLines, detailsX, y);
+  y += nameLines.length * 9 + 4;
+
+  if (w.alias) {
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`a.k.a. "${w.alias}"`, detailsX, y);
+    y += 8;
+  }
+
+  // Danger level badge
+  doc.setFillColor(...dc);
+  doc.roundedRect(detailsX, y, 75, 14, 2, 2, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  const dangerLabel = isArmed ? "⚠ ARMED & DANGEROUS" : `DANGER LEVEL: ${w.danger_level?.toUpperCase()}`;
+  doc.text(dangerLabel, detailsX + 37.5, y + 9.5, { align: "center" });
+  y += 22;
+
+  // Key details table
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+
+  const detailRow = (label, value) => {
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(100, 100, 100);
+    doc.text(label, detailsX, y);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(20, 20, 20);
+    const wrapped = doc.splitTextToSize(String(value || "—"), 70);
+    doc.text(wrapped, detailsX + 35, y);
+    y += Math.max(6, wrapped.length * 5 + 2);
+  };
+
+  detailRow("NIDA:",     w.nida);
+  detailRow("Gender:",   w.gender);
+  detailRow("DOB:",      w.dob ? new Date(w.dob).toLocaleDateString("en-GB") : "—");
+  detailRow("Last Seen:", w.last_seen);
+  detailRow("Region:",   w.region);
+
+  // ── Offenses section (full width) ──
+  y = Math.max(y, 150);
+  doc.setDrawColor(...dc);
+  doc.setLineWidth(0.5);
+  doc.line(14, y, 196, y);
+  y += 8;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(...dc);
+  doc.text("WANTED FOR · ANATAFUTWA KWA:", 14, y);
+  y += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.setTextColor(20, 20, 20);
+  const offenseLines = doc.splitTextToSize(w.offenses || w.crime || "Criminal offenses — contact police for details.", 180);
+  doc.text(offenseLines, 14, y);
+  y += offenseLines.length * 6 + 4;
+
+  // Description
+  if (w.description) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text("DESCRIPTION · MAELEZO:", 14, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(40, 40, 40);
+    const descLines = doc.splitTextToSize(w.description, 180);
+    doc.text(descLines, 14, y);
+    y += descLines.length * 5 + 4;
+  }
+
+  // ── Reward section (if any) ──
+  if (w.reward && w.reward > 0) {
+    doc.setFillColor(...GOLD);
+    doc.rect(14, y, 182, 16, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.text(`REWARD · TSHABA: TZS ${(w.reward || 0).toLocaleString()}`, 105, y + 11, { align: "center" });
+    y += 22;
+  }
+
+  // ── Footer with contact info ──
+  y = Math.max(y, 260);
+  doc.setDrawColor(...NAVY);
+  doc.setLineWidth(0.8);
+  doc.line(14, y, 196, y);
+  y += 7;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...NAVY);
+  doc.text("IF SEEN, CONTACT NEAREST POLICE STATION", 14, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(80, 80, 80);
+  doc.text(`Or call: 112 (Emergency) · 022-211-0000 (TPDOP HQ)`, 14, y);
+  y += 5;
+  doc.text(`Issued by: ${officerName || "—"} · ${stationName || "Tanzania Police"}`, 14, y);
+  y += 5;
+  doc.text(`Do not approach if armed. Exercise extreme caution.`, 14, y);
+
+  // ── Stamp/seal placeholder (bottom right) ──
+  doc.setDrawColor(...NAVY);
+  doc.setLineWidth(1);
+  doc.circle(180, 280, 12);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...NAVY);
+  doc.text("TPF", 180, 282, { align: "center" });
+  doc.setFontSize(5);
+  doc.text("OFFICIAL", 180, 285, { align: "center" });
+
+  // Footer with date + page
+  footer(doc);
+
+  doc.save(`Wanted_${(w.full_name || "Unknown").replace(/[^a-z0-9]/gi, "_")}_${w.ref_number || (w.id || "").slice(0, 8)}.pdf`);
+}

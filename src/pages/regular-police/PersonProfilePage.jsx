@@ -19,14 +19,17 @@ export default function PersonProfilePage() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const { data: p } = await supabase.from("persons").select("*, regions(name), districts(name)").eq("id", id).single();
+      const { data: p } = await supabase.from("persons").select("*").eq("id", id).single();
       setPerson(p);
       if (p) {
+        // Try to fetch the person's wanted status, arrests, vehicles, and citations.
+        // Citations are linked via driver_nida (the page writes driver_nida on issue),
+        // not via a person_id FK (that column doesn't exist on citations).
         const [arr, veh, cit, wnt] = await Promise.all([
-          supabase.from("arrests").select("*").or(`person_id.eq.${id},suspect_nida.eq.${p.nida||"___"}`).order("created_at",{ascending:false}),
+          supabase.from("arrests").select("*").or(`suspect_nida.eq.${p.nida||"___"},suspect_name.ilike.${p.full_name||"___"}`).order("created_at",{ascending:false}),
           supabase.from("vehicles").select("*").eq("owner_id", id),
-          supabase.from("citations").select("*").eq("person_id", id).order("created_at",{ascending:false}),
-          supabase.from("wanted_persons").select("*").eq("nida", p.nida||"___").maybeSingle(),
+          supabase.from("citations").select("*").or(`driver_nida.eq.${p.nida||"___"},driver_license.eq.${p.driver_license||p.license_no||"___"}`).order("created_at",{ascending:false}),
+          supabase.from("wanted_persons").select("*").or(`nida.eq.${p.nida||"___"},full_name.ilike.${p.full_name||"___"}`).maybeSingle(),
         ]);
         setArrests(arr.data||[]); setVehicles(veh.data||[]); setCitations(cit.data||[]); setWanted(wnt.data);
       }
@@ -87,7 +90,8 @@ export default function PersonProfilePage() {
               [Hash, "TIN", person.tin||"—"],
               [Globe, "Passport", person.passport_no ? `${person.passport_no} (${person.passport_country||"TZ"})` : "—"],
               [Briefcase, "Occupation", person.occupation||"—"],
-              [MapPin, "Region", person.regions?.name||"—"],
+              [MapPin, "Region", person.region||person.regions?.name||"—"],
+              [MapPin, "District", person.district||person.districts?.name||"—"],
               [MapPin, "Address", person.address||"—"],
             ].map(([Icon,k,v],i,arr)=>(
               <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:i<arr.length-1?"1px solid #F8FAFC":"none" }}>
@@ -155,11 +159,11 @@ export default function PersonProfilePage() {
                   <div key={v.id} onClick={()=>nav(`/vehicle/${v.id}`)} style={{ border:"1px solid #E2E8F0", borderRadius:10, padding:"12px 14px", cursor:"pointer" }}
                     onMouseEnter={e=>e.currentTarget.style.borderColor="#0891B2"} onMouseLeave={e=>e.currentTarget.style.borderColor="#E2E8F0"}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
-                      <span style={{ fontFamily:"monospace", fontWeight:800, fontSize:14, color:"#1E293B", background:"#F8FAFC", padding:"2px 8px", borderRadius:6 }}>{v.plate_number}</span>
-                      {v.is_stolen && <span style={{ background:"#FEF2F2", color:"#DC2626", padding:"2px 7px", borderRadius:999, fontSize:10, fontWeight:700 }}>STOLEN</span>}
+                      <span style={{ fontFamily:"monospace", fontWeight:800, fontSize:14, color:"#1E293B", background:"#F8FAFC", padding:"2px 8px", borderRadius:6 }}>{v.plate_number||v.plate}</span>
+                      {(v.is_stolen || v.stolen) && <span style={{ background:"#FEF2F2", color:"#DC2626", padding:"2px 7px", borderRadius:999, fontSize:10, fontWeight:700 }}>STOLEN</span>}
                     </div>
                     <div style={{ fontSize:13, fontWeight:600, color:"#1E293B" }}>{v.make} {v.model}</div>
-                    <div style={{ fontSize:11, color:"#94A3B8" }}>{v.color} · {v.year||"—"} · {v.vehicle_type}</div>
+                    <div style={{ fontSize:11, color:"#94A3B8" }}>{v.color} · {v.year||"—"} · {v.vehicle_type||v.type||"Vehicle"}</div>
                   </div>
                 ))}
               </div>

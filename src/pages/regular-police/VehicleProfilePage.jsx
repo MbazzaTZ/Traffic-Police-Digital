@@ -28,9 +28,11 @@ export default function VehicleProfilePage() {
       const { data: v } = await supabase.from("vehicles").select("*").eq("id", id).single();
       setVehicle(v);
       if (v) {
+        // Use whichever plate column is populated (plate is canonical, plate_number is alias)
+        const plateForQuery = v.plate_number || v.plate || "";
         const [own, cit] = await Promise.all([
           v.owner_id ? supabase.from("persons").select("*").eq("id", v.owner_id).maybeSingle() : Promise.resolve({data:null}),
-          supabase.from("citations").select("*").ilike("vehicle_plate", v.plate_number).order("created_at",{ascending:false}),
+          plateForQuery ? supabase.from("citations").select("*").ilike("vehicle_plate", plateForQuery).order("created_at",{ascending:false}) : Promise.resolve({data:[]}),
         ]);
         setOwner(own.data); setCitations(cit.data||[]);
       }
@@ -64,7 +66,7 @@ export default function VehicleProfilePage() {
           {(profile?.role === "regular_officer" || profile?.role === "inspector") && vehicle && (
             <button
               onClick={() => nav("/citation-requests", { state: { prefill: {
-                vehicle_plate: vehicle.plate_number,
+                vehicle_plate: vehicle.plate_number || vehicle.plate,
                 vehicle_id:    vehicle.id,
               }}})}
               style={{ padding:"9px 16px", borderRadius:9, border:"none", background:"#D97706", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
@@ -75,7 +77,7 @@ export default function VehicleProfilePage() {
           {profile?.role === "traffic_officer" && vehicle && (
             <button
               onClick={() => nav("/traffic/citations", { state: { prefill: {
-                vehicle_plate: vehicle.plate_number,
+                vehicle_plate: vehicle.plate_number || vehicle.plate,
                 vehicle_id:    vehicle.id,
               }}})}
               style={{ padding:"9px 16px", borderRadius:9, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
@@ -85,7 +87,7 @@ export default function VehicleProfilePage() {
         </div>
       </div>
 
-      {vehicle.is_stolen && (
+      {(vehicle.is_stolen || vehicle.stolen) && (
         <div style={{ background:"#FEF2F2", border:"2px solid #DC2626", borderRadius:12, padding:"14px 18px", marginBottom:16, display:"flex", alignItems:"center", gap:10 }}>
           <AlertTriangle size={20} color="#DC2626"/>
           <div>
@@ -98,18 +100,18 @@ export default function VehicleProfilePage() {
       <div style={{ display:"grid", gridTemplateColumns:"340px 1fr", gap:18 }}>
         {/* Vehicle card */}
         <div style={{ background:"white", borderRadius:18, border:"1px solid #E2E8F0", overflow:"hidden", alignSelf:"start" }}>
-          <div style={{ background:`linear-gradient(135deg,#03102B,#082A63,${vehicle.is_stolen?"#DC2626":"#0891B2"})`, padding:"28px 20px", textAlign:"center" }}>
+          <div style={{ background:`linear-gradient(135deg,#03102B,#082A63,${(vehicle.is_stolen||vehicle.stolen)?"#DC2626":"#0891B2"})`, padding:"28px 20px", textAlign:"center" }}>
             <Car size={40} color="white" style={{ marginBottom:10 }}/>
-            <div style={{ fontFamily:"monospace", fontSize:24, fontWeight:900, color:"white", background:"rgba(255,255,255,.15)", borderRadius:8, padding:"6px 14px", display:"inline-block", letterSpacing:2 }}>{vehicle.plate_number}</div>
+            <div style={{ fontFamily:"monospace", fontSize:24, fontWeight:900, color:"white", background:"rgba(255,255,255,.15)", borderRadius:8, padding:"6px 14px", display:"inline-block", letterSpacing:2 }}>{vehicle.plate_number || vehicle.plate}</div>
             <div style={{ fontSize:14, color:"rgba(255,255,255,.8)", marginTop:8 }}>{vehicle.make} {vehicle.model}</div>
           </div>
           <div style={{ padding:"16px 20px" }}>
             {[
-              ["Type", vehicle.vehicle_type],
+              ["Type", vehicle.vehicle_type || vehicle.type || "—"],
               ["Color", vehicle.color||"—"],
               ["Year", vehicle.year||"—"],
               ["Engine No", vehicle.engine_number||"—"],
-              ["Chassis No", vehicle.chassis_number||"—"],
+              ["Chassis No", vehicle.chassis_number||vehicle.vin||"—"],
               ["Registered", vehicle.registration_date?new Date(vehicle.registration_date).toLocaleDateString("en-GB"):"—"],
             ].map(([k,v],i)=>(
               <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"9px 0", borderBottom:i<5?"1px solid #F8FAFC":"none" }}>
@@ -126,11 +128,11 @@ export default function VehicleProfilePage() {
             <div style={{ fontSize:14, fontWeight:700, color:"#0D3477", marginBottom:14, display:"flex", alignItems:"center", gap:8 }}><Shield size={16}/> Insurance · Bima</div>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div>
-                <div style={{ fontSize:13, color:"#64748B" }}>{vehicle.insurance_company||"No insurer on record"}</div>
-                <div style={{ fontSize:12, color:"#94A3B8" }}>Expires: {vehicle.insurance_expiry?new Date(vehicle.insurance_expiry).toLocaleDateString("en-GB"):"Unknown"}</div>
+                <div style={{ fontSize:13, color:"#64748B" }}>{vehicle.insurance_company||vehicle.insurance_co||"No insurer on record"}</div>
+                <div style={{ fontSize:12, color:"#94A3B8" }}>Expires: {(vehicle.insurance_expiry||vehicle.insurance_exp)?new Date(vehicle.insurance_expiry||vehicle.insurance_exp).toLocaleDateString("en-GB"):"Unknown"}</div>
               </div>
-              <span style={{ background:vehicle.insurance_valid?"#F0FDF4":"#FEF2F2", color:vehicle.insurance_valid?"#16A34A":"#DC2626", padding:"6px 16px", borderRadius:999, fontSize:13, fontWeight:800 }}>
-                {vehicle.insurance_valid?"✓ VALID":"✗ INVALID/EXPIRED"}
+              <span style={{ background:(vehicle.insurance_valid||(vehicle.insurance_exp && new Date(vehicle.insurance_exp) > new Date()))?"#F0FDF4":"#FEF2F2", color:(vehicle.insurance_valid||(vehicle.insurance_exp && new Date(vehicle.insurance_exp) > new Date()))?"#16A34A":"#DC2626", padding:"6px 16px", borderRadius:999, fontSize:13, fontWeight:800 }}>
+                {(vehicle.insurance_valid||(vehicle.insurance_exp && new Date(vehicle.insurance_exp) > new Date()))?"✓ VALID":"✗ INVALID/EXPIRED"}
               </span>
             </div>
           </div>
