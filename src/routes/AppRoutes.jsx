@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, Component } from "react";
 import { supabase } from "../lib/supabase";
 
 // LoginPage stays eager - it's the entry route, no benefit from splitting
@@ -136,8 +136,62 @@ function PageLoader() {
   );
 }
 
+// ── Chunk-load error boundary ──
+// Catches the "Failed to fetch dynamically imported module" error that
+// happens when a user has a stale main bundle (from a previous deploy)
+// cached in their browser/SW. The boundary shows a brief "Updating…"
+// message while the main.jsx global handler unregisters the SW, clears
+// caches, and reloads the page.
+const CHUNK_ERR_PATTERNS = [
+  "failed to fetch dynamically imported module",
+  "importing a module script failed",
+  "error loading dynamically imported module",
+];
+function isChunkErr(msg) {
+  if (!msg) return false;
+  const m = String(msg).toLowerCase();
+  return CHUNK_ERR_PATTERNS.some(p => m.includes(p));
+}
+
+class ChunkErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasChunkError: false };
+  }
+  static getDerivedStateFromError(error) {
+    if (isChunkErr(error?.message) || isChunkErr(String(error))) {
+      return { hasChunkError: true };
+    }
+    return { hasChunkError: false };
+  }
+  componentDidCatch(error) {
+    if (isChunkErr(error?.message) || isChunkErr(String(error))) {
+      // main.jsx has a global handler that will unregister SW + reload.
+      // The boundary just keeps the UI from going blank during the
+      // brief window between the error and the reload.
+      console.warn("Chunk load failed — auto-reloading to recover...");
+    }
+  }
+  render() {
+    if (this.state.hasChunkError) {
+      return (
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", fontFamily:"system-ui", background:"#F4F7FC" }}>
+          <div style={{ textAlign:"center", color:"#64748B" }}>
+            <div style={{ width:36, height:36, border:"3px solid #E2E8F0", borderTopColor:"#0D3477", borderRadius:"50%", animation:"spin 1s linear infinite", margin:"0 auto 14px" }}/>
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            <div style={{ fontSize:14, fontWeight:600, color:"#0D3477", marginBottom:4 }}>Updating TPDOP...</div>
+            <div style={{ fontSize:12, color:"#94A3B8" }}>A new version is available — reloading automatically</div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function AppRoutes() {
   return (
+    <ChunkErrorBoundary>
     <Suspense fallback={<PageLoader/>}>
     <Routes>
       <Route path="/" element={<LoginPage/>}/>
@@ -214,5 +268,6 @@ export default function AppRoutes() {
       <Route path="*" element={<Navigate to="/" replace/>}/>
     </Routes>
     </Suspense>
+    </ChunkErrorBoundary>
   );
 }
