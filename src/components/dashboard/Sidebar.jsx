@@ -1,29 +1,21 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
-import { LayoutDashboard, Search, FileText, Shield, MapPinned, FolderOpen, MessageSquare, Bell, Settings, LogOut, User, FileCheck, Lock, Stethoscope, UserX, Target, Users, Home, Gavel, Banknote, Car, X } from "lucide-react";
+import { LayoutDashboard, Search, FileText, Shield, MapPinned, MessageSquare, Bell, Settings, LogOut, User, FileCheck, Lock, Stethoscope, MoreHorizontal, X } from "lucide-react";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 
+// Minimum menu: only the 8 destinations a regular officer touches every shift.
+// Everything else (Vehicle Search, Citation Requests, Registries, Firearms,
+// Payments, Prisoners, Cells, Court Cases, Evidence, Approvals, Messages,
+// Alerts, Settings) lives on the /more page and stays one tap away.
 const NAV = [
-  { icon:LayoutDashboard, label:"Dashboard",     sw:"Dashibodi",  path:"/dashboard" },
-  { icon:Search,          label:"Person Search", sw:"Tafuta Mtu", path:"/person-search" },
-  { icon:Car,             label:"Vehicle Search",sw:"Tafuta Gari",path:"/vehicle-search" },
-  { icon:FileCheck,       label:"Citation Requests", sw:"Maombi ya Faini", path:"/citation-requests" },
-  { icon:FileText,        label:"Incidents",     sw:"Ripoti",     path:"/incidents" },
-  { icon:Shield,          label:"Arrests",       sw:"Kukamatwa",  path:"/arrests" },
-  { icon:Lock,            label:"Detentions",    sw:"Vizuizini",  path:"/detentions" },
-  { icon:Stethoscope,     label:"PF3 Forms",     sw:"Fomu ya PF3",path:"/pf3" },
-  { icon:UserX,           label:"Registries",    sw:"Daftari",    path:"/registries" },
-  { icon:Target,          label:"Firearms",      sw:"Silaha",     path:"/firearms" },
-  { icon:Banknote,        label:"Payments",      sw:"Malipo",     path:"/payments" },
-  { icon:Users,           label:"Prisoners",     sw:"Wafungwa",   path:"/prisoners" },
-  { icon:Home,            label:"Cells",         sw:"Vyumba",     path:"/cells" },
-  { icon:Gavel,           label:"Court Cases",   sw:"Kesi",       path:"/court-cases" },
-  { icon:MapPinned,       label:"Patrols",       sw:"Doria",      path:"/patrols" },
-  { icon:FolderOpen,      label:"Evidence",      sw:"Ushahidi",   path:"/evidence" },
-  { icon:FileCheck,       label:"Approvals",     sw:"Maombi",     path:"/approvals" },
-  { icon:MessageSquare,   label:"Messages",      sw:"Ujumbe",     path:"/messages" },
-  { icon:Bell,            label:"Alerts",        sw:"Tahadhari",  path:"/alerts" },
-  { icon:Settings,        label:"Settings",      sw:"Mipangilio", path:"/settings" },
+  { icon:LayoutDashboard, label:"Dashboard",     sw:"Dashibodi",   path:"/dashboard" },
+  { icon:Search,          label:"Person Search", sw:"Tafuta Mtu",  path:"/person-search" },
+  { icon:FileText,        label:"Incidents",     sw:"Ripoti",      path:"/incidents" },
+  { icon:Shield,          label:"Arrests",       sw:"Kukamatwa",   path:"/arrests" },
+  { icon:Lock,            label:"Detentions",    sw:"Vizuizini",   path:"/detentions" },
+  { icon:Stethoscope,     label:"PF3 Forms",     sw:"Fomu ya PF3", path:"/pf3" },
+  { icon:MapPinned,       label:"Patrols",       sw:"Doria",       path:"/patrols" },
+  { icon:MoreHorizontal,  label:"More",          sw:"Zaidi",       path:"/more" },
 ];
 
 export default function Sidebar({ isMobile = false, open = false, onClose }) {

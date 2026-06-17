@@ -14,26 +14,14 @@ const TRAFFIC_BOTTOM_NAV = [
 ];
 
 const NAV = [
-  { icon:LayoutDashboard, label:"Dashboard",    sw:"Dashibodi",    path:"/traffic" },
-  { icon:FileText,        label:"Citations",    sw:"Faini",        path:"/traffic/citations" },
-  { icon:FileCheck,       label:"Citation Requests", sw:"Maombi ya Faini", path:"/citation-requests" },
-  { icon:Banknote,        label:"Payments",     sw:"Malipo",       path:"/traffic/payments" },
-  { icon:AlertTriangle,   label:"Accidents",    sw:"Ajali",        path:"/traffic/accidents" },
-  { icon:Search,          label:"Veh. Search",  sw:"Tafuta Gari",  path:"/traffic/vehicles" },
-  { icon:Car,             label:"Checkpoints",  sw:"Vizuizi",      path:"/traffic/checkpoints" },
-  { divider:true, label:"Cross-Functional" },
-  { icon:Search,          label:"Person Search",sw:"Tafuta Mtu",   path:"/person-search" },
-  { icon:Lock,            label:"Detentions",   sw:"Vizuizini",    path:"/detentions" },
-  { icon:Stethoscope,     label:"PF3 Forms",    sw:"Fomu ya PF3",  path:"/pf3" },
-  { icon:UserX,           label:"Registries",   sw:"Daftari",      path:"/registries" },
-  { icon:Target,          label:"Firearms",     sw:"Silaha",       path:"/firearms" },
-  { icon:Users,           label:"Prisoners",    sw:"Wafungwa",     path:"/prisoners" },
-  { icon:Gavel,           label:"Court Cases",  sw:"Kesi",         path:"/court-cases" },
-  { icon:MessageSquare,   label:"Messages",     sw:"Ujumbe",       path:"/messages" },
-  { icon:Bell,            label:"Alerts",       sw:"Tahadhari",    path:"/alerts" },
-  { divider:true },
-  { icon:FileCheck,       label:"Approvals",    sw:"Maombi",       path:"/traffic/approvals" },
-  { icon:Settings,        label:"Settings",     sw:"Mipangilio",   path:"/traffic/settings" },
+  { icon:LayoutDashboard, label:"Dashboard",         sw:"Dashibodi",        path:"/traffic" },
+  { icon:FileText,        label:"Citations",         sw:"Faini",            path:"/traffic/citations" },
+  { icon:FileCheck,       label:"Citation Requests", sw:"Maombi ya Faini",  path:"/citation-requests" },
+  { icon:Banknote,        label:"Payments",          sw:"Malipo",           path:"/traffic/payments" },
+  { icon:AlertTriangle,   label:"Accidents",         sw:"Ajali",            path:"/traffic/accidents" },
+  { icon:Search,          label:"Vehicle Search",    sw:"Tafuta Gari",      path:"/traffic/vehicles" },
+  { icon:Car,             label:"Checkpoints",       sw:"Vizuizi",          path:"/traffic/checkpoints" },
+  { icon:MoreHorizontal,  label:"More",              sw:"Zaidi",            path:"/more" },
 ];
 
 export default function TrafficLayout({ children, pageTitle="Traffic", pageTitle2="" }) {

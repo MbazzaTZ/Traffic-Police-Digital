@@ -19,10 +19,16 @@ function RoleLayout({ role, children, ...props }) {
   return <DashboardLayout {...props}>{children}</DashboardLayout>;
 }
 
-// Build the menu groups based on role
+// Build the menu groups based on role.
+// When the sidebar slims down to "essentials only", this page becomes
+// the safety-net for everything else. Everything removed from the
+// sidebar MUST appear here, organized for quick scanning.
 function menuFor(role) {
-  // Common cross-functional links every field officer has
-  const operations = [
+  const isTraffic = role === "traffic_officer";
+
+  // Operations - same for both roles, but ordered by relevance
+  // (regular officers see Detentions/PF3 first, traffic see Vehicle Search first)
+  const operationsCommon = [
     { icon:Lock,         label:"Detentions",    sw:"Vizuizini",    path:"/detentions" },
     { icon:Stethoscope,  label:"PF3 Forms",     sw:"Fomu ya PF3",  path:"/pf3" },
     { icon:UserX,        label:"Registries",    sw:"Daftari",      path:"/registries" },
@@ -30,36 +36,36 @@ function menuFor(role) {
     { icon:Users,        label:"Prisoners",     sw:"Wafungwa",     path:"/prisoners" },
     { icon:Home,         label:"Cells",         sw:"Vyumba",       path:"/cells" },
     { icon:Gavel,        label:"Court Cases",   sw:"Kesi",         path:"/court-cases" },
-    { icon:Banknote,     label:"Payments",      sw:"Malipo",       path:"/payments" },
+    { icon:Banknote,     label:"Payments",      sw:"Malipo",       path:isTraffic ? "/traffic/payments" : "/payments" },
   ];
 
-  // Regular officer also gets these
-  const regular = role === "traffic_officer" ? [] : [
-    { icon:Search,       label:"Person Search", sw:"Tafuta Mtu",  path:"/person-search" },
+  // Lookup tools - cross-functional
+  const lookups = isTraffic ? [
+    // Traffic also gets Person Search (was removed from their slim sidebar)
+    { icon:Search,       label:"Person Search", sw:"Tafuta Mtu",   path:"/person-search" },
+  ] : [
+    // Regular gets Vehicle Search + Citation Requests
+    // (the gateway to flagging traffic offenses)
+    { icon:Car,          label:"Vehicle Search",sw:"Tafuta Gari",  path:"/vehicle-search" },
+    { icon:FileCheck,    label:"Citation Requests", sw:"Maombi ya Faini", path:"/citation-requests" },
     { icon:MapPinned,    label:"Patrols",       sw:"Doria",        path:"/patrols" },
     { icon:FolderOpen,   label:"Evidence",      sw:"Ushahidi",     path:"/evidence" },
   ];
 
-  // Traffic officer also gets these
-  const traffic = role === "traffic_officer" ? [
-    { icon:Car,           label:"Vehicle Search", sw:"Tafuta Gari", path:"/traffic/vehicles" },
-    { icon:Car,           label:"Checkpoints",    sw:"Vizuizi",      path:"/traffic/checkpoints" },
-    { icon:Search,        label:"Person Search",  sw:"Tafuta Mtu",   path:"/person-search" },
-  ] : [];
-
   const communications = [
-    { icon:MessageSquare, label:"Messages",      sw:"Ujumbe",      path:"/messages" },
-    { icon:Bell,          label:"Alerts",        sw:"Tahadhari",   path:"/alerts" },
-    { icon:FileCheck,     label:"Approvals",     sw:"Maombi",      path:"/approvals" },
+    { icon:MessageSquare, label:"Messages",     sw:"Ujumbe",       path:"/messages" },
+    { icon:Bell,          label:"Alerts",       sw:"Tahadhari",    path:"/alerts" },
+    { icon:FileCheck,     label:"Approvals",    sw:"Maombi",       path:isTraffic ? "/traffic/approvals" : "/approvals" },
   ];
 
   const account = [
-    { icon:User,          label:"My Profile",    sw:"Wasifu Wangu", path:"/profile" },
-    { icon:Settings,      label:"Settings",      sw:"Mipangilio",  path:"/settings" },
+    { icon:User,          label:"My Profile",   sw:"Wasifu Wangu", path:"/profile" },
+    { icon:Settings,      label:"Settings",     sw:"Mipangilio",   path:isTraffic ? "/traffic/settings" : "/settings" },
   ];
 
   return [
-    { title:"Operations · Shughuli",          items:[...regular, ...traffic, ...operations] },
+    { title:"Lookups · Utafutaji",            items:lookups },
+    { title:"Operations · Shughuli",          items:operationsCommon },
     { title:"Communications · Mawasiliano",   items:communications },
     { title:"Account · Akaunti",              items:account },
   ];

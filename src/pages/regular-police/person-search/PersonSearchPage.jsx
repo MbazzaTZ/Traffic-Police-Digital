@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../layouts/DashboardLayout";
-import { Search, CreditCard, Car, User, Shield, FileText, AlertTriangle, CheckCircle, Phone, Globe, Fingerprint, ScanFace, Hash } from "lucide-react";
+import { Search, CreditCard, Car, User, Shield, FileText, AlertTriangle, CheckCircle, Phone, Globe, Fingerprint, ScanFace, Hash, UserPlus, X, Camera } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { logAction } from "../../../lib/audit";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import { useAppData } from "../../../context/AppDataContext";
+import PhotoUpload from "../../../components/PhotoUpload";
 
 // 9 search methods per blueprint. Each `col` is the persons-table column we ILIKE-match.
 // `biometric:true` methods route to a placeholder (AFIS / face-recognition integration not yet wired).
@@ -23,10 +25,75 @@ const METHODS = [
 export default function PersonSearchPage() {
   const nav = useNavigate();
   const { profile } = useCurrentUser();
+  const { regions, districts } = useAppData();
   const [method,   setMethod]   = useState(0);
   const [query,    setQuery]    = useState("");
   const [results,  setResults]  = useState(null);
   const [loading,  setLoading]  = useState(false);
+
+  // Add Person flow
+  const [addModal, setAddModal] = useState(false);
+  const [addForm,  setAddForm]  = useState(initAddForm());
+  const [adding,   setAdding]   = useState(false);
+  const [addErr,   setAddErr]   = useState("");
+  const [addDone,  setAddDone]  = useState(null);
+
+  function initAddForm() {
+    return {
+      full_name:"", alias:"", nida:"", driver_license:"", passport_no:"",
+      phone:"", dob:"", gender:"Male", nationality:"Tanzanian", tribe:"",
+      address:"", region_id:"", district_id:"", occupation:"",
+      notes:"", photo_urls:[],
+    };
+  }
+
+  function openAddPerson() {
+    setAddErr(""); setAddDone(null);
+    // Pre-fill the relevant field with whatever the officer was searching for
+    const M = METHODS[method];
+    const f = initAddForm();
+    if (M.col && query.trim()) f[M.col] = query.trim();
+    setAddForm(f);
+    setAddModal(true);
+  }
+  const updAdd = k => e => setAddForm(f => ({ ...f, [k]: e.target.value }));
+
+  // Districts cascading from selected region
+  const addDistricts = addForm.region_id ? districts.filter(d => d.region_id === addForm.region_id) : [];
+
+  async function submitAddPerson(e) {
+    e.preventDefault();
+    setAdding(true); setAddErr("");
+    try {
+      if (!addForm.full_name.trim()) throw new Error("Full name is required");
+      // Convert empty FK strings to null so Supabase accepts the UUID column
+      const payload = { ...addForm, created_by: profile?.id || null };
+      ["region_id","district_id","dob","nida","driver_license","passport_no","phone","address","tribe","occupation","alias","notes"].forEach(k => {
+        if (payload[k] === "") payload[k] = null;
+      });
+      const { data, error } = await supabase.from("persons").insert(payload).select().single();
+      if (error) throw error;
+
+      logAction({
+        profile, action:"add_person",
+        entityType:"person", entityId: data.id,
+        entityRef: data.nida || data.full_name,
+        description: `Added person to database: ${data.full_name}`,
+      });
+
+      setAddDone(data);
+    } catch (e) {
+      setAddErr(e.message || "Could not add person");
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  function closeAddModal() {
+    setAddModal(false);
+    setAddForm(initAddForm());
+    setAddDone(null);
+  }
 
   async function doSearch(e) {
     e.preventDefault();
@@ -137,11 +204,19 @@ export default function PersonSearchPage() {
             </div>
           )}
 
-          <div style={{ background:total>0?(hasWanted?"#FEF2F2":"#FFFBEB"):"#F0FDF4", border:`1px solid ${total>0?(hasWanted?"#FECACA":"#FDE68A"):"#BBF7D0"}`, borderRadius:12, padding:"14px 18px", marginBottom:16, display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ background:total>0?(hasWanted?"#FEF2F2":"#FFFBEB"):"#F0FDF4", border:`1px solid ${total>0?(hasWanted?"#FECACA":"#FDE68A"):"#BBF7D0"}`, borderRadius:12, padding:"14px 18px", marginBottom:16, display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
             {total>0 ? <AlertTriangle size={18} color={hasWanted?"#DC2626":"#D97706"}/> : <CheckCircle size={18} color="#16A34A"/>}
-            <div style={{ fontSize:14, fontWeight:700, color:total>0?(hasWanted?"#B91C1C":"#92400E"):"#166534" }}>
+            <div style={{ fontSize:14, fontWeight:700, color:total>0?(hasWanted?"#B91C1C":"#92400E"):"#166534", flex:1, minWidth:200 }}>
               {hasWanted ? `⚠ WANTED PERSON MATCH — ${total} record(s)` : total>0 ? `${total} record(s) found` : "No records found — clean"}
             </div>
+            {/* Add Person button: shown when zero results, and only for non-plate searches
+                (plate searches are about vehicles, not persons). */}
+            {total === 0 && results.kind !== "plate" && (
+              <button onClick={openAddPerson}
+                style={{ padding:"8px 14px", borderRadius:9, border:"1px solid #0D3477", background:"#0D3477", color:"white", fontWeight:700, fontSize:12, cursor:"pointer", display:"flex", alignItems:"center", gap:6, flexShrink:0 }}>
+                <UserPlus size={14}/> Add Person to Database
+              </button>
+            )}
           </div>
 
           {results.kind==="plate" ? (
@@ -258,6 +333,166 @@ export default function PersonSearchPage() {
           <div style={{ fontSize:13, marginTop:6 }}>Results from arrests, suspects, wanted persons & citations</div>
         </div>
       )}
+
+      {/* ─── ADD PERSON MODAL ─── */}
+      {addModal && (
+        <div onClick={e=>e.target===e.currentTarget && !adding && closeAddModal()}
+          style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.55)", zIndex:100, display:"flex", alignItems:"center", justifyContent:"center", padding:14 }}>
+          <div style={{ background:"white", borderRadius:18, padding:24, width:"100%", maxWidth:640, maxHeight:"92vh", overflowY:"auto" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:11 }}>
+                <div style={{ width:42, height:42, borderRadius:11, background:"#0D3477", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <UserPlus size={20} color="white"/>
+                </div>
+                <div>
+                  <div style={{ fontSize:17, fontWeight:800, color:"#0D3477" }}>Add Person · Ongeza Mtu</div>
+                  <div style={{ fontSize:12, color:"#64748B", marginTop:1 }}>This person will be searchable immediately</div>
+                </div>
+              </div>
+              <button onClick={closeAddModal} aria-label="Close" style={{ width:32, height:32, borderRadius:8, background:"#F1F5F9", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <X size={16}/>
+              </button>
+            </div>
+
+            {addDone ? (
+              // Success state - jump to person profile or close
+              <div style={{ textAlign:"center", padding:"22px 0" }}>
+                <CheckCircle size={50} color="#16A34A" style={{ marginBottom:12 }}/>
+                <h3 style={{ margin:"0 0 6px", color:"#16A34A" }}>Person Added</h3>
+                <p style={{ fontSize:13, color:"#64748B", marginBottom:18 }}>
+                  <strong>{addDone.full_name}</strong> is now in the database.
+                </p>
+                <div style={{ display:"flex", gap:8, justifyContent:"center" }}>
+                  <button onClick={() => { closeAddModal(); nav(`/person/${addDone.id}`); }}
+                    style={{ padding:"9px 16px", borderRadius:9, border:"none", background:"#0D3477", color:"white", fontWeight:700, fontSize:13, cursor:"pointer" }}>
+                    Open Profile
+                  </button>
+                  <button onClick={closeAddModal}
+                    style={{ padding:"9px 16px", borderRadius:9, border:"1px solid #E2E8F0", background:"white", color:"#475569", fontWeight:700, fontSize:13, cursor:"pointer" }}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={submitAddPerson}>
+                {addErr && (
+                  <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:8, padding:"9px 14px", marginBottom:14, fontSize:12, color:"#B91C1C", display:"flex", gap:7, alignItems:"center" }}>
+                    <AlertTriangle size={14}/>{addErr}
+                  </div>
+                )}
+
+                {/* Identity */}
+                <SectionTitle>Identity · Utambulisho</SectionTitle>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 14px" }}>
+                  <Field label="Full Name *" col2>
+                    <input value={addForm.full_name} onChange={updAdd("full_name")} required style={S.inp} autoFocus/>
+                  </Field>
+                  <Field label="Alias / Nickname">
+                    <input value={addForm.alias} onChange={updAdd("alias")} placeholder="if known" style={S.inp}/>
+                  </Field>
+                  <Field label="Date of Birth">
+                    <input type="date" value={addForm.dob} onChange={updAdd("dob")} style={S.inp}/>
+                  </Field>
+                  <Field label="Gender">
+                    <select value={addForm.gender} onChange={updAdd("gender")} style={S.sel}>
+                      <option>Male</option><option>Female</option><option>Other</option>
+                    </select>
+                  </Field>
+                  <Field label="Nationality">
+                    <input value={addForm.nationality} onChange={updAdd("nationality")} style={S.inp}/>
+                  </Field>
+                </div>
+
+                {/* ID numbers */}
+                <SectionTitle>Documents · Vitambulisho</SectionTitle>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 14px" }}>
+                  <Field label="NIDA">
+                    <input value={addForm.nida} onChange={updAdd("nida")} placeholder="20-digit NIDA" style={{ ...S.inp, fontFamily:"monospace" }}/>
+                  </Field>
+                  <Field label="Driver License">
+                    <input value={addForm.driver_license} onChange={updAdd("driver_license")} style={{ ...S.inp, fontFamily:"monospace" }}/>
+                  </Field>
+                  <Field label="Passport">
+                    <input value={addForm.passport_no} onChange={updAdd("passport_no")} style={{ ...S.inp, fontFamily:"monospace" }}/>
+                  </Field>
+                  <Field label="Phone">
+                    <input value={addForm.phone} onChange={updAdd("phone")} placeholder="+255..." style={S.inp}/>
+                  </Field>
+                </div>
+
+                {/* Location */}
+                <SectionTitle>Address · Anuani</SectionTitle>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 14px" }}>
+                  <Field label="Region">
+                    <select value={addForm.region_id} onChange={e => setAddForm(f=>({...f, region_id:e.target.value, district_id:""}))} style={S.sel}>
+                      <option value="">— Not set —</option>
+                      {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="District">
+                    <select value={addForm.district_id} onChange={updAdd("district_id")}
+                      disabled={!addForm.region_id} style={{ ...S.sel, opacity:addForm.region_id?1:.5 }}>
+                      <option value="">{addForm.region_id ? "— Not set —" : "Select region first"}</option>
+                      {addDistricts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Street Address" col2>
+                    <input value={addForm.address} onChange={updAdd("address")} placeholder="Last known address" style={S.inp}/>
+                  </Field>
+                  <Field label="Tribe">
+                    <input value={addForm.tribe} onChange={updAdd("tribe")} style={S.inp}/>
+                  </Field>
+                  <Field label="Occupation">
+                    <input value={addForm.occupation} onChange={updAdd("occupation")} style={S.inp}/>
+                  </Field>
+                </div>
+
+                {/* Photos */}
+                <SectionTitle><Camera size={12} style={{display:"inline", marginRight:5}}/>Photos · Picha</SectionTitle>
+                <div style={{ marginBottom:13 }}>
+                  <PhotoUpload
+                    folder="persons"
+                    value={addForm.photo_urls}
+                    onChange={(urls)=>setAddForm(f=>({...f, photo_urls:urls}))}
+                    maxFiles={6}
+                    label="Face, NIDA card, driver license, vehicle"
+                    hint="Tap to capture (face + ID is best)"
+                  />
+                </div>
+
+                {/* Notes */}
+                <div style={{ marginBottom:16 }}>
+                  <label style={S.lbl}>Notes · Maelezo</label>
+                  <textarea value={addForm.notes} onChange={updAdd("notes")} rows={2} placeholder="Where and how the officer encountered this person..." style={{ ...S.inp, height:"auto", padding:"10px 12px", resize:"vertical" }}/>
+                </div>
+
+                <button type="submit" disabled={adding || !addForm.full_name.trim()}
+                  style={{ width:"100%", height:48, background:(adding||!addForm.full_name.trim())?"#94A3B8":"#0D3477", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:(adding||!addForm.full_name.trim())?"not-allowed":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+                  <UserPlus size={16}/> {adding ? "Adding..." : "Add to Database"}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </DashboardLayout>
+  );
+}
+
+// ─ Helpers used only in the Add Person modal ─
+const S = {
+  inp: { width:"100%", height:40, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", fontSize:13, outline:"none", boxSizing:"border-box" },
+  sel: { width:"100%", height:40, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", fontSize:13, outline:"none", background:"white", boxSizing:"border-box" },
+  lbl: { display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:0.4, marginBottom:5 },
+};
+function SectionTitle({ children }) {
+  return <div style={{ fontSize:10, fontWeight:800, color:"#94A3B8", textTransform:"uppercase", letterSpacing:0.6, margin:"4px 0 10px", paddingBottom:6, borderBottom:"1px solid #F1F5F9" }}>{children}</div>;
+}
+function Field({ label, col2, children }) {
+  return (
+    <div style={{ marginBottom:13, gridColumn: col2 ? "1/-1" : "auto" }}>
+      <label style={S.lbl}>{label}</label>
+      {children}
+    </div>
   );
 }
