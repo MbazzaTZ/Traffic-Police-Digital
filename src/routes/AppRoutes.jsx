@@ -68,6 +68,7 @@ const CommandReports    = lazy(() => import("../pages/command/CommandReports"));
 const CommandAlerts     = lazy(() => import("../pages/command/CommandAlerts"));
 const AuditLogsPage     = lazy(() => import("../pages/command/AuditLogsPage"));
 const CommandPatrolMap  = lazy(() => import("../pages/command/CommandPatrolMap"));
+const IntelligencePage  = lazy(() => import("../pages/command/IntelligencePage"));
 
 // Shared
 const ApprovalsPage = lazy(() => import("../pages/shared/ApprovalsPage"));
@@ -216,6 +217,7 @@ export default function AppRoutes() {
       <Route path="/command/reports"   element={<Guard roles={COMMAND}><CommandReports/></Guard>}/>
       <Route path="/command/audit"     element={<Guard roles={COMMAND}><AuditLogsPage/></Guard>}/>
       <Route path="/command/patrol-map" element={<Guard roles={COMMAND}><CommandPatrolMap/></Guard>}/>
+      <Route path="/command/intel"      element={<Guard roles={COMMAND}><IntelligencePage/></Guard>}/>
       <Route path="/command/approvals" element={<Guard roles={COMMAND}><ApprovalsPage/></Guard>}/>
       <Route path="/command/settings"  element={<Guard roles={COMMAND}><SettingsPage/></Guard>}/>
 

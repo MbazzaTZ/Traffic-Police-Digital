@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { LayoutDashboard, Activity, Bell, Users, FileText, Map, Settings, LogOut, Shield, FileCheck, Menu, X } from "lucide-react";
+import { LayoutDashboard, Activity, Bell, Users, FileText, Map, Settings, LogOut, Shield, FileCheck, Lock, Menu, X } from "lucide-react";
 import { useResponsiveSidebar } from "../hooks/useResponsiveSidebar";
 
 const NAV = [
@@ -11,6 +11,7 @@ const NAV = [
   { icon:FileText,        label:"Reports",        sw:"Ripoti",        path:"/command/reports" },
   { icon:FileCheck,       label:"Approvals",      sw:"Maombi",        path:"/command/approvals" },
   { icon:Shield,          label:"Audit Logs",     sw:"Kumbukumbu",    path:"/command/audit" },
+  { icon:Lock,            label:"Intelligence",   sw:"Ujasusi",       path:"/command/intel" },
   { icon:Map,             label:"Patrol Map",     sw:"Ramani ya Doria", path:"/command/patrol-map" },
   { icon:Settings,        label:"Settings",       sw:"Mipangilio",    path:"/command/settings" },
 ];
