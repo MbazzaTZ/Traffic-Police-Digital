@@ -16,7 +16,7 @@
 //   1. See list of pending requests at their station
 //   2. Click a request to open the review drawer
 //   3. Either:
-//      - "Issue Citation" -> creates traffic_citations row + sets status='issued'
+//      - "Issue Citation" -> creates citations row + sets status='issued'
 //      - "Reject" -> requires reason, status='rejected'
 //
 // All actions audited.
@@ -82,7 +82,7 @@ export default function CitationRequestsPage() {
     setLoading(true);
     let q = supabase
       .from("citation_requests")
-      .select("*, requester:profiles!cr_requester_fk(full_name,badge), reviewer:profiles!cr_reviewer_fk(full_name,badge)")
+      .select("*, requester:profiles!citation_requests_requester_id_fkey(full_name,badge), reviewer:profiles!citation_requests_reviewed_by_fkey(full_name,badge)")
       .order("created_at", { ascending:false })
       .limit(200);
 

@@ -34,7 +34,7 @@ export default function SuspectsPage() {
   async function load() {
     setLoading(true);
     const [sRes, cRes] = await Promise.all([
-      supabase.from("suspects").select("*, cid_cases(case_number,title), profiles!suspects_added_by_fkey(full_name)").order("created_at",{ascending:false}),
+      supabase.from("suspects").select("*, cases(case_number,title), profiles!suspects_added_by_fkey(full_name)").order("created_at",{ascending:false}),
       supabase.from("cases").select("id,case_number,title").in("status",["open","active"]).order("created_at",{ascending:false}),
     ]);
     setSuspects(sRes.data||[]); setCases(cRes.data||[]); setLoading(false);
@@ -135,7 +135,7 @@ export default function SuspectsPage() {
                       </td>
                       <td style={{ padding:"11px 14px", fontSize:12, color:"#475569" }}>{s.alias||"—"}</td>
                       <td style={{ padding:"11px 14px", fontSize:11, color:"#64748B", fontFamily:"monospace" }}>{s.nida||"—"}</td>
-                      <td style={{ padding:"11px 14px", fontSize:11, color:"#0D3477", fontWeight:700, fontFamily:"monospace" }}>{s.cid_cases?.case_number||"—"}</td>
+                      <td style={{ padding:"11px 14px", fontSize:11, color:"#0D3477", fontWeight:700, fontFamily:"monospace" }}>{s.cases?.case_number||"—"}</td>
                       <td style={{ padding:"11px 14px" }}><span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{s.status}</span></td>
                       <td style={{ padding:"11px 14px", fontSize:12, color:"#475569" }}>{s.profiles?.full_name||"—"}</td>
                       <td style={{ padding:"11px 14px", fontSize:11, color:"#94A3B8" }}>{new Date(s.created_at).toLocaleDateString("en-GB")}</td>
@@ -171,7 +171,7 @@ export default function SuspectsPage() {
                 ["Phone", selected.phone||"—"],
                 ["Occupation", selected.occupation||"—"],
                 ["Address", selected.address||"—"],
-                ["Linked Case", selected.cid_cases?.case_number||"None"],
+                ["Linked Case", selected.cases?.case_number||"None"],
               ].map(([k,v]) => (
                 <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid #F8FAFC" }}>
                   <span style={{ fontSize:11, color:"#94A3B8", fontWeight:700 }}>{k}</span>

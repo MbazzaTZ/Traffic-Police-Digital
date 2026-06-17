@@ -133,7 +133,7 @@ export default function PersonSearchPage() {
       const [persons, arrests, suspects, wanted] = await Promise.all([
         supabase.from("persons").select("*").ilike(M.col, `%${q}%`),
         supabase.from("arrests").select("*").ilike(arrCol, `%${q}%`).order("created_at",{ascending:false}),
-        supabase.from("suspects").select("*, cid_cases(case_number)").ilike(M.col, `%${q}%`),
+        supabase.from("suspects").select("*, cases(case_number)").ilike(M.col, `%${q}%`),
         supabase.from("wanted_persons").select("*").ilike(M.col, `%${q}%`),
       ]);
       setResults({ kind:"person", query:q, persons:persons.data||[], arrests:arrests.data||[], suspects:suspects.data||[], wanted:wanted.data||[] });
@@ -300,7 +300,7 @@ export default function PersonSearchPage() {
 
               {[
                 { title:"Arrest Records", icon:Shield, color:"#D97706", items:results.arrests, render:a=>({ name:a.suspect_name, sub:`${a.charge} · NIDA: ${a.suspect_nida||"—"}`, badge:a.ref_number, status:a.status }) },
-                { title:"Suspect Records", icon:User, color:"#0891B2", items:results.suspects, render:s=>({ name:s.full_name, sub:`${s.cid_cases?.case_number?`Case ${s.cid_cases.case_number}`:"No case"}`, badge:s.gender, status:s.status }) },
+                { title:"Suspect Records", icon:User, color:"#0891B2", items:results.suspects, render:s=>({ name:s.full_name, sub:`${s.cases?.case_number?`Case ${s.cases.case_number}`:"No case"}`, badge:s.gender, status:s.status }) },
               ].filter(s=>s.items.length>0).map(section=>{
                 const Icon=section.icon;
                 return (

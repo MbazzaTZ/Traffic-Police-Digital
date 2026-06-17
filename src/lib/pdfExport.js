@@ -275,7 +275,7 @@ export async function exportPaymentReceipt(p, officerName, stationName) {
     y += 8;
   };
 
-  const cit = p.traffic_citations || {};
+  const cit = p.citations || {};
   doc.setFont("helvetica","bold"); doc.setFontSize(11);
   doc.text("CITATION", 14, y); y += 9;
   doc.setFontSize(10);

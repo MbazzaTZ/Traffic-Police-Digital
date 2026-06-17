@@ -25,7 +25,7 @@ export default function CommandIncidents() {
   useEffect(() => {
     load();
     const sub = supabase.channel("cmd-incidents")
-      .on("postgres_changes",{event:"*",schema:"public",table:"incidents"},load).subscribe();
+      .on("postgres_changes",{event:"*",schema:"public",table:"incident_reports"},load).subscribe();
     return () => supabase.removeChannel(sub);
   }, []);
 

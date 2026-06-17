@@ -73,7 +73,7 @@ export default function CourtCasesPage() {
   async function loadEvidencePool() {
     // Show all evidence in the system — officer chooses which to attach
     const { data } = await supabase.from("evidence")
-      .select("*, cid_cases(case_number,title)")
+      .select("*, cases(case_number,title)")
       .order("created_at",{ascending:false}).limit(200);
     setEvidencePool(data||[]);
   }

@@ -29,7 +29,7 @@ export default function EvidencePage() {
   async function load() {
     setLoading(true);
     const [ev, cs] = await Promise.all([
-      supabase.from("evidence").select("*, profiles!evidence_collected_by_fkey(full_name), cid_cases(case_number,title)").order("created_at",{ascending:false}).limit(100),
+      supabase.from("evidence").select("*, profiles!evidence_collected_by_fkey(full_name), cases(case_number,title)").order("created_at",{ascending:false}).limit(100),
       supabase.from("cases").select("id,case_number,title").eq("status","open").order("created_at",{ascending:false}),
     ]);
     setEvidence(ev.data||[]); setCases(cs.data||[]); setLoading(false);
@@ -112,7 +112,7 @@ export default function EvidencePage() {
                     <td style={{ padding:"11px 14px", fontWeight:700, color:"#059669", fontSize:12, fontFamily:"monospace" }}>{ev.ref_number}</td>
                     <td style={{ padding:"11px 14px", fontSize:12, color:"#475569" }}>{ev.type}</td>
                     <td style={{ padding:"11px 14px", fontSize:13, maxWidth:180, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{ev.description}</td>
-                    <td style={{ padding:"11px 14px", fontSize:11, color:"#0D3477", fontFamily:"monospace", fontWeight:700 }}>{ev.cid_cases?.case_number||"—"}</td>
+                    <td style={{ padding:"11px 14px", fontSize:11, color:"#0D3477", fontFamily:"monospace", fontWeight:700 }}>{ev.cases?.case_number||"—"}</td>
                     <td style={{ padding:"11px 14px" }}><span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{ev.status?.replace("_"," ")}</span></td>
                     <td style={{ padding:"11px 14px", textAlign:"center" }}><span style={{ background:"#F5F3FF", color:"#7C3AED", padding:"2px 9px", borderRadius:999, fontSize:12, fontWeight:700 }}>#{ev.chain_count}</span></td>
                     <td style={{ padding:"11px 14px", fontSize:12, color:"#475569" }}>{ev.profiles?.full_name||"—"}</td>

@@ -41,7 +41,7 @@ export default function CommandCenter() {
   useEffect(() => {
     load();
     const sub = supabase.channel("command-realtime")
-      .on("postgres_changes",{event:"*",schema:"public",table:"incidents"},load)
+      .on("postgres_changes",{event:"*",schema:"public",table:"incident_reports"},load)
       .on("postgres_changes",{event:"*",schema:"public",table:"alerts"},load)
       .on("postgres_changes",{event:"*",schema:"public",table:"patrols"},load)
       .subscribe();

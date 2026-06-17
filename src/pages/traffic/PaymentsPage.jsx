@@ -50,7 +50,7 @@ export default function PaymentsPage() {
   async function load() {
     setLoading(true);
     const [pay, out] = await Promise.all([
-      supabase.from("payments").select("*, traffic_citations(ref_number, driver_name, vehicle_plate, offense_type)").order("paid_at",{ascending:false}).limit(300),
+      supabase.from("payments").select("*, citations(ref_number, driver_name, vehicle_plate, offense_type)").order("paid_at",{ascending:false}).limit(300),
       supabase.from("citations").select("id, ref_number, control_number, driver_name, vehicle_plate, offense_type, fine_amount, amount_paid, status, issued_at").in("status",["unpaid","partial"]).order("issued_at",{ascending:false}).limit(100),
     ]);
     setPayments(pay.data||[]); setOutstanding(out.data||[]); setLoading(false);
@@ -95,12 +95,12 @@ export default function PaymentsPage() {
         payer_name: form.payer_name || null,
         payer_phone: form.payer_phone || null,
         notes: form.notes || null,
-        recorded_by: profile?.id || null,
+        received_by: profile?.id || null,
         station_id: stationId || null,
         status: "completed",
-      }).select("*, traffic_citations(ref_number, driver_name, vehicle_plate, offense_type, fine_amount, amount_paid)").single();
+      }).select("*, citations(ref_number, driver_name, vehicle_plate, offense_type, fine_amount, amount_paid)").single();
       if (error) throw error;
-      logAction({ profile, action:"record_payment", entityType:"payment", entityId:data.id, entityRef:data.ref_number, description:`${data.method} TZS ${data.amount.toLocaleString()} for citation ${data.traffic_citations?.ref_number}` });
+      logAction({ profile, action:"record_payment", entityType:"payment", entityId:data.id, entityRef:data.ref_number, description:`${data.method} TZS ${data.amount.toLocaleString()} for citation ${data.citations?.ref_number}` });
       setDone(true);
       // Auto-download receipt
       exportPaymentReceipt(data, fullName, stationName);
@@ -110,7 +110,7 @@ export default function PaymentsPage() {
   }
 
   const filtered = payments.filter(p =>
-    (!search || [p.ref_number, p.control_number, p.transaction_ref, p.payer_name, p.traffic_citations?.driver_name, p.traffic_citations?.vehicle_plate].some(f=>String(f||"").toLowerCase().includes(search.toLowerCase()))) &&
+    (!search || [p.ref_number, p.control_number, p.transaction_ref, p.payer_name, p.citations?.driver_name, p.citations?.vehicle_plate].some(f=>String(f||"").toLowerCase().includes(search.toLowerCase()))) &&
     (!fMethod || p.method===fMethod)
   );
 
@@ -174,8 +174,8 @@ export default function PaymentsPage() {
               { key:"_payer", label:"Payer", primary:true,
                 render:(_, p) => (
                   <div>
-                    <div style={{ fontWeight:700, color:"#1E293B" }}>{p.traffic_citations?.driver_name || p.payer_name || "—"}</div>
-                    <div style={{ fontSize:11, color:"#94A3B8", fontFamily:"monospace", marginTop:2 }}>{p.traffic_citations?.vehicle_plate || ""}</div>
+                    <div style={{ fontWeight:700, color:"#1E293B" }}>{p.citations?.driver_name || p.payer_name || "—"}</div>
+                    <div style={{ fontSize:11, color:"#94A3B8", fontFamily:"monospace", marginTop:2 }}>{p.citations?.vehicle_plate || ""}</div>
                   </div>
                 ) },
               { key:"ref_number", label:"Receipt",
@@ -183,7 +183,7 @@ export default function PaymentsPage() {
               { key:"control_number", label:"Control No",
                 render:v => v ? <span style={{ fontFamily:"monospace", fontSize:11, color:"#64748B" }}>{v}</span> : "—" },
               { key:"_offense", label:"Offense",
-                render:(_, p) => p.traffic_citations?.offense_type || "—" },
+                render:(_, p) => p.citations?.offense_type || "—" },
               { key:"method", label:"Method",
                 render:v => {
                   const mc = METHOD_C[v] || "#64748B";

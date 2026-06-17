@@ -14,7 +14,7 @@ export default function NidaSearchPage() {
     const q = query.trim();
     const [arrests, suspects, wanted, cases] = await Promise.all([
       supabase.from("arrests").select("*").or(`suspect_name.ilike.%${q}%,suspect_nida.ilike.%${q}%`).limit(20),
-      supabase.from("suspects").select("*, cid_cases(case_number)").or(`full_name.ilike.%${q}%,nida.ilike.%${q}%,alias.ilike.%${q}%`).limit(20),
+      supabase.from("suspects").select("*, cases(case_number)").or(`full_name.ilike.%${q}%,nida.ilike.%${q}%,alias.ilike.%${q}%`).limit(20),
       supabase.from("wanted_persons").select("*").or(`full_name.ilike.%${q}%,nida.ilike.%${q}%,alias.ilike.%${q}%`).limit(20),
       supabase.from("cases").select("*").ilike("title",`%${q}%`).limit(10),
     ]);
@@ -87,7 +87,7 @@ export default function NidaSearchPage() {
           {/* Result sections */}
           {[
             { title:"Arrest Records · Rekodi za Kukamatwa", icon:Shield, color:"#D97706", items:results.arrests, render:a=>({ name:a.suspect_name, sub:`${a.charge} · NIDA: ${a.suspect_nida||"—"}`, badge:a.ref_number, status:a.status }) },
-            { title:"Suspect Records · Washukiwa", icon:User, color:"#0891B2", items:results.suspects, render:s=>({ name:s.full_name, sub:`${s.cid_cases?.case_number?`Case ${s.cid_cases.case_number}`:"No case"} · NIDA: ${s.nida||"—"}`, badge:s.gender, status:s.status }) },
+            { title:"Suspect Records · Washukiwa", icon:User, color:"#0891B2", items:results.suspects, render:s=>({ name:s.full_name, sub:`${s.cases?.case_number?`Case ${s.cases.case_number}`:"No case"} · NIDA: ${s.nida||"—"}`, badge:s.gender, status:s.status }) },
             { title:"Related Cases · Kesi", icon:FileText, color:"#7C3AED", items:results.cases, render:c=>({ name:c.title, sub:`${c.type} · ${c.priority} priority`, badge:c.case_number, status:c.status }) },
           ].filter(s=>s.items.length>0).map(section=>{
             const Icon = section.icon;
