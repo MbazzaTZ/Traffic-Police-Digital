@@ -63,8 +63,9 @@ export default function CitationsPage() {
   });
 
   // Lookup state
-  const [nidaLookup,  setNidaLookup]  = useState({ status:"idle", match:null });   // idle | searching | found | none
-  const [plateLookup, setPlateLookup] = useState({ status:"idle", match:null });
+  const [nidaLookup,   setNidaLookup]    = useState({ status:"idle", match:null });   // idle | searching | found | applied | none
+  const [licenseLookup,setLicenseLookup] = useState({ status:"idle", match:null });
+  const [plateLookup,  setPlateLookup]   = useState({ status:"idle", match:null });
 
   // Cascading geo dropdowns derived from form state
   const formDistricts = form.region_id ? districts.filter(d => d.region_id === form.region_id) : [];
@@ -121,6 +122,43 @@ export default function CitationsPage() {
       driver_phone:   nidaLookup.match.phone          || f.driver_phone,
     }));
     setNidaLookup({ status:"applied", match:nidaLookup.match });
+  }
+
+  // ── License driver lookup ──
+  // When the officer types 4+ characters of a driver license, search persons
+  // for a match. Mirrors the NIDA flow - useful when the officer only has
+  // the license in hand (a common traffic-stop scenario).
+  useEffect(() => {
+    if (!modal) return;
+    const lic = form.driver_license.trim();
+    if (lic.length < 4) {
+      setLicenseLookup({ status:"idle", match:null });
+      return;
+    }
+    setLicenseLookup({ status:"searching", match:null });
+    const t = setTimeout(async () => {
+      const { data } = await supabase.from("persons")
+        .select("id, full_name, nida, driver_license, phone")
+        .ilike("driver_license", `%${lic}%`)
+        .limit(1);
+      if (data && data.length > 0) {
+        setLicenseLookup({ status:"found", match: data[0] });
+      } else {
+        setLicenseLookup({ status:"none", match:null });
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [form.driver_license, modal]);
+
+  function applyLicenseMatch() {
+    if (!licenseLookup.match) return;
+    setForm(f => ({
+      ...f,
+      driver_name:    licenseLookup.match.full_name    || f.driver_name,
+      driver_nida:    licenseLookup.match.nida          || f.driver_nida,
+      driver_phone:   licenseLookup.match.phone         || f.driver_phone,
+    }));
+    setLicenseLookup({ status:"applied", match:licenseLookup.match });
   }
 
   // ── Plate vehicle lookup ──
@@ -212,6 +250,7 @@ export default function CitationsPage() {
       setTimeout(()=>{
         setModal(false); setDone(null);
         setNidaLookup({ status:"idle", match:null });
+        setLicenseLookup({ status:"idle", match:null });
         setPlateLookup({ status:"idle", match:null });
         setForm({
           driver_name:"", driver_license:"", driver_nida:"", driver_phone:"",
@@ -379,7 +418,27 @@ export default function CitationsPage() {
                     )}
                   </div>
                   <div style={{ marginBottom:14 }}><label style={S.lbl}>Driver Name *</label><input value={form.driver_name} onChange={upd("driver_name")} placeholder="Full name" required style={S.inp}/></div>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>License Number</label><input value={form.driver_license} onChange={upd("driver_license")} placeholder="e.g. TZ-DL-001234" style={{ ...S.inp, fontFamily:"monospace" }}/></div>
+                  <div style={{ marginBottom:14 }}>
+                    <label style={S.lbl}>License Number {licenseLookup.status==="searching" && <Loader size={11} style={{display:"inline",marginLeft:5,animation:"spin 1s linear infinite"}}/>}</label>
+                    <input value={form.driver_license} onChange={upd("driver_license")} placeholder="e.g. TZ-DL-001234 — type to look up" style={{ ...S.inp, fontFamily:"monospace" }}/>
+                    {licenseLookup.status==="found" && (
+                      <div style={{ marginTop:6, padding:"7px 10px", background:"#F0FDF4", border:"1px solid #BBF7D0", borderRadius:8, display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
+                        <div style={{ fontSize:12, color:"#166534" }}>
+                          <strong>{licenseLookup.match.full_name}</strong>
+                          {licenseLookup.match.nida && <span style={{ color:"#65A30D", marginLeft:8 }}>· NIDA {licenseLookup.match.nida.slice(0,8)}…</span>}
+                        </div>
+                        <button type="button" onClick={applyLicenseMatch} style={{ padding:"4px 10px", borderRadius:6, border:"none", background:"#16A34A", color:"white", fontSize:11, fontWeight:700, cursor:"pointer", flexShrink:0 }}>Use This Driver</button>
+                      </div>
+                    )}
+                    {licenseLookup.status==="applied" && (
+                      <div style={{ marginTop:6, padding:"6px 10px", background:"#EFF6FF", border:"1px solid #BFDBFE", borderRadius:8, fontSize:11, color:"#1E40AF", display:"flex", alignItems:"center", gap:6 }}>
+                        <CheckCircle size={12}/> Driver auto-filled from license
+                      </div>
+                    )}
+                    {licenseLookup.status==="none" && form.driver_license.length >= 4 && (
+                      <div style={{ marginTop:6, padding:"5px 10px", fontSize:11, color:"#94A3B8" }}>No match — fill manually</div>
+                    )}
+                  </div>
                   <div style={{ marginBottom:14, gridColumn:"1/-1" }}><label style={S.lbl}>Driver Phone</label><input value={form.driver_phone} onChange={upd("driver_phone")} placeholder="+255 ..." style={S.inp}/></div>
                 </div>
 
