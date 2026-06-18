@@ -1,12 +1,40 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import TrafficLayout from "../../layouts/TrafficLayout";
-import { Plus, X, CheckCircle, AlertTriangle, Search, Download, FileText, Banknote } from "lucide-react";
+import { Plus, X, CheckCircle, AlertTriangle, Search, Download, FileText, Banknote, UserSearch, Loader, MapPin, Car } from "lucide-react";
 import { exportCitation, exportReport } from "../../lib/pdfExport";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useAppData } from "../../context/AppDataContext";
 import { logAction } from "../../lib/audit";
 import ResponsiveTable from "../../components/mobile/ResponsiveTable";
+import PhotoUpload from "../../components/PhotoUpload";
+
+// Common vehicle makes in Tanzania (most-seen brands first).
+// Officers can still type 'Other' for unusual makes.
+const MAKES = [
+  "Toyota","Nissan","Honda","Suzuki","Mitsubishi","Mazda","Subaru","Isuzu","Hino","Scania",
+  "Mercedes-Benz","BMW","Volkswagen","Ford","Land Rover","Range Rover","Hyundai","Kia",
+  "Daihatsu","TVS","Bajaj","Boxer","Sanlg","Other",
+];
+
+// Standard color palette (UN-ECE color names + Swahili)
+const COLORS = [
+  { v:"White",   sw:"Nyeupe" },
+  { v:"Black",   sw:"Nyeusi" },
+  { v:"Silver",  sw:"Fedha"  },
+  { v:"Grey",    sw:"Kijivu" },
+  { v:"Red",     sw:"Nyekundu"},
+  { v:"Blue",    sw:"Bluu"   },
+  { v:"Green",   sw:"Kijani" },
+  { v:"Yellow",  sw:"Manjano"},
+  { v:"Brown",   sw:"Kahawia"},
+  { v:"Gold",    sw:"Dhahabu"},
+  { v:"Beige",   sw:"Beige"  },
+  { v:"Orange",  sw:"Chungwa"},
+  { v:"Maroon",  sw:"Maroon" },
+  { v:"Other",   sw:"Nyingine"},
+];
 
 const S = {
   inp: { width:"100%", height:44, border:"1.5px solid var(--border-strong,#CBD5E1)", borderRadius:10, padding:"0 14px", fontSize:14, outline:"none", boxSizing:"border-box", color:"var(--ink-900,#0F172A)", background:"rgba(255,255,255,0.85)", fontFamily:"inherit", transition:"border-color 180ms, box-shadow 180ms" },
@@ -17,6 +45,7 @@ const S = {
 export default function CitationsPage() {
   const nav = useNavigate();
   const { profile, stationId, regionId, districtId } = useCurrentUser();
+  const { regions, districts, wards } = useAppData();
   const [citations, setCitations] = useState([]);
   const [schedule,  setSchedule]  = useState([]); // live fine_schedule
   const [loading,   setLoading]   = useState(true);
@@ -25,7 +54,21 @@ export default function CitationsPage() {
   const [done,      setDone]      = useState(null);
   const [err,       setErr]       = useState("");
   const [search,    setSearch]    = useState("");
-  const [form, setForm] = useState({ driver_name:"", driver_license:"", driver_nida:"", vehicle_plate:"", vehicle_type:"Car", vehicle_make:"", vehicle_color:"", offense_type:"", fine_amount:0, fine_schedule_id:"", location_text:"" });
+  const [form, setForm] = useState({
+    driver_name:"", driver_license:"", driver_nida:"", driver_phone:"",
+    vehicle_plate:"", vehicle_type:"Car", vehicle_make:"", vehicle_color:"",
+    offense_type:"", fine_amount:0, fine_schedule_id:"",
+    region_id:"", district_id:"", ward_id:"", location_text:"",
+    photo_urls:[],
+  });
+
+  // Lookup state
+  const [nidaLookup,  setNidaLookup]  = useState({ status:"idle", match:null });   // idle | searching | found | none
+  const [plateLookup, setPlateLookup] = useState({ status:"idle", match:null });
+
+  // Cascading geo dropdowns derived from form state
+  const formDistricts = form.region_id ? districts.filter(d => d.region_id === form.region_id) : [];
+  const formWards     = form.district_id ? wards.filter(w => w.district_id === form.district_id) : [];
 
   const upd = k => e => {
     const v = e.target.value;
@@ -35,6 +78,92 @@ export default function CitationsPage() {
     }
     setForm(f=>({...f,[k]:v}));
   };
+
+  // Reset child selectors when parent changes (region -> district -> ward)
+  function pickRegion(rid) {
+    setForm(f => ({ ...f, region_id: rid, district_id:"", ward_id:"" }));
+  }
+  function pickDistrict(did) {
+    setForm(f => ({ ...f, district_id: did, ward_id:"" }));
+  }
+
+  // ── NIDA driver lookup ──
+  // When the officer types 8+ characters of NIDA, search the persons table
+  // for a match. If found, offer to auto-fill the form.
+  useEffect(() => {
+    if (!modal) return;
+    const nida = form.driver_nida.trim();
+    if (nida.length < 8) {
+      setNidaLookup({ status:"idle", match:null });
+      return;
+    }
+    setNidaLookup({ status:"searching", match:null });
+    const t = setTimeout(async () => {
+      const { data } = await supabase.from("persons")
+        .select("id, full_name, nida, driver_license, phone")
+        .ilike("nida", `%${nida}%`)
+        .limit(1);
+      if (data && data.length > 0) {
+        setNidaLookup({ status:"found", match: data[0] });
+      } else {
+        setNidaLookup({ status:"none", match:null });
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [form.driver_nida, modal]);
+
+  function applyNidaMatch() {
+    if (!nidaLookup.match) return;
+    setForm(f => ({
+      ...f,
+      driver_name:    nidaLookup.match.full_name    || f.driver_name,
+      driver_license: nidaLookup.match.driver_license || f.driver_license,
+      driver_phone:   nidaLookup.match.phone          || f.driver_phone,
+    }));
+    setNidaLookup({ status:"applied", match:nidaLookup.match });
+  }
+
+  // ── Plate vehicle lookup ──
+  // When the officer types 5+ characters of plate, search vehicles table.
+  // If found, offer to auto-fill make/color/type + last-known driver if any.
+  useEffect(() => {
+    if (!modal) return;
+    const plate = form.vehicle_plate.trim().toUpperCase();
+    if (plate.length < 5) {
+      setPlateLookup({ status:"idle", match:null });
+      return;
+    }
+    setPlateLookup({ status:"searching", match:null });
+    const t = setTimeout(async () => {
+      const { data } = await supabase.from("vehicles")
+        .select("id, plate_number, plate, make, model, color, vehicle_type, type, owner_name, owner_nida, owner_phone")
+        .or(`plate_number.ilike.%${plate}%,plate.ilike.%${plate}%`)
+        .limit(1);
+      if (data && data.length > 0) {
+        setPlateLookup({ status:"found", match: data[0] });
+      } else {
+        setPlateLookup({ status:"none", match:null });
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [form.vehicle_plate, modal]);
+
+  function applyPlateMatch() {
+    if (!plateLookup.match) return;
+    const m = plateLookup.match;
+    const makeCombined = [m.make, m.model].filter(Boolean).join(" ");
+    setForm(f => ({
+      ...f,
+      vehicle_make:  makeCombined  || f.vehicle_make,
+      vehicle_color: m.color       || f.vehicle_color,
+      vehicle_type:  m.vehicle_type || m.type || f.vehicle_type,
+      // If the form has no driver info yet, fall back to registered owner
+      driver_name:   f.driver_name   || m.owner_name  || "",
+      driver_nida:   f.driver_nida   || m.owner_nida  || "",
+      driver_phone:  f.driver_phone  || m.owner_phone || "",
+    }));
+    setPlateLookup({ status:"applied", match:m });
+  }
 
   async function load() {
     setLoading(true);
@@ -55,16 +184,43 @@ export default function CitationsPage() {
   async function submit(e) {
     e.preventDefault(); setErr(""); setSaving(true);
     try {
+      // Use form geo if officer picked it, otherwise fall back to officer's station context.
+      const finalRegionId   = form.region_id   || regionId   || null;
+      const finalDistrictId = form.district_id || districtId || null;
+
+      // Convert empty FK strings → null so UUID columns don't reject them.
+      const payload = { ...form };
+      ["fine_schedule_id","region_id","district_id","ward_id"].forEach(k => {
+        if (payload[k] === "") payload[k] = null;
+      });
+
       const { data, error } = await supabase.from("citations").insert({
-        ...form, fine_amount:parseInt(form.fine_amount)||0, fine_currency:"TZS",
-        fine_schedule_id: form.fine_schedule_id || null,
-        station_id:stationId||null, region_id:regionId||null, district_id:districtId||null,
-        issued_by:profile?.id||null, status:"unpaid", due_date:new Date(Date.now()+30*86400000).toISOString(),
+        ...payload,
+        fine_amount: parseInt(form.fine_amount) || 0,
+        fine_currency: "TZS",
+        station_id:  stationId || null,
+        region_id:   finalRegionId,
+        district_id: finalDistrictId,
+        officer_id:  profile?.id || null,  // RLS policy checks officer_id = auth.uid()
+        issued_by:   profile?.id || null,  // downstream queries read this
+        status:      "unpaid",
+        due_date:    new Date(Date.now() + 30*86400000).toISOString(),
       }).select().single();
       if (error) throw error;
       logAction({ profile, action:"issue_citation", entityType:"citation", entityId:data.id, entityRef:data.ref_number, description:`Citation: ${data.vehicle_plate} - ${data.offense_type} - TZS ${data.fine_amount}` });
       setDone(data); await load();
-      setTimeout(()=>{setModal(false);setDone(null);setForm({driver_name:"",driver_license:"",driver_nida:"",vehicle_plate:"",vehicle_type:"Car",vehicle_make:"",vehicle_color:"",offense_type:"",fine_amount:0,fine_schedule_id:"",location_text:""});},2500);
+      setTimeout(()=>{
+        setModal(false); setDone(null);
+        setNidaLookup({ status:"idle", match:null });
+        setPlateLookup({ status:"idle", match:null });
+        setForm({
+          driver_name:"", driver_license:"", driver_nida:"", driver_phone:"",
+          vehicle_plate:"", vehicle_type:"Car", vehicle_make:"", vehicle_color:"",
+          offense_type:"", fine_amount:0, fine_schedule_id:"",
+          region_id:"", district_id:"", ward_id:"", location_text:"",
+          photo_urls:[],
+        });
+      },2500);
     } catch(e){setErr(e.message);} finally{setSaving(false);}
   }
 
@@ -200,27 +356,151 @@ export default function CitationsPage() {
               <form onSubmit={submit}>
                 <div style={{ fontSize:12, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.5, marginBottom:10 }}>Driver Information</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 16px" }}>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Driver Name *</label><input value={form.driver_name} onChange={upd("driver_name")} placeholder="Full name" required style={S.inp} onFocus={e=>e.target.style.borderColor="#D97706"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}/></div>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>License Number</label><input value={form.driver_license} onChange={upd("driver_license")} placeholder="e.g. TZ-DL-001234" style={S.inp} onFocus={e=>e.target.style.borderColor="#D97706"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}/></div>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>NIDA Number</label><input value={form.driver_nida} onChange={upd("driver_nida")} placeholder="19xxxxxx-xxxxx-xxxxx-x" style={S.inp}/></div>
+                  {/* NIDA first - drives the lookup */}
+                  <div style={{ marginBottom:14, gridColumn:"1/-1" }}>
+                    <label style={S.lbl}>NIDA Number {nidaLookup.status==="searching" && <Loader size={11} style={{display:"inline",marginLeft:5,animation:"spin 1s linear infinite"}}/>}</label>
+                    <input value={form.driver_nida} onChange={upd("driver_nida")} placeholder="19xxxxxx... — type to look up driver" style={{ ...S.inp, fontFamily:"monospace" }}/>
+                    {nidaLookup.status==="found" && (
+                      <div style={{ marginTop:6, padding:"7px 10px", background:"#F0FDF4", border:"1px solid #BBF7D0", borderRadius:8, display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
+                        <div style={{ fontSize:12, color:"#166534" }}>
+                          <strong>{nidaLookup.match.full_name}</strong>
+                          {nidaLookup.match.driver_license && <span style={{ color:"#65A30D", marginLeft:8 }}>· DL {nidaLookup.match.driver_license}</span>}
+                        </div>
+                        <button type="button" onClick={applyNidaMatch} style={{ padding:"4px 10px", borderRadius:6, border:"none", background:"#16A34A", color:"white", fontSize:11, fontWeight:700, cursor:"pointer" }}>Use This Driver</button>
+                      </div>
+                    )}
+                    {nidaLookup.status==="applied" && (
+                      <div style={{ marginTop:6, padding:"6px 10px", background:"#EFF6FF", border:"1px solid #BFDBFE", borderRadius:8, fontSize:11, color:"#1E40AF", display:"flex", alignItems:"center", gap:6 }}>
+                        <CheckCircle size={12}/> Driver auto-filled from database
+                      </div>
+                    )}
+                    {nidaLookup.status==="none" && form.driver_nida.length >= 8 && (
+                      <div style={{ marginTop:6, padding:"5px 10px", fontSize:11, color:"#94A3B8" }}>No match in database — fill manually</div>
+                    )}
+                  </div>
+                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Driver Name *</label><input value={form.driver_name} onChange={upd("driver_name")} placeholder="Full name" required style={S.inp}/></div>
+                  <div style={{ marginBottom:14 }}><label style={S.lbl}>License Number</label><input value={form.driver_license} onChange={upd("driver_license")} placeholder="e.g. TZ-DL-001234" style={{ ...S.inp, fontFamily:"monospace" }}/></div>
+                  <div style={{ marginBottom:14, gridColumn:"1/-1" }}><label style={S.lbl}>Driver Phone</label><input value={form.driver_phone} onChange={upd("driver_phone")} placeholder="+255 ..." style={S.inp}/></div>
                 </div>
+
                 <div style={{ fontSize:12, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.5, margin:"6px 0 10px" }}>Vehicle Information</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 16px" }}>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Plate Number *</label><input value={form.vehicle_plate} onChange={upd("vehicle_plate")} placeholder="e.g. T 123 ABC" required style={{ ...S.inp, fontFamily:"monospace", fontWeight:700 }} onFocus={e=>e.target.style.borderColor="#D97706"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}/></div>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Vehicle Type</label><select value={form.vehicle_type} onChange={upd("vehicle_type")} style={S.sel}>{["Car","Truck","Bus","Motorcycle","Tuk-tuk","Other"].map(t=><option key={t}>{t}</option>)}</select></div>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Make/Model</label><input value={form.vehicle_make} onChange={upd("vehicle_make")} placeholder="e.g. Toyota Corolla" style={S.inp}/></div>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Color</label><input value={form.vehicle_color} onChange={upd("vehicle_color")} placeholder="e.g. White" style={S.inp}/></div>
+                  <div style={{ marginBottom:14, gridColumn:"1/-1" }}>
+                    <label style={S.lbl}>Plate Number * {plateLookup.status==="searching" && <Loader size={11} style={{display:"inline",marginLeft:5,animation:"spin 1s linear infinite"}}/>}</label>
+                    <input value={form.vehicle_plate} onChange={(e)=>upd("vehicle_plate")({target:{value:e.target.value.toUpperCase()}})} placeholder="e.g. T 123 ABC — type to look up vehicle" required style={{ ...S.inp, fontFamily:"monospace", fontWeight:700, textTransform:"uppercase" }}/>
+                    {plateLookup.status==="found" && (
+                      <div style={{ marginTop:6, padding:"7px 10px", background:"#FEF3C7", border:"1px solid #FCD34D", borderRadius:8, display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
+                        <div style={{ fontSize:12, color:"#92400E" }}>
+                          <strong>{plateLookup.match.make || "Unknown make"} {plateLookup.match.model||""}</strong>
+                          {plateLookup.match.color && <span style={{ color:"#A16207", marginLeft:8 }}>· {plateLookup.match.color}</span>}
+                          {plateLookup.match.owner_name && <div style={{ fontSize:10, color:"#A16207", marginTop:2 }}>Owner: {plateLookup.match.owner_name}</div>}
+                        </div>
+                        <button type="button" onClick={applyPlateMatch} style={{ padding:"4px 10px", borderRadius:6, border:"none", background:"#D97706", color:"white", fontSize:11, fontWeight:700, cursor:"pointer" }}>Use This Vehicle</button>
+                      </div>
+                    )}
+                    {plateLookup.status==="applied" && (
+                      <div style={{ marginTop:6, padding:"6px 10px", background:"#EFF6FF", border:"1px solid #BFDBFE", borderRadius:8, fontSize:11, color:"#1E40AF", display:"flex", alignItems:"center", gap:6 }}>
+                        <CheckCircle size={12}/> Vehicle auto-filled from database
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ marginBottom:14 }}>
+                    <label style={S.lbl}>Vehicle Type</label>
+                    <select value={form.vehicle_type} onChange={upd("vehicle_type")} style={S.sel}>
+                      {["Car","Truck","Bus","Minibus (Daladala)","Motorcycle (Pikipiki)","Tuk-tuk (Bajaji)","Lorry","Van","Pickup","Tractor","Other"].map(t=><option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ marginBottom:14 }}>
+                    <label style={S.lbl}>Color · Rangi</label>
+                    <select value={form.vehicle_color} onChange={upd("vehicle_color")} style={S.sel}>
+                      <option value="">— Select —</option>
+                      {COLORS.map(c => <option key={c.v} value={c.v}>{c.v} · {c.sw}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ marginBottom:14 }}>
+                    <label style={S.lbl}>Make</label>
+                    <select value={form.vehicle_make.split(" ")[0]} onChange={(e)=>{
+                      // Keep existing model after make is changed
+                      const restModel = form.vehicle_make.split(" ").slice(1).join(" ");
+                      setForm(f=>({ ...f, vehicle_make: restModel ? `${e.target.value} ${restModel}` : e.target.value }));
+                    }} style={S.sel}>
+                      <option value="">— Select —</option>
+                      {MAKES.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ marginBottom:14 }}>
+                    <label style={S.lbl}>Model</label>
+                    <input value={form.vehicle_make.split(" ").slice(1).join(" ")} onChange={(e)=>{
+                      const make = form.vehicle_make.split(" ")[0] || "";
+                      setForm(f=>({ ...f, vehicle_make: make ? `${make} ${e.target.value}` : e.target.value }));
+                    }} placeholder="e.g. Corolla, Hilux, Ist" style={S.inp}/>
+                  </div>
                 </div>
+
+                <div style={{ fontSize:12, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.5, margin:"6px 0 10px" }}>
+                  <MapPin size={12} style={{display:"inline",marginRight:5}}/>Offense Location · Mahali pa Kosa
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"0 12px" }}>
+                  <div style={{ marginBottom:14 }}>
+                    <label style={S.lbl}>Region · Mkoa</label>
+                    <select value={form.region_id} onChange={e=>pickRegion(e.target.value)} style={S.sel}>
+                      <option value="">— My region —</option>
+                      {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ marginBottom:14 }}>
+                    <label style={S.lbl}>District · Wilaya</label>
+                    <select value={form.district_id} onChange={e=>pickDistrict(e.target.value)} disabled={!form.region_id}
+                      style={{ ...S.sel, opacity: form.region_id ? 1 : .55, cursor: form.region_id ? "pointer" : "not-allowed" }}>
+                      <option value="">{form.region_id ? "— Select —" : "Region first"}</option>
+                      {formDistricts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ marginBottom:14 }}>
+                    <label style={S.lbl}>Ward · Kata</label>
+                    <select value={form.ward_id} onChange={upd("ward_id")} disabled={!form.district_id}
+                      style={{ ...S.sel, opacity: form.district_id ? 1 : .55, cursor: form.district_id ? "pointer" : "not-allowed" }}>
+                      <option value="">{form.district_id ? "— Select —" : "District first"}</option>
+                      {formWards.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div style={{ marginBottom:14 }}>
+                  <label style={S.lbl}>Specific Location · Eneo *</label>
+                  <input value={form.location_text} onChange={upd("location_text")} placeholder="e.g. Uhuru Street near Posta junction" required style={S.inp}/>
+                </div>
+
                 <div style={{ fontSize:12, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.5, margin:"6px 0 10px" }}>Offense & Fine</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 16px" }}>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Offense (from schedule) *</label><select value={form.fine_schedule_id} onChange={upd("fine_schedule_id")} required style={S.sel} onFocus={e=>e.target.style.borderColor="#D97706"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}><option value="">Select offense...</option>{schedule.map(s=><option key={s.id} value={s.id}>{s.code} · {s.offense_name} — TZS {s.fine_amount.toLocaleString()}</option>)}</select></div>
-                  <div style={{ marginBottom:14 }}><label style={S.lbl}>Fine Amount (TZS) *</label><input type="number" value={form.fine_amount} onChange={upd("fine_amount")} required style={{ ...S.inp, fontWeight:700 }} onFocus={e=>e.target.style.borderColor="#D97706"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}/></div>
-                  <div style={{ marginBottom:16, gridColumn:"1/-1" }}><label style={S.lbl}>Location *</label><input value={form.location_text} onChange={upd("location_text")} placeholder="e.g. Uhuru Street, Dar es Salaam" required style={S.inp} onFocus={e=>e.target.style.borderColor="#D97706"} onBlur={e=>e.target.style.borderColor="#E2E8F0"}/></div>
+                  <div style={{ marginBottom:14, gridColumn:"1/-1" }}>
+                    <label style={S.lbl}>Offense (from schedule) *</label>
+                    <select value={form.fine_schedule_id} onChange={upd("fine_schedule_id")} required style={S.sel}>
+                      <option value="">Select offense...</option>
+                      {schedule.map(s=><option key={s.id} value={s.id}>{s.code} · {s.offense_name} — TZS {s.fine_amount.toLocaleString()}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ marginBottom:14, gridColumn:"1/-1" }}>
+                    <label style={S.lbl}>Fine Amount (TZS) *</label>
+                    <input type="number" value={form.fine_amount} onChange={upd("fine_amount")} required style={{ ...S.inp, fontWeight:700 }}/>
+                  </div>
                 </div>
+
+                <div style={{ marginBottom:14 }}>
+                  <PhotoUpload
+                    folder="citations"
+                    value={form.photo_urls}
+                    onChange={(urls)=>setForm(f=>({...f, photo_urls:urls}))}
+                    maxFiles={5}
+                    label="Evidence Photos · Picha za Ushahidi"
+                    hint="Plate close-up, scene, driver license"
+                  />
+                </div>
+
                 {form.fine_amount>0 && <div style={{ background:"#FFFBEB", border:"1px solid #FDE68A", borderRadius:9, padding:"10px 14px", marginBottom:14, display:"flex", justifyContent:"space-between", alignItems:"center" }}><span style={{ fontSize:13, color:"#92400E" }}>Fine Amount:</span><span style={{ fontSize:18, fontWeight:900, color:"#D97706" }}>TZS {parseInt(form.fine_amount||0).toLocaleString()}</span></div>}
                 <button type="submit" disabled={saving} style={{ width:"100%", height:46, background:saving?"#94A3B8":"#D97706", color:"white", border:"none", borderRadius:10, fontWeight:700, fontSize:14, cursor:saving?"not-allowed":"pointer" }}>
                   {saving?"Saving...":"Issue Citation · Toa Faini"}
                 </button>
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
               </form>
             )}
           </div>
