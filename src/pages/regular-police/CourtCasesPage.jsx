@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
 import { exportCourtFile } from "../../lib/pdfExport";
+import { StatusPieChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
 
 const STATUS_C = { open:"#0891B2", active:"#D97706", concluded:"#059669", appealed:"#7C3AED", withdrawn:"#64748B", dismissed:"#64748B" };
 const VERDICTS = ["pending","guilty","not_guilty","dismissed","withdrawn"];
@@ -24,6 +25,7 @@ export default function CourtCasesPage() {
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState("");
+  const [statusPieData, setStatusPieData] = useState([]);
   const [search, setSearch] = useState("");
   const [fStatus, setFStatus] = useState("");
   // Inline confirm dialog (replaces window.confirm).
@@ -58,7 +60,13 @@ export default function CourtCasesPage() {
   async function load() {
     setLoading(true);
     const { data } = await supabase.from("court_cases").select("*").order("created_at",{ascending:false}).limit(300);
-    setCases(data||[]); setLoading(false);
+    setCases(data||[]);
+    // Build status pie chart data
+    const statusCounts = {};
+    (data||[]).forEach(c => { statusCounts[c.status] = (statusCounts[c.status]||0)+1; });
+    const colorMap = { open:CHART_COLORS.info, active:CHART_COLORS.gold, concluded:CHART_COLORS.success, appealed:CHART_COLORS.critical, withdrawn:CHART_COLORS.muted, dismissed:CHART_COLORS.muted };
+    setStatusPieData(Object.entries(statusCounts).map(([name,value]) => ({ name: name.replace(/_/g," ").replace(/\b\w/g, c=>c.toUpperCase()), value, color: colorMap[name] || CHART_COLORS.navy })));
+    setLoading(false);
   }
   async function loadHearings(caseId) {
     const { data } = await supabase.from("hearings").select("*").eq("case_id", caseId).order("hearing_date",{ascending:false});

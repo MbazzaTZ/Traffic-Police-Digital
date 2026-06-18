@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
 import { exportPaymentReceipt } from "../../lib/pdfExport";
+import { TrendAreaChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
 import ResponsiveTable from "../../components/mobile/ResponsiveTable";
 
 // Render in the layout that matches the viewing officer's role
@@ -44,6 +45,7 @@ export default function PaymentsPage() {
   const [lookupResult, setLookupResult] = useState(null);
   const [lookingUp, setLookingUp] = useState(false);
 
+  const [payTrend, setPayTrend] = useState([]);
   const [form, setForm] = useState({ citation_id:"", control_number:"", amount:0, method:"mpesa", transaction_ref:"", payer_name:"", payer_phone:"", notes:"" });
   const upd = k => e => setForm(f=>({ ...f, [k]: k==="amount"?parseInt(e.target.value)||0:e.target.value }));
 
@@ -53,7 +55,18 @@ export default function PaymentsPage() {
       supabase.from("payments").select("*, citations(ref_number, driver_name, vehicle_plate, offense_type)").order("paid_at",{ascending:false}).limit(300),
       supabase.from("citations").select("id, ref_number, control_number, driver_name, vehicle_plate, offense_type, fine_amount, amount_paid, status, issued_at").in("status",["unpaid","partial"]).order("issued_at",{ascending:false}).limit(100),
     ]);
-    setPayments(pay.data||[]); setOutstanding(out.data||[]); setLoading(false);
+    setPayments(pay.data||[]); setOutstanding(out.data||[]);
+    // Build 7-day payment trend
+    const days = {};
+    for (let i=6;i>=0;i--) { const d=new Date(Date.now()-i*86400000); days[d.toLocaleDateString("en-GB",{weekday:"short"})]=0; }
+    (pay.data||[]).forEach(p => {
+      if (p.paid_at) {
+        const k = new Date(p.paid_at).toLocaleDateString("en-GB",{weekday:"short"});
+        if (k in days) days[k] += (p.amount||0);
+      }
+    });
+    setPayTrend(Object.entries(days).map(([date,v])=>({date,v})));
+    setLoading(false);
   }
   useEffect(()=>{ if(profile!==undefined) load(); },[profile]);
 

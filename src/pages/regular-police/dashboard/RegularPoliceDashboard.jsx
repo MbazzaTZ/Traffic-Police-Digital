@@ -1,6 +1,10 @@
 import DashboardLayout from "../../../layouts/DashboardLayout";
 import { useNavigate } from "react-router-dom";
 import { Search, FileText, ShieldAlert, MapPinned, FolderOpen, Siren, Activity, AlertTriangle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "../../../lib/supabase";
+import { TrendAreaChart, Sparkline, CHART_COLORS } from "../../../components/charts/ChartAtoms";
+import { buildTrendFromRecords } from "../../../hooks/useTrendData";
 
 const ACTIONS = [
   { icon:Search,      label:"Search Person",   sw:"Tafuta Mtu",       path:"/person-search", color:"#0D3477" },
@@ -27,6 +31,36 @@ function EmptyState({ icon: Icon, title, sub }) {
 
 export default function RegularPoliceDashboard() {
   const nav = useNavigate();
+  const [stats, setStats] = useState({ incidents:0, arrests:0, detentions:0, evidence:0 });
+  const [incidentTrend, setIncidentTrend] = useState([]);
+  const [sparkData, setSparkData] = useState({});
+
+  useEffect(() => {
+    async function load() {
+      const sevenDaysAgo = new Date(Date.now() - 7*86400000).toISOString();
+      const [inc, arr, det, evd] = await Promise.all([
+        supabase.from("incident_reports").select("created_at").gte("created_at", sevenDaysAgo),
+        supabase.from("arrests").select("created_at").gte("created_at", sevenDaysAgo),
+        supabase.from("detentions").select("created_at").gte("created_at", sevenDaysAgo),
+        supabase.from("evidence").select("collected_at").gte("collected_at", sevenDaysAgo),
+      ]);
+      const incTrend = buildTrendFromRecords(inc.data, "created_at");
+      setIncidentTrend(incTrend);
+      setStats({
+        incidents: (inc.data||[]).length,
+        arrests: (arr.data||[]).length,
+        detentions: (det.data||[]).length,
+        evidence: (evd.data||[]).length,
+      });
+      setSparkData({
+        incidents: incTrend,
+        arrests: buildTrendFromRecords(arr.data, "created_at"),
+        detentions: buildTrendFromRecords(det.data, "created_at"),
+        evidence: buildTrendFromRecords(evd.data, "collected_at"),
+      });
+    }
+    load();
+  }, []);
 
   return (
     <DashboardLayout pageTitle="Dashboard" pageTitle2="Dashibodi">
@@ -67,6 +101,39 @@ export default function RegularPoliceDashboard() {
           </div>
         ))}
       </div>
+
+      {/* KPI tiles with sparklines */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:16 }}>
+        {[
+          { label:"Incidents (7d)",  sw:"Matukio",    v:stats.incidents,  c:"#DC2626", icon:AlertTriangle, sk:"incidents" },
+          { label:"Arrests (7d)",    sw:"Kukamatwa",  v:stats.arrests,    c:"#D97706", icon:ShieldAlert,   sk:"arrests" },
+          { label:"Detentions (7d)", sw:"Vizuizini",  v:stats.detentions, c:"#0891B2", icon:FileText,      sk:"detentions" },
+          { label:"Evidence (7d)",   sw:"Ushahidi",   v:stats.evidence,   c:"#7C3AED", icon:FolderOpen,    sk:"evidence" },
+        ].map(k => {
+          const Icon = k.icon;
+          return (
+            <div key={k.label} className="glass-card is-light" style={{ borderTop:`3px solid ${k.c}`, textAlign:"center", padding:"16px 14px" }}>
+              <Icon size={20} color={k.c} style={{ marginBottom:6 }}/>
+              <div style={{ fontSize:"clamp(26px,4vw,30px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
+              <div style={{ fontSize:12, fontWeight:700, color:"var(--ink-900,#0F172A)" }}>{k.label}</div>
+              <div style={{ fontSize:10, color:"var(--ink-500,#64748B)" }}>{k.sw}</div>
+              {sparkData[k.sk] && sparkData[k.sk].length > 0 && (
+                <div style={{ height:22, marginTop:6, opacity:0.7 }}>
+                  <Sparkline data={sparkData[k.sk]} color={k.c} height={22} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 7-day incident trend */}
+      {incidentTrend.length > 0 && (
+        <div className="glass-card" style={{ padding:18, marginBottom:16 }}>
+          <div style={{ fontSize:14, fontWeight:700, color:"var(--navy-700,#0D3477)", marginBottom:12, fontFamily:"var(--font-serif,Georgia,serif)" }}>7-Day Incident Trend · Mwelekeo wa Matukio</div>
+          <TrendAreaChart data={incidentTrend} xKey="date" yKey="v" color={CHART_COLORS.danger} height={160} dark={false} />
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div style={{ fontSize:16, fontWeight:700, color:"#082A63", marginBottom:12 }}>

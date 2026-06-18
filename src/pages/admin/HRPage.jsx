@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { logAction } from "../../lib/audit";
 import { useAppData } from "../../context/AppDataContext";
+import { TrendBarChart, StatusPieChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
 
 const TYPES = [
   { v:"leave",            l:"Leave · Likizo",           icon:Calendar,   c:"#0D3477" },
@@ -49,6 +50,8 @@ export default function HRPage() {
   const [fType,    setFType]    = useState("");
   const [fStatus,  setFStatus]  = useState("");
   const [drawer,   setDrawer]   = useState(null);
+  const [typeChartData, setTypeChartData] = useState([]);
+  const [statusPieData, setStatusPieData] = useState([]);
   const [form, setForm] = useState({
     officer_id:"", type:"leave", title:"", description:"",
     start_date:"", end_date:"", severity:"normal", status:"active", notes:"",
@@ -65,6 +68,17 @@ export default function HRPage() {
       const { data, error } = await q;
       if (error) throw error;
       setRecords(data || []);
+      // Build charts
+      const typeCounts = {};
+      const statCounts = {};
+      (data || []).forEach(r => {
+        typeCounts[r.type] = (typeCounts[r.type]||0)+1;
+        statCounts[r.status] = (statCounts[r.status]||0)+1;
+      });
+      const typeColors = TYPES.reduce((acc, t) => { acc[t.v] = t.c; return acc; }, {});
+      setTypeChartData(Object.entries(typeCounts).map(([type,count]) => ({ type: type.replace(/_/g," ").replace(/\b\w/g, c=>c.toUpperCase()), count, color: typeColors[type] || CHART_COLORS.navy })));
+      const statColors = { active:CHART_COLORS.navy, pending:CHART_COLORS.gold, approved:CHART_COLORS.success, rejected:CHART_COLORS.danger, completed:CHART_COLORS.info, expired:CHART_COLORS.muted, cancelled:CHART_COLORS.muted, archived:CHART_COLORS.muted };
+      setStatusPieData(Object.entries(statCounts).map(([name,value]) => ({ name: name.replace(/_/g," ").replace(/\b\w/g, c=>c.toUpperCase()), value, color: statColors[name] || CHART_COLORS.navy })));
     } catch (e) {
       setErr(e.message || "Could not load HR records");
     } finally {
@@ -208,6 +222,24 @@ export default function HRPage() {
           </div>
         ))}
       </div>
+
+      {/* Charts */}
+      {(typeChartData.length > 0 || statusPieData.length > 0) && (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
+          {typeChartData.length > 0 && (
+            <div className="glass-card" style={{ padding:18 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:"var(--navy-700,#0D3477)", marginBottom:12, fontFamily:"var(--font-serif,Georgia,serif)" }}>Records by Type · kwa Aina</div>
+              <TrendBarChart data={typeChartData} xKey="type" yKey="count" color={CHART_COLORS.navy} height={200} dark={false} horizontal={true} />
+            </div>
+          )}
+          {statusPieData.length > 0 && (
+            <div className="glass-card" style={{ padding:18 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:"var(--navy-700,#0D3477)", marginBottom:12, fontFamily:"var(--font-serif,Georgia,serif)" }}>Records by Status · kwa Hali</div>
+              <StatusPieChart data={statusPieData} height={200} dark={false} />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filters */}
       <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap" }}>
