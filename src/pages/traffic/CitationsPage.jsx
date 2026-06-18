@@ -232,10 +232,11 @@ export default function CitationsPage() {
         if (payload[k] === "") payload[k] = null;
       });
 
-      // Build the base insert. Build with the common fields, plus driver_phone
-      // attempted as an OPTIONAL field — if the schema doesn't have that column
-      // yet (migration 00011 not run), the insert is retried without it. This
-      // lets the form work today AND tomorrow without coordination.
+      // Build the base insert. The form may include columns the schema doesn't
+      // have yet (driver_phone, ward_id added in migration 00011). If the server
+      // rejects with "Could not find the 'X' column", we strip that column and
+      // retry. This lets the form work BEFORE the migration is applied AND
+      // AFTER, with no coordinated deploy.
       const baseInsert = {
         ...payload,
         fine_amount: parseInt(form.fine_amount) || 0,
@@ -249,19 +250,29 @@ export default function CitationsPage() {
         due_date:    new Date(Date.now() + 30*86400000).toISOString(),
       };
 
-      let { data, error } = await supabase.from("citations").insert(baseInsert).select().single();
-
-      // Retry without driver_phone if the schema doesn't have that column.
-      // The PostgREST schema-cache error message contains "driver_phone" so we
-      // match on that rather than a generic column code.
-      if (error && /driver_phone/i.test(error.message)) {
-        const { driver_phone, ...withoutPhone } = baseInsert;
-        const retry = await supabase.from("citations").insert(withoutPhone).select().single();
-        data = retry.data; error = retry.error;
-        if (!error) {
-          // Surface a one-time hint that the column should be added
-          console.warn("citations.driver_phone column missing — run migration 00011_citations_driver_phone.sql to persist phone numbers.");
-        }
+      // Retry loop: each iteration strips one missing-column at a time.
+      // Hard cap at 5 retries so a real (non-schema) error can't loop forever.
+      let attempt = { ...baseInsert };
+      let data, error;
+      const droppedCols = [];
+      for (let i = 0; i < 5; i++) {
+        const r = await supabase.from("citations").insert(attempt).select().single();
+        data = r.data; error = r.error;
+        if (!error) break;
+        // Match PostgREST schema-cache errors of the form:
+        //   "Could not find the 'XYZ' column of 'citations' in the schema cache"
+        const m = /the '([a-z_]+)' column of '([a-z_]+)' in the schema cache/i.exec(error.message);
+        if (!m) break; // some other error - stop retrying
+        const col = m[1];
+        if (!(col in attempt)) break; // sanity check
+        delete attempt[col];
+        droppedCols.push(col);
+      }
+      if (droppedCols.length) {
+        console.warn(
+          `citations insert: stripped missing columns [${droppedCols.join(", ")}]. ` +
+          `Run migration 00011_citations_driver_phone.sql to enable: driver_phone, ward_id.`
+        );
       }
       if (error) throw error;
       logAction({ profile, action:"issue_citation", entityType:"citation", entityId:data.id, entityRef:data.ref_number, description:`Citation: ${data.vehicle_plate} - ${data.offense_type} - TZS ${data.fine_amount}` });
