@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import TrafficLayout from "../../layouts/TrafficLayout";
 import { Car, FileText, AlertTriangle, TrendingUp, Plus } from "lucide-react";
+import { StatusPieChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +10,7 @@ export default function TrafficDashboard() {
   const { profile, fullName, badge, stationName } = useCurrentUser();
   const nav = useNavigate();
   const [stats, setStats] = useState({ citations:0, accidents:0, unpaid:0, today:0 });
+  const [statusData, setStatusData] = useState([]);
 
   useEffect(() => {
     async function load() {
@@ -20,6 +22,12 @@ export default function TrafficDashboard() {
         supabase.from("citations").select("id", {count:"exact"}).gte("created_at", today).then(r=>r.count||0),
       ]);
       setStats({ citations:c, accidents:a, unpaid:u, today:t });
+      // Citation status breakdown for pie chart
+      const statusCounts = {};
+      const allCits = await supabase.from("citations").select("status");
+      (allCits.data||[]).forEach(c => { statusCounts[c.status] = (statusCounts[c.status]||0)+1; });
+      const colorMap = { unpaid:CHART_COLORS.danger, paid:CHART_COLORS.success, partial:CHART_COLORS.gold, contested:CHART_COLORS.critical, cancelled:CHART_COLORS.muted };
+      setStatusData(Object.entries(statusCounts).map(([name,value]) => ({ name, value, color: colorMap[name] || CHART_COLORS.navy })));
     }
     load();
   }, []);
@@ -62,6 +70,37 @@ export default function TrafficDashboard() {
             </div>
           );
         })}
+      </div>
+
+      {/* Citations by status (pie chart) + Quick actions */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr", gap:16, marginBottom:20 }}>
+        {statusData.length > 0 && (
+          <div className="glass-card" style={{ padding:18 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:"var(--navy-700,#0D3477)", marginBottom:12, fontFamily:"var(--font-serif,Georgia,serif)" }}>Citations by Status</div>
+            <StatusPieChart data={statusData} height={200} dark={false} />
+          </div>
+        )}
+        <div className="glass-card" style={{ padding:18 }}>
+          <div style={{ fontSize:14, fontWeight:700, color:"var(--navy-700,#0D3477)", marginBottom:12, fontFamily:"var(--font-serif,Georgia,serif)" }}>Summary · Muhtasari</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            <div style={{ padding:14, background:"rgba(13,52,119,0.04)", borderRadius:10 }}>
+              <div style={{ fontSize:11, color:"#64748B", fontWeight:700, textTransform:"uppercase" }}>Total Citations</div>
+              <div style={{ fontSize:28, fontWeight:700, color:"#0D3477", fontFamily:"var(--font-mono,monospace)" }}>{stats.citations}</div>
+            </div>
+            <div style={{ padding:14, background:"rgba(220,38,38,0.04)", borderRadius:10 }}>
+              <div style={{ fontSize:11, color:"#64748B", fontWeight:700, textTransform:"uppercase" }}>Unpaid Fines</div>
+              <div style={{ fontSize:28, fontWeight:700, color:"#DC2626", fontFamily:"var(--font-mono,monospace)" }}>{stats.unpaid}</div>
+            </div>
+            <div style={{ padding:14, background:"rgba(217,119,6,0.04)", borderRadius:10 }}>
+              <div style={{ fontSize:11, color:"#64748B", fontWeight:700, textTransform:"uppercase" }}>Accidents</div>
+              <div style={{ fontSize:28, fontWeight:700, color:"#D97706", fontFamily:"var(--font-mono,monospace)" }}>{stats.accidents}</div>
+            </div>
+            <div style={{ padding:14, background:"rgba(5,150,105,0.04)", borderRadius:10 }}>
+              <div style={{ fontSize:11, color:"#64748B", fontWeight:700, textTransform:"uppercase" }}>Today's Citations</div>
+              <div style={{ fontSize:28, fontWeight:700, color:"#059669", fontFamily:"var(--font-mono,monospace)" }}>{stats.today}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Quick actions */}

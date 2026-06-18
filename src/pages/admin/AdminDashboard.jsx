@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../layouts/AdminLayout";
 import { Users, Building2, Shield, MapPin, UserPlus, Activity, CheckCircle } from "lucide-react";
+import { TrendBarChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
 import { useAppData } from "../../context/AppDataContext";
 
 const ROLE_LABELS = { regular_officer:"Regular Officer", traffic_officer:"Traffic Officer", cid_officer:"CID Officer", forensic_officer:"Forensic Officer", ocs:"OCS", ocd:"OCD", rpc:"RPC", igp:"IGP", admin_officer:"Admin Officer" };
@@ -8,6 +9,9 @@ const ROLE_LABELS = { regular_officer:"Regular Officer", traffic_officer:"Traffi
 export default function AdminDashboard() {
   const nav = useNavigate();
   const { officers, stations, regions, loading } = useAppData();
+  const roleData = Object.entries(
+    officers.reduce((acc, o) => { acc[o.role] = (acc[o.role]||0)+1; return acc; }, {})
+  ).map(([role, count]) => ({ role: role.replace(/_/g," ").replace(/\b\w/g, c=>c.toUpperCase()), count }));
 
   const kpis = [
     { label:"Total Officers",  sw:"Maafisa Wote",       color:"#0D3477", icon:Users,        v: officers.length },
@@ -55,6 +59,14 @@ export default function AdminDashboard() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Officers by Role chart */}
+      {roleData.length > 0 && (
+        <div className="glass-card" style={{ padding:18, marginBottom:22 }}>
+          <div style={{ fontSize:14, fontWeight:700, color:"var(--navy-700,#0D3477)", marginBottom:12, fontFamily:"var(--font-serif,Georgia,serif)" }}>Officers by Role · Maafisa kwa Majukumu</div>
+          <TrendBarChart data={roleData} xKey="role" yKey="count" color={CHART_COLORS.navy} height={220} dark={false} />
         </div>
       )}
 

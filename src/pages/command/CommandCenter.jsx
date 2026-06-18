@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import CommandLayout from "../../layouts/CommandLayout";
 import { Users, AlertTriangle, Shield, Activity, FileText, Bell, MapPin, TrendingUp } from "lucide-react";
+import { TrendAreaChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +18,7 @@ export default function CommandCenter() {
   const [alerts,    setAlerts]    = useState([]);
   const [patrols,   setPatrols]   = useState([]);
   const [time,      setTime]      = useState(new Date());
+  const [incidentTrend, setIncidentTrend] = useState([]);
 
   useEffect(() => { const t = setInterval(()=>setTime(new Date()),1000); return ()=>clearInterval(t); }, []);
 
@@ -37,6 +39,23 @@ export default function CommandCenter() {
     setIncidents(recentInc.data||[]);
     setAlerts(recentAlerts.data||[]);
     setPatrols(activePatrols.data||[]);
+    // Build 7-day incident trend from recent incidents
+    const allInc = await supabase.from("incident_reports")
+      .select("created_at")
+      .gte("created_at", new Date(Date.now() - 7*86400000).toISOString())
+      .order("created_at",{ascending:true});
+    const days = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i*86400000);
+      const key = d.toLocaleDateString("en-GB",{weekday:"short"});
+      days[key] = 0;
+    }
+    (allInc.data||[]).forEach(inc => {
+      const d = new Date(inc.created_at);
+      const key = d.toLocaleDateString("en-GB",{weekday:"short"});
+      if (key in days) days[key]++;
+    });
+    setIncidentTrend(Object.entries(days).map(([date,count]) => ({ date, count })));
   }
 
   useEffect(() => {
@@ -89,6 +108,20 @@ export default function CommandCenter() {
           );
         })}
       </div>
+
+      {/* 7-day incident trend */}
+      {incidentTrend.length > 0 && (
+        <div className="glass-card-dark" style={{ marginBottom:16, padding:18 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <div>
+              <div style={{ fontSize:14, fontWeight:700, color:"white" }}>7-Day Incident Trend</div>
+              <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", marginTop:2 }}>Incidents reported per day</div>
+            </div>
+            <TrendingUp size={18} color={CHART_COLORS.gold}/>
+          </div>
+          <TrendAreaChart data={incidentTrend} xKey="date" yKey="count" color={CHART_COLORS.danger} height={180} dark={true} />
+        </div>
+      )}
 
       <div style={{ display:"grid", gridTemplateColumns:"1.4fr 1fr", gap:16, marginBottom:16 }}>
         {/* Live Incidents */}
