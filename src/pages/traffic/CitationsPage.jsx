@@ -232,7 +232,11 @@ export default function CitationsPage() {
         if (payload[k] === "") payload[k] = null;
       });
 
-      const { data, error } = await supabase.from("citations").insert({
+      // Build the base insert. Build with the common fields, plus driver_phone
+      // attempted as an OPTIONAL field — if the schema doesn't have that column
+      // yet (migration 00011 not run), the insert is retried without it. This
+      // lets the form work today AND tomorrow without coordination.
+      const baseInsert = {
         ...payload,
         fine_amount: parseInt(form.fine_amount) || 0,
         fine_currency: "TZS",
@@ -243,7 +247,22 @@ export default function CitationsPage() {
         issued_by:   profile?.id || null,  // downstream queries read this
         status:      "unpaid",
         due_date:    new Date(Date.now() + 30*86400000).toISOString(),
-      }).select().single();
+      };
+
+      let { data, error } = await supabase.from("citations").insert(baseInsert).select().single();
+
+      // Retry without driver_phone if the schema doesn't have that column.
+      // The PostgREST schema-cache error message contains "driver_phone" so we
+      // match on that rather than a generic column code.
+      if (error && /driver_phone/i.test(error.message)) {
+        const { driver_phone, ...withoutPhone } = baseInsert;
+        const retry = await supabase.from("citations").insert(withoutPhone).select().single();
+        data = retry.data; error = retry.error;
+        if (!error) {
+          // Surface a one-time hint that the column should be added
+          console.warn("citations.driver_phone column missing — run migration 00011_citations_driver_phone.sql to persist phone numbers.");
+        }
+      }
       if (error) throw error;
       logAction({ profile, action:"issue_citation", entityType:"citation", entityId:data.id, entityRef:data.ref_number, description:`Citation: ${data.vehicle_plate} - ${data.offense_type} - TZS ${data.fine_amount}` });
       setDone(data); await load();
