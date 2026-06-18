@@ -190,7 +190,7 @@ export default function WarrantsPage() {
     <CIDLayout pageTitle="Warrants" pageTitle2="Hati za Mahakama">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20, flexWrap:"wrap", gap:10 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Warrants <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Hati za Mahakama</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Warrants <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Hati za Mahakama</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>Court-issued warrants for arrest, search, and seizure</p>
         </div>
         <div style={{ display:"flex", gap:8 }}>
@@ -218,7 +218,7 @@ export default function WarrantsPage() {
           { label:"Expiring Soon", v:warrants.filter(isExpiringSoon).length,         c:"#D97706" },
           { label:"Expired",    v:warrants.filter(isExpired).length,                 c:"#94A3B8" },
         ].map(k=>(
-          <div key={k.label} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
+          <div key={k.label} style={{ background:"var(--glass-bg-light,rgba(255,255,255,0.72))", borderRadius:"var(--glass-radius,14px)", padding:"14px", border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", borderTop:`3px solid ${k.c}`, textAlign:"center" }}>
             <div style={{ fontSize:"clamp(24px,4vw,28px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
           </div>
@@ -244,13 +244,13 @@ export default function WarrantsPage() {
       {loading ? (
         <div style={{ padding:"60px", textAlign:"center", color:"#94A3B8" }}>Loading...</div>
       ) : filtered.length === 0 ? (
-        <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
           <ScrollText size={40} style={{ opacity:.2, marginBottom:12 }}/>
           <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>{warrants.length===0?"No warrants issued yet":"No warrants match filters"}</div>
           <button onClick={()=>setModal(true)} style={{ marginTop:14, padding:"8px 20px", borderRadius:9, border:"none", background:"#DC2626", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>Issue First Warrant</button>
         </div>
       ) : (
-        <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
           <table style={{ width:"100%", borderCollapse:"collapse" }}>
             <thead><tr style={{ background:"#F8FAFC" }}>
               {["Ref","Type","Person","Court","Judge","Status","Expires","Actions"].map(h=>(

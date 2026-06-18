@@ -72,7 +72,7 @@ export default function AlertsPage() {
     <DashboardLayout pageTitle="Alerts" pageTitle2="Tahadhari">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Alert Center <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Kituo cha Tahadhari</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Alert Center <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Kituo cha Tahadhari</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{unread.length} unread · {alerts.filter(a=>a.type==="emergency").length} emergencies · Real-time</p>
         </div>
         {isAdmin && (
@@ -102,7 +102,7 @@ export default function AlertsPage() {
       {/* Alerts list */}
       {loading ? <div style={{ padding:"50px", textAlign:"center", color:"#94A3B8" }}>Loading...</div>
       : filtered.length===0 ? (
-        <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
           <Bell size={40} style={{ opacity:.2, marginBottom:12 }}/>
           <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>{alerts.length===0?"No alerts issued yet":"No alerts match filter"}</div>
           <div style={{ fontSize:13, marginTop:4 }}>Hakuna tahadhari · Alerts from Control Room appear here in real-time</div>

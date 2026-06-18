@@ -91,7 +91,7 @@ export default function AdminSettingsPage() {
   const section = (icon, title, sub, content) => {
     const Icon = icon;
     return (
-      <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden", marginBottom:16 }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden", marginBottom:16 }}>
         <div style={{ padding:"14px 20px", borderBottom:"1px solid #F1F5F9", display:"flex", alignItems:"center", gap:10 }}>
           <div style={{ width:34, height:34, borderRadius:10, background:"#EFF6FF", display:"flex", alignItems:"center", justifyContent:"center" }}>
             <Icon size={17} color="#0D3477" />

@@ -70,7 +70,7 @@ export default function PatrolDashboardPage() {
   return (
     <DashboardLayout pageTitle="Patrols" pageTitle2="Doria">
       <div style={{ marginBottom:20 }}>
-        <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Patrol Dashboard <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Doria</span></h1>
+        <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Patrol Dashboard <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Doria</span></h1>
         <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{today.length} patrols today · {Math.floor(totalHrs/60)}h {totalHrs%60}m total logged</p>
       </div>
       {err && (
@@ -111,7 +111,7 @@ export default function PatrolDashboardPage() {
           {label:"Total This Month", v:patrols.length,                                              c:"#D97706"},
           {label:"Hours Logged",     v:`${Math.floor(totalHrs/60)}h ${totalHrs%60}m`,              c:"#7C3AED"},
         ].map(k=>(
-          <div key={k.label} style={{ background:"white", borderRadius:14, padding:"16px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
+          <div key={k.label} style={{ background:"var(--glass-bg-light,rgba(255,255,255,0.72))", borderRadius:"var(--glass-radius,14px)", padding:"16px", border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", borderTop:`3px solid ${k.c}`, textAlign:"center" }}>
             <div style={{ fontSize:k.label==="Hours Logged"?18:28, fontWeight:900, color:k.c, lineHeight:1.2 }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B", marginTop:4 }}>{k.label}</div>
           </div>
@@ -119,7 +119,7 @@ export default function PatrolDashboardPage() {
       </div>
 
       {/* Map placeholder */}
-      <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", marginBottom:16, overflow:"hidden" }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", marginBottom:16, overflow:"hidden" }}>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div style={{ fontSize:14, fontWeight:700, color:"#082A63" }}>Live Map · Ramani ya Doria</div>
           {active && <span style={{ background:"#FEF2F2", color:"#DC2626", padding:"4px 12px", borderRadius:999, fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:6 }}><span style={{ width:8, height:8, borderRadius:"50%", background:"#DC2626", display:"inline-block", animation:"pulse 1s infinite" }}/>LIVE</span>}
@@ -135,7 +135,7 @@ export default function PatrolDashboardPage() {
       </div>
 
       {/* History */}
-      <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9" }}>
           <div style={{ fontSize:14, fontWeight:700, color:"#082A63" }}>Patrol History · Historia ya Doria</div>
           <div style={{ fontSize:12, color:"#94A3B8" }}>{patrols.length} patrols logged in Supabase</div>

@@ -96,7 +96,7 @@ export default function CreateUserPage() {
         <div style={{ width:72, height:72, borderRadius:"50%", background:"#F0FDF4", border:"2px solid #BBF7D0", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px" }}>
           <CheckCircle size={36} color="#16A34A" />
         </div>
-        <h2 style={{ fontSize:22, fontWeight:800, color:"#03102B", marginBottom:6 }}>Officer Created in Supabase!</h2>
+        <h2 style={{ fontSize:22, fontWeight:700, color:"var(--navy-900,#03102B)", fontFamily:"var(--font-serif,Georgia,serif)", marginBottom:6 }}>Officer Created in Supabase!</h2>
         <p style={{ color:"#64748B", fontSize:13, marginBottom:20 }}>Akaunti ya Afisa Imeundwa · Saved to database</p>
         <div style={{ background:"#F8FAFC", borderRadius:12, padding:16, marginBottom:16, textAlign:"left" }}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>

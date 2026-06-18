@@ -101,7 +101,7 @@ export default function CitationsPage() {
           { label:"Today",  v:citations.filter(c=>new Date(c.created_at).toDateString()===new Date().toDateString()).length, c:"#D97706" },
           { label:"Total Fine (TZS)", v:`${(citations.reduce((a,c)=>a+(c.fine_amount||0),0)/1000).toFixed(0)}K`, c:"#0D3477" },
         ].map(k=>(
-          <div key={k.label} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
+          <div key={k.label} style={{ background:"var(--glass-bg-light,rgba(255,255,255,0.72))", borderRadius:"var(--glass-radius,14px)", padding:"14px", border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", borderTop:`3px solid ${k.c}`, textAlign:"center" }}>
             <div style={{ fontSize:22, fontWeight:900, color:k.c }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
           </div>
@@ -119,7 +119,7 @@ export default function CitationsPage() {
         </div>
       )}
 
-      <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
         {loading ? <div style={{ padding:"50px", textAlign:"center", color:"#94A3B8" }}>Loading...</div>
         : filtered.length===0 ? (
           <div style={{ padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>

@@ -273,7 +273,7 @@ export default function OfficersPage() {
           </button>
         </div>
       ) : (
-        <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
           <table style={{ width:"100%", borderCollapse:"collapse" }}>
             <thead><tr style={{ background:"#F8FAFC", borderBottom:"1px solid #E2E8F0" }}>
               {["Officer","Badge","Rank","Role","Region / Station","Status","Actions"].map(h=>(

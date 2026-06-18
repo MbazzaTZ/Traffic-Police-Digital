@@ -99,7 +99,7 @@ export default function MyProfilePage() {
           </div>
 
           {/* Status badge */}
-          <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", padding:"14px 18px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"14px 18px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <div>
               <div style={{ fontSize:13, fontWeight:700, color:"#1E293B" }}>Account Status</div>
               <div style={{ fontSize:12, color:"#94A3B8" }}>Hali ya Akaunti</div>

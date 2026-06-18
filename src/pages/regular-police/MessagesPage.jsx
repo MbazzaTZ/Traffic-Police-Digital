@@ -113,13 +113,13 @@ export default function MessagesPage() {
     <DashboardLayout pageTitle="Messages" pageTitle2="Ujumbe">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Messages <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Ujumbe</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Messages <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Ujumbe</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>Secure internal communications · Real-time · Supabase</p>
         </div>
         <div style={{ display:"flex", gap:8 }}>
           <button onClick={loadThreads} style={{ width:38, height:38, borderRadius:9, border:"1px solid #E2E8F0", background:"white", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"#64748B" }}><RefreshCw size={16}/></button>
           <button onClick={()=>setCompose(true)}
-            style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+            style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"var(--navy-700,#0D3477)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
             <MessageSquare size={15}/> Compose · Tunga Ujumbe
           </button>
         </div>
@@ -127,7 +127,7 @@ export default function MessagesPage() {
 
       <div style={{ display:"grid", gridTemplateColumns:"300px 1fr", gap:14, height:580 }}>
         {/* Sidebar */}
-        <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", display:"flex", flexDirection:"column", overflow:"hidden" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", display:"flex", flexDirection:"column", overflow:"hidden" }}>
           <div style={{ padding:"12px 14px", borderBottom:"1px solid #F1F5F9" }}>
             <div style={{ display:"flex", alignItems:"center", gap:8, background:"#F8FAFC", borderRadius:8, padding:"7px 10px" }}>
               <Search size={13} color="#94A3B8"/>
@@ -178,7 +178,7 @@ export default function MessagesPage() {
         </div>
 
         {/* Chat */}
-        <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", display:"flex", flexDirection:"column", overflow:"hidden" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", display:"flex", flexDirection:"column", overflow:"hidden" }}>
           {!selected ? (
             <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:10, color:"#94A3B8" }}>
               <MessageSquare size={48} style={{ opacity:.15 }}/>

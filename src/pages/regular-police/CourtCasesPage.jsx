@@ -212,17 +212,17 @@ export default function CourtCasesPage() {
     <DashboardLayout pageTitle="Court Cases" pageTitle2="Kesi Mahakamani">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Court Cases <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Kesi Mahakamani</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Court Cases <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Kesi Mahakamani</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{cases.length} total · {cases.filter(c=>c.status==="active").length} active hearings</p>
         </div>
-        <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+        <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"var(--navy-700,#0D3477)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
           <Plus size={15}/> File New Case
         </button>
       </div>
 
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:16 }}>
         {["open","active","concluded","appealed"].map(s=>(
-          <div key={s} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${STATUS_C[s]}`, textAlign:"center" }}>
+          <div key={s} style={{ background:"var(--glass-bg-light,rgba(255,255,255,0.72))", borderRadius:"var(--glass-radius,14px)", padding:"14px", border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", borderTop:`3px solid ${k.c}`, textAlign:"center" }}>
             <div style={{ fontSize:26, fontWeight:900, color:STATUS_C[s] }}>{cases.filter(c=>c.status===s).length}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B", textTransform:"capitalize" }}>{s}</div>
           </div>
@@ -240,7 +240,7 @@ export default function CourtCasesPage() {
         </select>
       </div>
 
-      <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
         {loading ? <div style={{ padding:"50px", textAlign:"center", color:"#94A3B8" }}>Loading...</div>
         : filtered.length===0 ? (
           <div style={{ padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>

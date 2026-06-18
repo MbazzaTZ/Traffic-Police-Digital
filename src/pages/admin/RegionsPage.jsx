@@ -155,7 +155,7 @@ export default function RegionsPage() {
 
       {/* Tree */}
       {regions.length===0 ? (
-        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:"70px 20px", textAlign:"center", color:"#94A3B8" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"70px 20px", textAlign:"center", color:"#94A3B8" }}>
           <MapPin size={44} style={{ opacity:.2, marginBottom:12 }}/>
           <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>No regions yet · Tanzania has 31 regions</div>
           <button onClick={()=>setModalRegion(true)} style={{ marginTop:16, padding:"10px 24px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>Add First Region</button>
@@ -168,7 +168,7 @@ export default function RegionsPage() {
             const isROpen     = openRegion === ri;
 
             return (
-              <div key={region.id} style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+              <div key={region.id} className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
 
                 {/* ── REGION ROW ── */}
                 <div style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", cursor:"pointer", borderBottom: isROpen?"1px solid #F1F5F9":"none" }}

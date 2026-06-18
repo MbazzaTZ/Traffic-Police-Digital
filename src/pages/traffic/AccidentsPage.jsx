@@ -52,7 +52,7 @@ export default function AccidentsPage() {
     <TrafficLayout pageTitle="Accidents" pageTitle2="Ripoti za Ajali">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Traffic Accidents <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Ajali</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Traffic Accidents <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Ajali</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{accidents.length} reported · {accidents.filter(a=>a.fatalities>0).length} fatal</p>
         </div>
         <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#DC2626", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
@@ -67,7 +67,7 @@ export default function AccidentsPage() {
           {label:"Serious",   v:accidents.filter(a=>a.type==="Serious").length,    c:"#DC2626"},
           {label:"Casualties",v:accidents.reduce((t,a)=>t+(a.casualties||0),0),    c:"#D97706"},
         ].map(k=>(
-          <div key={k.label} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
+          <div key={k.label} style={{ background:"var(--glass-bg-light,rgba(255,255,255,0.72))", borderRadius:"var(--glass-radius,14px)", padding:"14px", border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", borderTop:`3px solid ${k.c}`, textAlign:"center" }}>
             <div style={{ fontSize:"clamp(24px,4vw,28px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
           </div>
@@ -78,7 +78,7 @@ export default function AccidentsPage() {
         <Search size={14} color="#94A3B8"/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search location, type, ref..." style={{ border:"none", outline:"none", fontSize:13, width:"100%", background:"transparent" }}/>
       </div>
 
-      <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
         {loading ? <div style={{ padding:"50px", textAlign:"center", color:"#94A3B8" }}>Loading...</div>
         : filtered.length===0 ? (
           <div style={{ padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>

@@ -44,11 +44,11 @@ export default function NidaSearchPage() {
   return (
     <CIDLayout pageTitle="NIDA Search" pageTitle2="Tafuta kwa NIDA">
       <div style={{ marginBottom:20 }}>
-        <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Criminal Record Search <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Tafuta Rekodi</span></h1>
+        <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Criminal Record Search <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Tafuta Rekodi</span></h1>
         <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>Search by name or NIDA across arrests, suspects, wanted persons & cases</p>
       </div>
 
-      <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:28, marginBottom:20 }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:28, marginBottom:20 }}>
         <form onSubmit={doSearch}>
           <label style={{ display:"block", fontSize:13, fontWeight:700, color:"#475569", marginBottom:10 }}>Name or NIDA Number · Jina au Nambari ya NIDA</label>
           <div style={{ display:"flex", gap:12 }}>
@@ -105,7 +105,7 @@ export default function NidaSearchPage() {
           ].filter(s=>s.items.length>0).map(section=>{
             const Icon = section.icon;
             return (
-              <div key={section.title} style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden", marginBottom:14 }}>
+              <div key={section.title} className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden", marginBottom:14 }}>
                 <div style={{ padding:"12px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:section.color, display:"flex", alignItems:"center", gap:8 }}>
                   <Icon size={16}/> {section.title} ({section.items.length})
                 </div>
@@ -131,7 +131,7 @@ export default function NidaSearchPage() {
       )}
 
       {!results && !loading && (
-        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
           <Search size={48} style={{ opacity:.15, marginBottom:14 }}/>
           <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>Search criminal records</div>
           <div style={{ fontSize:13, marginTop:6 }}>Tafuta kwa jina au NIDA · Searches across all CID databases</div>

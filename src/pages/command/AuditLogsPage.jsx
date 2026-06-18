@@ -41,7 +41,7 @@ export default function AuditLogsPage() {
     <CommandLayout pageTitle="Audit Logs" pageTitle2="Kumbukumbu za Mfumo">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
         <div>
-          <h1 style={{ fontSize:24, fontWeight:900, color:"white", margin:0 }}>Audit Trail</h1>
+          <h1 style={{ fontSize:24, fontWeight:700, color:"white", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Audit Trail</h1>
           <p style={{ color:"rgba(255,255,255,.45)", fontSize:13, marginTop:3 }}>{logs.length} actions logged · append-only · tamper-resistant</p>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>

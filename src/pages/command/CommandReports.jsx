@@ -48,7 +48,7 @@ export default function CommandReports() {
     <CommandLayout pageTitle="Reports & Analytics" pageTitle2="Ripoti na Takwimu">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
         <div>
-          <h1 style={{ fontSize:24, fontWeight:900, color:"white", margin:0 }}>Reports & Analytics</h1>
+          <h1 style={{ fontSize:24, fontWeight:700, color:"white", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Reports & Analytics</h1>
           <p style={{ color:"rgba(255,255,255,.45)", fontSize:13, marginTop:3 }}>National crime statistics · Takwimu za Kitaifa</p>
         </div>
         <button onClick={()=>exportReport("National Crime Statistics",
@@ -70,7 +70,7 @@ export default function CommandReports() {
           {label:"CID Cases",       v:data.cases.length,      c:"#7C3AED"},
         ].map(k=>(
           <div key={k.label} style={{ ...card, padding:"18px", textAlign:"center", borderTop:`3px solid ${k.c}` }}>
-            <div style={{ fontSize:32, fontWeight:900, color:k.c }}>{k.v}</div>
+            <div style={{ fontSize:"clamp(28px,4vw,32px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"rgba(255,255,255,.7)" }}>{k.label}</div>
           </div>
         ))}

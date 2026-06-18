@@ -133,7 +133,7 @@ export default function StationsPage() {
             ))}
           </div>
           <button onClick={()=>{setErr("");setModal(true);}}
-            style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+            style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"var(--navy-700,#0D3477)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
             <Plus size={15}/> Add Station
           </button>
         </div>
@@ -150,7 +150,7 @@ export default function StationsPage() {
       </div>
 
       {/* ── FILTERS ── */}
-      <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", padding:"14px 16px", marginBottom:14 }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"14px 16px", marginBottom:14 }}>
         <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:12 }}>
           <Filter size={14} color="#64748B"/>
           <span style={{ fontSize:13, fontWeight:700, color:"#475569" }}>Filter Stations</span>
@@ -199,7 +199,7 @@ export default function StationsPage() {
 
       {/* ── TABLE VIEW ── scalable to 1000+ ── */}
       {view==="table" && (
-        <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
           {/* Sticky header */}
           <div style={{ overflowX:"auto" }}>
             <table style={{ width:"100%", borderCollapse:"collapse", minWidth:800 }}>
@@ -303,7 +303,7 @@ export default function StationsPage() {
       {view==="card" && (
         <>
           {paged.length===0 ? (
-            <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
+            <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
               <Building2 size={40} style={{ opacity:.2, marginBottom:12 }}/>
               <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>{stations.length===0?"No stations added yet":"No stations match your filters"}</div>
             </div>
@@ -312,7 +312,7 @@ export default function StationsPage() {
               {paged.map(s=>{
                 const tColor = TYPE_COLOR[s.type]||"#475569";
                 return (
-                  <div key={s.id} style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden", transition:".15s" }}
+                  <div key={s.id} className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden", transition:".15s" }}
                     onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 18px rgba(0,0,0,.09)";}}
                     onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
                     <div style={{ height:4, background:tColor }}/>

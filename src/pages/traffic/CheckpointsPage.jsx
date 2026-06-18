@@ -138,7 +138,7 @@ export default function CheckpointsPage() {
   };
 
   const Counter = ({ label, sw, k, color }) => (
-    <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", padding:18, textAlign:"center", borderTop:`4px solid ${color}` }}>
+    <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:18, textAlign:"center", borderTop:`4px solid ${color}` }}>
       <div style={{ fontSize:13, fontWeight:700, color:"#475569", marginBottom:4 }}>{label}</div>
       <div style={{ fontSize:11, color:"#94A3B8", marginBottom:14 }}>{sw}</div>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:16 }}>
@@ -153,7 +153,7 @@ export default function CheckpointsPage() {
     <TrafficLayout pageTitle="Checkpoints" pageTitle2="Vizuizi vya Barabara">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20, flexWrap:"wrap", gap:10 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Road Checkpoints <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Vizuizi</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Road Checkpoints <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Vizuizi</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>Log and track roadblock operations in real-time · All sessions persist to the database</p>
         </div>
         <button onClick={load} disabled={loading}
@@ -207,7 +207,7 @@ export default function CheckpointsPage() {
       )}
 
       {/* Session history */}
-      <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9" }}>
           <div style={{ fontSize:14, fontWeight:700, color:"#0D3477" }}>Checkpoint History · Historia</div>
           <div style={{ fontSize:12, color:"#94A3B8" }}>{sessions.length} sessions · showing most recent 50</div>

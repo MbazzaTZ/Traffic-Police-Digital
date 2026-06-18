@@ -87,7 +87,7 @@ export default function RolesPage() {
         {ROLES.map((r, i) => {
           const count = counts[r.name] || 0;
           return (
-            <div key={i} style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+            <div key={i} className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
               <div style={{ height:4, background:r.color }} />
               <div style={{ padding:16 }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
@@ -111,7 +111,7 @@ export default function RolesPage() {
       </div>
 
       {/* Access Matrix */}
-      <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"auto" }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"auto" }}>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9" }}>
           <div style={{ fontSize:14, fontWeight:700, color:"#03102B" }}>Access Matrix · Jedwali la Ruhusa</div>
           <div style={{ fontSize:12, color:"#94A3B8" }}>Which roles can access which modules</div>

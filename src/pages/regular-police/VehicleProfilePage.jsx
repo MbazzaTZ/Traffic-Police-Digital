@@ -69,7 +69,7 @@ export default function VehicleProfilePage() {
                 vehicle_plate: vehicle.plate_number || vehicle.plate,
                 vehicle_id:    vehicle.id,
               }}})}
-              style={{ padding:"9px 16px", borderRadius:9, border:"none", background:"#D97706", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+              style={{ padding:"9px 16px", borderRadius:9, border:"none", background:"var(--gold-600,#B45309)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13, boxShadow:"0 1px 2px rgba(180,83,9,0.25)" }}>
               <Flag size={14}/> Flag for Citation
             </button>
           )}
@@ -80,7 +80,7 @@ export default function VehicleProfilePage() {
                 vehicle_plate: vehicle.plate_number || vehicle.plate,
                 vehicle_id:    vehicle.id,
               }}})}
-              style={{ padding:"9px 16px", borderRadius:9, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+              style={{ padding:"9px 16px", borderRadius:9, border:"none", background:"var(--navy-700,#0D3477)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
               <FileText size={14}/> Issue Citation
             </button>
           )}
@@ -102,7 +102,7 @@ export default function VehicleProfilePage() {
         <div style={{ background:"white", borderRadius:18, border:"1px solid #E2E8F0", overflow:"hidden", alignSelf:"start" }}>
           <div style={{ background:`linear-gradient(135deg,#03102B,#082A63,${(vehicle.is_stolen||vehicle.stolen)?"#DC2626":"#0891B2"})`, padding:"28px 20px", textAlign:"center" }}>
             <Car size={40} color="white" style={{ marginBottom:10 }}/>
-            <div style={{ fontFamily:"monospace", fontSize:24, fontWeight:900, color:"white", background:"rgba(255,255,255,.15)", borderRadius:8, padding:"6px 14px", display:"inline-block", letterSpacing:2 }}>{vehicle.plate_number || vehicle.plate}</div>
+            <div style={{ fontFamily:"monospace", fontSize:24, fontWeight:700, color:"white", fontFamily:"var(--font-serif,Georgia,serif)", background:"rgba(255,255,255,.15)", borderRadius:8, padding:"6px 14px", display:"inline-block", letterSpacing:2 }}>{vehicle.plate_number || vehicle.plate}</div>
             <div style={{ fontSize:14, color:"rgba(255,255,255,.8)", marginTop:8 }}>{vehicle.make} {vehicle.model}</div>
           </div>
           <div style={{ padding:"16px 20px" }}>
@@ -124,7 +124,7 @@ export default function VehicleProfilePage() {
 
         <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
           {/* Insurance status */}
-          <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", padding:"18px 20px" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"18px 20px" }}>
             <div style={{ fontSize:14, fontWeight:700, color:"#0D3477", marginBottom:14, display:"flex", alignItems:"center", gap:8 }}><Shield size={16}/> Insurance · Bima</div>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div>
@@ -138,7 +138,7 @@ export default function VehicleProfilePage() {
           </div>
 
           {/* Owner */}
-          <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", padding:"18px 20px" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"18px 20px" }}>
             <div style={{ fontSize:14, fontWeight:700, color:"#0D3477", marginBottom:14, display:"flex", alignItems:"center", gap:8 }}><User size={16}/> Registered Owner · Mmiliki</div>
             {owner ? (
               <div onClick={()=>nav(`/person/${owner.id}`)} style={{ display:"flex", alignItems:"center", gap:12, cursor:"pointer", padding:"8px", borderRadius:10 }}
@@ -153,7 +153,7 @@ export default function VehicleProfilePage() {
           </div>
 
           {/* Violations */}
-          <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
             <div style={{ padding:"13px 18px", borderBottom:"1px solid #F1F5F9", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div style={{ fontSize:14, fontWeight:700, color:"#7C3AED", display:"flex", alignItems:"center", gap:8 }}><FileText size={16}/> Violations · Faini ({citations.length})</div>
               {unpaidFines>0 && <span style={{ background:"#FEF2F2", color:"#DC2626", padding:"3px 12px", borderRadius:999, fontSize:12, fontWeight:700 }}>TZS {unpaidFines.toLocaleString()} unpaid</span>}

@@ -216,7 +216,7 @@ export default function HRPage() {
           { label:"On Leave",         v:records.filter(r=>r.type==="leave" && r.status==="active").length, c:"#0891B2" },
           { label:"Disciplinary",     v:records.filter(r=>r.type==="disciplinary").length,       c:"#DC2626" },
         ].map(k=>(
-          <div key={k.label} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
+          <div key={k.label} style={{ background:"var(--glass-bg-light,rgba(255,255,255,0.72))", borderRadius:"var(--glass-radius,14px)", padding:"14px", border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", borderTop:`3px solid ${k.c}`, textAlign:"center" }}>
             <div style={{ fontSize:"clamp(24px,4vw,28px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
           </div>
@@ -267,13 +267,13 @@ export default function HRPage() {
       {loading ? (
         <div style={{ padding:"60px", textAlign:"center", color:"#94A3B8" }}>Loading...</div>
       ) : filtered.length === 0 ? (
-        <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
           <FileText size={40} style={{ opacity:.2, marginBottom:12 }}/>
           <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>{records.length===0?"No HR records yet":"No records match filters"}</div>
           <button onClick={()=>setModal(true)} style={{ marginTop:14, padding:"8px 20px", borderRadius:9, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", fontSize:13 }}>Create First Record</button>
         </div>
       ) : (
-        <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
           <table style={{ width:"100%", borderCollapse:"collapse" }}>
             <thead><tr style={{ background:"#F8FAFC" }}>
               {["Officer","Type","Title","Severity","Status","Date","Created By","Actions"].map(h=>(

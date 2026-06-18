@@ -58,10 +58,10 @@ export default function CellsPage() {
     <DashboardLayout pageTitle="Cells" pageTitle2="Vyumba">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Holding Cells <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Vyumba vya Kuwekewa</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Holding Cells <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Vyumba vya Kuwekewa</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{stationName||"Your station"} · {totalOcc}/{totalCapacity} occupied</p>
         </div>
-        <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+        <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"var(--navy-700,#0D3477)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
           <Plus size={15}/> Add Cell
         </button>
       </div>
@@ -73,7 +73,7 @@ export default function CellsPage() {
           { label:"Full",         v:cells.filter(c=>c.status==="full").length, c:"#D97706" },
           { label:"Occupancy %",  v:totalCapacity?Math.round((totalOcc/totalCapacity)*100)+"%":"0%", c:"#7C3AED" },
         ].map(k=>(
-          <div key={k.label} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
+          <div key={k.label} style={{ background:"var(--glass-bg-light,rgba(255,255,255,0.72))", borderRadius:"var(--glass-radius,14px)", padding:"14px", border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", borderTop:`3px solid ${k.c}`, textAlign:"center" }}>
             <div style={{ fontSize:"clamp(24px,4vw,28px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
           </div>

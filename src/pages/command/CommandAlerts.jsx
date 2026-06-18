@@ -51,7 +51,7 @@ export default function CommandAlerts() {
     <CommandLayout pageTitle="Issue Alerts" pageTitle2="Toa Tahadhari">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
         <div>
-          <h1 style={{ fontSize:24, fontWeight:900, color:"white", margin:0 }}>Alert Command</h1>
+          <h1 style={{ fontSize:24, fontWeight:700, color:"white", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Alert Command</h1>
           <p style={{ color:"rgba(255,255,255,.45)", fontSize:13, marginTop:3 }}>{alerts.length} issued · {alerts.filter(a=>a.is_national).length} national broadcasts</p>
         </div>
         <button onClick={()=>setModal(true)} style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"#DC2626", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, fontSize:13 }}>

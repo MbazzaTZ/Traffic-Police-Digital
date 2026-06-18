@@ -235,7 +235,7 @@ export default function CitationRequestsPage() {
     <RoleLayout role={profile?.role} pageTitle="Citation Requests" pageTitle2="Maombi ya Faini">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18, flexWrap:"wrap", gap:10 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>
             Citation Requests <span style={{ color:"#94A3B8", fontWeight:500, fontSize:16 }}>· Maombi ya Faini</span>
           </h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>

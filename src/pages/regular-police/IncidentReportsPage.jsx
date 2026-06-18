@@ -80,11 +80,11 @@ export default function IncidentReportsPage() {
     <DashboardLayout pageTitle="Incident Reports" pageTitle2="Ripoti za Matukio">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Incident Reports <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Ripoti</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Incident Reports <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Ripoti</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{incidents.length} total · {incidents.filter(i=>i.status==="open").length} open</p>
         </div>
         <button onClick={() => { setErr(""); setModal(true); }}
-          style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+          style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"var(--navy-700,#0D3477)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
           <Plus size={15}/> New Incident
         </button>
       </div>
@@ -128,7 +128,7 @@ export default function IncidentReportsPage() {
         </div>
       )}
       {/* Table */}
-      <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
         {loading ? (
           <div style={{ padding:"50px 20px", textAlign:"center", color:"#94A3B8" }}>Loading from Supabase...</div>
         ) : filtered.length === 0 ? (

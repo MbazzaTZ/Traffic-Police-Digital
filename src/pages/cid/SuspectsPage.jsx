@@ -65,11 +65,11 @@ export default function SuspectsPage() {
     <CIDLayout pageTitle="Suspects" pageTitle2="Washukiwa">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Suspects Register <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Washukiwa</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Suspects Register <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Washukiwa</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{suspects.length} total · {suspects.filter(s=>s.status==="suspect").length} active suspects</p>
         </div>
         <button onClick={() => { setErr(""); setModal(true); }}
-          style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#D97706", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+          style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"var(--gold-600,#B45309)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13, boxShadow:"0 1px 2px rgba(180,83,9,0.25)" }}>
           <Plus size={15}/> Add Suspect
         </button>
       </div>
@@ -77,7 +77,7 @@ export default function SuspectsPage() {
       {/* Stats */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:16 }}>
         {Object.entries(STATUS_C).map(([s,c]) => (
-          <div key={s} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${c}`, textAlign:"center", cursor:"pointer" }}
+          <div key={s} style={{ background:"var(--glass-bg-light,rgba(255,255,255,0.72))", borderRadius:"var(--glass-radius,14px)", padding:"14px", border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", borderTop:`3px solid ${k.c}`, textAlign:"center", cursor:"pointer" }}
             onClick={() => setFStatus(fStatus===s?"":s)}>
             <div style={{ fontSize:26, fontWeight:900, color:c }}>{suspects.filter(x=>x.status===s).length}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B", textTransform:"capitalize" }}>{s}</div>
@@ -102,7 +102,7 @@ export default function SuspectsPage() {
       {/* Detail panel + list */}
       <div style={{ display:"grid", gridTemplateColumns:selected?"1fr 380px":"1fr", gap:14 }}>
         {/* Table */}
-        <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
           {loading ? <div style={{ padding:"50px", textAlign:"center", color:"#94A3B8" }}>Loading...</div>
           : filtered.length===0 ? (
             <div style={{ padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
@@ -151,7 +151,7 @@ export default function SuspectsPage() {
 
         {/* Detail panel */}
         {selected && (
-          <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", padding:20, alignSelf:"start" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:20, alignSelf:"start" }}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}>
               <div style={{ fontSize:14, fontWeight:800, color:"#03102B" }}>Suspect Detail</div>
               <button onClick={()=>setSelected(null)} style={{ width:26, height:26, borderRadius:6, background:"#F1F5F9", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}><X size={13}/></button>

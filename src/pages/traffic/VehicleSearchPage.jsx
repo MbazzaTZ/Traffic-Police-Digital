@@ -36,11 +36,11 @@ export default function VehicleSearchPage() {
   return (
     <RoleLayout role={profile?.role} pageTitle="Vehicle Search" pageTitle2="Tafuta Gari">
       <div style={{ marginBottom:20 }}>
-        <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Vehicle Search <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Tafuta Gari</span></h1>
+        <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Vehicle Search <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Tafuta Gari</span></h1>
         <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>Search by plate number to view citation and accident history</p>
       </div>
 
-      <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:28, marginBottom:20 }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:28, marginBottom:20 }}>
         <form onSubmit={doSearch}>
           <label style={{ display:"block", fontSize:13, fontWeight:700, color:"#475569", marginBottom:10 }}>Enter Vehicle Plate Number · Nambari ya Gari</label>
           <div style={{ display:"flex", gap:12 }}>
@@ -73,7 +73,7 @@ export default function VehicleSearchPage() {
             ))}
           </div>
 
-          <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden", marginBottom:14 }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden", marginBottom:14 }}>
             <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div style={{ fontSize:14, fontWeight:700, color:"#0D3477" }}>Citations for plate: <span style={{ fontFamily:"monospace", background:"#F8FAFC", padding:"2px 10px", borderRadius:6, border:"1px solid #E2E8F0" }}>{results.plate}</span></div>
               <span style={{ fontSize:12, color:"#94A3B8" }}>{results.citations.length} records</span>
@@ -115,7 +115,7 @@ export default function VehicleSearchPage() {
       )}
 
       {!results && !loading && (
-        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
           <Car size={48} style={{ opacity:.15, marginBottom:14 }}/>
           <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>Enter a plate number to search</div>
           <div style={{ fontSize:13, marginTop:6 }}>Weka nambari ya gari kutafuta historia ya faini na ajali</div>

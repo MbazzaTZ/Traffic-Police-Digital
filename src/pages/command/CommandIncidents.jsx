@@ -40,7 +40,7 @@ export default function CommandIncidents() {
     <CommandLayout pageTitle="Live Incidents" pageTitle2="Matukio Hai">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
         <div>
-          <h1 style={{ fontSize:24, fontWeight:900, color:"white", margin:0 }}>Live Incidents</h1>
+          <h1 style={{ fontSize:24, fontWeight:700, color:"white", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Live Incidents</h1>
           <p style={{ color:"rgba(255,255,255,.45)", fontSize:13, marginTop:3 }}>{incidents.length} total · {incidents.filter(i=>i.status==="open").length} open · real-time</p>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:7, padding:"6px 14px", borderRadius:999, background:"rgba(220,38,38,.15)", border:"1px solid rgba(220,38,38,.3)" }}>
@@ -58,7 +58,7 @@ export default function CommandIncidents() {
           {label:"Resolved Today",v:incidents.filter(i=>i.status==="resolved"&&new Date(i.created_at).toDateString()===new Date().toDateString()).length, c:"#059669"},
         ].map(k=>(
           <div key={k.label} style={{ ...card, padding:"16px", textAlign:"center", borderTop:`3px solid ${k.c}` }}>
-            <div style={{ fontSize:30, fontWeight:900, color:k.c }}>{k.v}</div>
+            <div style={{ fontSize:"clamp(26px,4vw,30px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"rgba(255,255,255,.7)" }}>{k.label}</div>
           </div>
         ))}

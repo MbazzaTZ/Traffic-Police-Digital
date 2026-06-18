@@ -180,7 +180,7 @@ export default function EvidenceDashboardPage() {
     <DashboardLayout pageTitle="Evidence" pageTitle2="Ushahidi">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20, flexWrap:"wrap", gap:10 }}>
         <div>
-          <h1 style={{ fontSize:24, fontWeight:800, color:"#0D3477", margin:0 }}>Evidence <span style={{ fontWeight:500, color:"#94A3B8", fontSize:18 }}>· Ushahidi</span></h1>
+          <h1 style={{ fontSize:24, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Evidence <span style={{ fontWeight:500, color:"#94A3B8", fontSize:18 }}>· Ushahidi</span></h1>
           <p style={{ color:"#64748B", marginTop:3 }}>{items.length} items · Chain of custody active · {items.filter(i=>i.status==="in_custody").length} in custody</p>
         </div>
         <div style={{ display:"flex", gap:8 }}>
@@ -208,9 +208,9 @@ export default function EvidenceDashboardPage() {
       </div>
 
       {loading ? (
-        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:"80px 20px", textAlign:"center", color:"#94A3B8" }}>Loading evidence...</div>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"80px 20px", textAlign:"center", color:"#94A3B8" }}>Loading evidence...</div>
       ) : items.length === 0 ? (
-        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:"80px 20px", textAlign:"center", color:"#94A3B8" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"80px 20px", textAlign:"center", color:"#94A3B8" }}>
           <FolderOpen size={48} style={{ opacity:.2, marginBottom:14 }} />
           <div style={{ fontSize:16, fontWeight:600, color:"#64748B" }}>No evidence uploaded yet</div>
           <div style={{ fontSize:13, marginTop:6 }}>Ushahidi haujapakuliwa bado</div>
@@ -219,7 +219,7 @@ export default function EvidenceDashboardPage() {
           </button>
         </div>
       ) : (
-        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
           <table style={{ width:"100%", borderCollapse:"collapse" }}>
             <thead>
               <tr style={{ background:"#F8FAFC", borderBottom:"2px solid #E2E8F0" }}>

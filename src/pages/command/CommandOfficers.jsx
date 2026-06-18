@@ -32,7 +32,7 @@ export default function CommandOfficers() {
   return (
     <CommandLayout pageTitle="Officer Roster" pageTitle2="Orodha ya Maafisa">
       <div style={{ marginBottom:18 }}>
-        <h1 style={{ fontSize:24, fontWeight:900, color:"white", margin:0 }}>Officer Roster</h1>
+        <h1 style={{ fontSize:24, fontWeight:700, color:"white", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Officer Roster</h1>
         <p style={{ color:"rgba(255,255,255,.45)", fontSize:13, marginTop:3 }}>{officers.length} officers · {officers.filter(o=>o.status==="active").length} active</p>
       </div>
 
@@ -44,7 +44,7 @@ export default function CommandOfficers() {
           {label:"CID Unit",       v:officers.filter(o=>o.role==="cid_officer").length, c:"#7C3AED"},
         ].map(k=>(
           <div key={k.label} style={{ ...card, padding:"16px", textAlign:"center", borderTop:`3px solid ${k.c}` }}>
-            <div style={{ fontSize:30, fontWeight:900, color:k.c }}>{k.v}</div>
+            <div style={{ fontSize:"clamp(26px,4vw,30px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"rgba(255,255,255,.7)" }}>{k.label}</div>
           </div>
         ))}

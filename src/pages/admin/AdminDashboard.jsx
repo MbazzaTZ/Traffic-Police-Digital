@@ -106,7 +106,7 @@ export default function AdminDashboard() {
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
         {/* Officers table */}
-        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
           <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <div>
               <div style={{ fontSize:14, fontWeight:700, color:"#03102B" }}>Officers · Maafisa</div>
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
 
         {/* Stations + Summary */}
         <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-          <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
             <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div>
                 <div style={{ fontSize:14, fontWeight:700, color:"#03102B" }}>Stations · Vituo</div>
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Summary */}
-          <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:"16px 18px" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"16px 18px" }}>
             <div style={{ fontSize:14, fontWeight:700, color:"#03102B", marginBottom:12 }}>Supabase Summary</div>
             {[
               { label:`${officers.length} Officer${officers.length!==1?"s":""} in database`, c:"#0D3477", v:officers.length },

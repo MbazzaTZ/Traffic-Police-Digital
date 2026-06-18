@@ -160,7 +160,7 @@ export default function PersonSearchPage() {
         <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>9 search methods: Name · NIDA · Plate · Driver License · TIN · Passport · Phone · Fingerprint · Face</p>
       </div>
 
-      <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:24, marginBottom:20 }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:24, marginBottom:20 }}>
         {/* Method tabs - 3-col grid handles 9 methods cleanly */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8, marginBottom:18 }}>
           {METHODS.map((mt,i)=>{
@@ -222,7 +222,7 @@ export default function PersonSearchPage() {
           {results.kind==="plate" ? (
             <>
               {results.vehicles && results.vehicles.length > 0 && (
-                <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden", marginBottom:14 }}>
+                <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden", marginBottom:14 }}>
                   <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:"#0891B2" }}>Vehicle Records ({results.vehicles.length})</div>
                   {results.vehicles.map(v=>(
                     <div key={v.id} onClick={()=>nav(`/vehicle/${v.id}`)} style={{ padding:"12px 18px", borderBottom:"1px solid #F8FAFC", display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"pointer" }}
@@ -236,7 +236,7 @@ export default function PersonSearchPage() {
                   ))}
                 </div>
               )}
-            <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+            <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
               <div style={{ padding:"14px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:"#0D3477" }}>
                 Citations for {results.plate} ({results.citations.length})
               </div>
@@ -265,7 +265,7 @@ export default function PersonSearchPage() {
           ) : (
             <>
               {results.persons && results.persons.length > 0 && (
-                <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden", marginBottom:14 }}>
+                <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden", marginBottom:14 }}>
                   <div style={{ padding:"12px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:"#0D3477", display:"flex", alignItems:"center", gap:8 }}><User size={16}/> Person Records ({results.persons.length})</div>
                   {results.persons.map(p=>(
                     <div key={p.id} onClick={()=>nav(`/person/${p.id}`)} style={{ padding:"12px 18px", borderBottom:"1px solid #F8FAFC", display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"pointer" }}
@@ -304,7 +304,7 @@ export default function PersonSearchPage() {
               ].filter(s=>s.items.length>0).map(section=>{
                 const Icon=section.icon;
                 return (
-                  <div key={section.title} style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden", marginBottom:14 }}>
+                  <div key={section.title} className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden", marginBottom:14 }}>
                     <div style={{ padding:"12px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:section.color, display:"flex", alignItems:"center", gap:8 }}><Icon size={16}/> {section.title} ({section.items.length})</div>
                     {section.items.map((item,i)=>{
                       const r=section.render(item);
@@ -327,7 +327,7 @@ export default function PersonSearchPage() {
       )}
 
       {!results && !loading && (
-        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>
           <Search size={48} style={{ opacity:.15, marginBottom:14 }}/>
           <div style={{ fontSize:15, fontWeight:600, color:"#64748B" }}>Search by {M.label}</div>
           <div style={{ fontSize:13, marginTop:6 }}>Results from arrests, suspects, wanted persons & citations</div>

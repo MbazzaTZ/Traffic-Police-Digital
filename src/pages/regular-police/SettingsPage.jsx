@@ -28,7 +28,7 @@ export default function SettingsPage() {
     <RoleLayout role={profile?.role} pageTitle="Settings" pageTitle2="Mipangilio">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:22 }}>
         <div>
-          <h1 style={{ fontSize:24, fontWeight:800, color:"#0D3477", margin:0 }}>Settings <span style={{ fontWeight:500, color:"#94A3B8", fontSize:18 }}>· Mipangilio</span></h1>
+          <h1 style={{ fontSize:24, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Settings <span style={{ fontWeight:500, color:"#94A3B8", fontSize:18 }}>· Mipangilio</span></h1>
           <p style={{ color:"#64748B", marginTop:3 }}>Account and system preferences</p>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
@@ -41,7 +41,7 @@ export default function SettingsPage() {
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
         {/* Profile */}
-        <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+        <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
           <div style={{ padding:"14px 20px", borderBottom:"1px solid #F1F5F9", display:"flex", alignItems:"center", gap:10 }}>
             <User size={17} color="#0D3477" />
             <div style={{ fontSize:14, fontWeight:700, color:"#082A63" }}>Officer Profile · Wasifu wa Afisa</div>
@@ -75,7 +75,7 @@ export default function SettingsPage() {
 
         <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
           {/* Language */}
-          <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
             <div style={{ padding:"14px 20px", borderBottom:"1px solid #F1F5F9", display:"flex", alignItems:"center", gap:10 }}>
               <Globe size={17} color="#0D3477" />
               <div style={{ fontSize:14, fontWeight:700, color:"#082A63" }}>Language · Lugha</div>
@@ -91,7 +91,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Notifications */}
-          <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
             <div style={{ padding:"14px 20px", borderBottom:"1px solid #F1F5F9", display:"flex", alignItems:"center", gap:10 }}>
               <Bell size={17} color="#0D3477" />
               <div style={{ fontSize:14, fontWeight:700, color:"#082A63" }}>Notifications · Arifa</div>
@@ -114,7 +114,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Security */}
-          <div style={{ background:"white", borderRadius:16, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:16, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
             <div style={{ padding:"14px 20px", borderBottom:"1px solid #F1F5F9", display:"flex", alignItems:"center", gap:10 }}>
               <Lock size={17} color="#0D3477" />
               <div style={{ fontSize:14, fontWeight:700, color:"#082A63" }}>Security · Usalama</div>

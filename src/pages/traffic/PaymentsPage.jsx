@@ -134,7 +134,7 @@ export default function PaymentsPage() {
     <RoleLayout role={profile?.role} pageTitle="Payments" pageTitle2="Malipo">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Fine Payments <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Malipo ya Faini</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", fontFamily:"var(--font-serif,Georgia,serif)", margin:0 }}>Fine Payments <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Malipo ya Faini</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{payments.length} payments recorded · {outstanding.length} citations awaiting payment</p>
         </div>
         <div style={{ display:"flex", gap:8 }}>
@@ -154,7 +154,7 @@ export default function PaymentsPage() {
           { label:"Payments",         v:payments.length,                   c:"#0D3477" },
           { label:"M-Pesa",           v:payments.filter(p=>p.method==="mpesa").length, c:"#16A34A" },
         ].map(k=>(
-          <div key={k.label} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
+          <div key={k.label} style={{ background:"var(--glass-bg-light,rgba(255,255,255,0.72))", borderRadius:"var(--glass-radius,14px)", padding:"14px", border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", borderTop:`3px solid ${k.c}`, textAlign:"center" }}>
             <div style={{ fontSize:20, fontWeight:900, color:k.c, fontFamily:"monospace" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
           </div>
@@ -172,7 +172,7 @@ export default function PaymentsPage() {
         </select>
       </div>
 
-      <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+      <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
         {loading ? <div style={{ padding:"50px", textAlign:"center", color:"#94A3B8" }}>Loading...</div>
         : filtered.length===0 ? (
           <div style={{ padding:"60px 20px", textAlign:"center", color:"#94A3B8" }}>

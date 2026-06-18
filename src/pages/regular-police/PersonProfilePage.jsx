@@ -113,7 +113,7 @@ export default function PersonProfilePage() {
             ].map(k=>{
               const Icon=k.icon;
               return (
-                <div key={k.label} style={{ background:"white", borderRadius:14, padding:"16px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
+                <div key={k.label} style={{ background:"var(--glass-bg-light,rgba(255,255,255,0.72))", borderRadius:"var(--glass-radius,14px)", padding:"16px", border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", borderTop:`3px solid ${k.c}`, textAlign:"center" }}>
                   <Icon size={18} color={k.c} style={{ marginBottom:6 }}/>
                   <div style={{ fontSize:"clamp(24px,4vw,28px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
                   <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
@@ -123,7 +123,7 @@ export default function PersonProfilePage() {
           </div>
 
           {/* Criminal history */}
-          <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
             <div style={{ padding:"13px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:"#D97706", display:"flex", alignItems:"center", gap:8 }}><Shield size={16}/> Criminal History · Historia ya Uhalifu</div>
             {arrests.length===0 ? (
               <div style={{ padding:"30px", textAlign:"center", color:"#94A3B8", fontSize:13 }}>No arrest records · Hakuna rekodi za kukamatwa</div>
@@ -149,7 +149,7 @@ export default function PersonProfilePage() {
           </div>
 
           {/* Vehicles */}
-          <div style={{ background:"white", borderRadius:14, border:"1px solid #E2E8F0", overflow:"hidden" }}>
+          <div className="glass-card" style={{ background:"rgba(255,255,255,0.85)", borderRadius:14, border:"1px solid var(--glass-border-light,rgba(13,52,119,0.14))", overflow:"hidden" }}>
             <div style={{ padding:"13px 18px", borderBottom:"1px solid #F1F5F9", fontSize:14, fontWeight:700, color:"#0891B2", display:"flex", alignItems:"center", gap:8 }}><Car size={16}/> Registered Vehicles · Magari</div>
             {vehicles.length===0 ? (
               <div style={{ padding:"30px", textAlign:"center", color:"#94A3B8", fontSize:13 }}>No vehicles registered to this person</div>

@@ -106,7 +106,7 @@ export default function ApprovalsPage() {
           <h1 style={{ fontSize:23, fontWeight:800, color:txtColor, margin:0 }}>Approvals & Requests <span style={{ color:subColor, fontWeight:400, fontSize:15 }}>· Maombi</span></h1>
           <p style={{ color:subColor, fontSize:13, marginTop:3 }}>Request and approval workflow · Upward escalation</p>
         </div>
-        <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+        <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"var(--navy-700,#0D3477)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
           <Plus size={15}/> New Request · Omba
         </button>
       </div>
