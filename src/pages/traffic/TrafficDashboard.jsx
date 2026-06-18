@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import TrafficLayout from "../../layouts/TrafficLayout";
 import { Car, FileText, AlertTriangle, TrendingUp, Plus } from "lucide-react";
-import { StatusPieChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
+import { StatusPieChart, Sparkline, CHART_COLORS } from "../../components/charts/ChartAtoms";
+import { buildTrendFromRecords } from "../../hooks/useTrendData";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +12,7 @@ export default function TrafficDashboard() {
   const nav = useNavigate();
   const [stats, setStats] = useState({ citations:0, accidents:0, unpaid:0, today:0 });
   const [statusData, setStatusData] = useState([]);
+  const [sparkData, setSparkData] = useState({});
 
   useEffect(() => {
     async function load() {
@@ -28,6 +30,15 @@ export default function TrafficDashboard() {
       (allCits.data||[]).forEach(c => { statusCounts[c.status] = (statusCounts[c.status]||0)+1; });
       const colorMap = { unpaid:CHART_COLORS.danger, paid:CHART_COLORS.success, partial:CHART_COLORS.gold, contested:CHART_COLORS.critical, cancelled:CHART_COLORS.muted };
       setStatusData(Object.entries(statusCounts).map(([name,value]) => ({ name, value, color: colorMap[name] || CHART_COLORS.navy })));
+      // Build sparkline data from citations + accidents
+      const allAcc = await supabase.from("accident_reports").select("created_at").gte("created_at", new Date(Date.now()-7*86400000).toISOString());
+      const todayCit = (allCits.data||[]).filter(c => { const d=new Date(c.created_at); const t=new Date(); return d.toDateString()===t.toDateString(); });
+      setSparkData({
+        citations: buildTrendFromRecords(allCits.data, "created_at"),
+        accidents: buildTrendFromRecords(allAcc.data, "created_at"),
+        unpaid: buildTrendFromRecords((allCits.data||[]).filter(c=>c.status==="unpaid"), "created_at"),
+        today: buildTrendFromRecords(todayCit, "created_at"),
+      });
     }
     load();
   }, []);
@@ -55,18 +66,23 @@ export default function TrafficDashboard() {
       {/* KPIs */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
         {[
-          { label:"Total Citations",  sw:"Faini Zote",     v:stats.citations, c:"#0D3477", icon:FileText },
-          { label:"Accidents",        sw:"Ajali",          v:stats.accidents, c:"#DC2626", icon:AlertTriangle },
-          { label:"Unpaid Fines",     sw:"Faini Hazijalipiwa", v:stats.unpaid, c:"#D97706", icon:TrendingUp },
-          { label:"Today's Citations",sw:"Faini za Leo",   v:stats.today,     c:"#059669", icon:Car },
+          { label:"Total Citations",  sw:"Faini Zote",     v:stats.citations, c:"#0D3477", icon:FileText, sk:"citations" },
+          { label:"Accidents",        sw:"Ajali",          v:stats.accidents, c:"#DC2626", icon:AlertTriangle, sk:"accidents" },
+          { label:"Unpaid Fines",     sw:"Faini Hazijalipiwa", v:stats.unpaid, c:"#D97706", icon:TrendingUp, sk:"unpaid" },
+          { label:"Today's Citations",sw:"Faini za Leo",   v:stats.today,     c:"#059669", icon:Car, sk:"today" },
         ].map(k=>{
           const Icon = k.icon;
           return (
-            <div key={k.label} style={{ background:"white", borderRadius:14, padding:"16px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
-              <Icon size={20} color={k.c} style={{ marginBottom:8 }}/>
-              <div style={{ fontSize:30, fontWeight:900, color:k.c }}>{k.v}</div>
-              <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
-              <div style={{ fontSize:10, color:"#94A3B8" }}>{k.sw}</div>
+            <div key={k.label} className="glass-card is-light" style={{ borderTop:`3px solid ${k.c}`, textAlign:"center", padding:"16px 14px" }}>
+              <Icon size={20} color={k.c} style={{ marginBottom:6 }}/>
+              <div style={{ fontSize:"clamp(26px,4vw,30px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
+              <div style={{ fontSize:12, fontWeight:700, color:"var(--ink-900,#0F172A)" }}>{k.label}</div>
+              <div style={{ fontSize:10, color:"var(--ink-500,#64748B)" }}>{k.sw}</div>
+              {sparkData[k.sk] && sparkData[k.sk].length > 0 && (
+                <div style={{ height:22, marginTop:6, opacity:0.7 }}>
+                  <Sparkline data={sparkData[k.sk]} color={k.c} height={22} />
+                </div>
+              )}
             </div>
           );
         })}

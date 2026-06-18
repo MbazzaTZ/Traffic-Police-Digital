@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../layouts/AdminLayout";
 import { Users, Building2, Shield, MapPin, UserPlus, Activity, CheckCircle } from "lucide-react";
-import { TrendBarChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
+import { TrendBarChart, Sparkline, CHART_COLORS } from "../../components/charts/ChartAtoms";
+import { useTrendData } from "../../hooks/useTrendData";
 import { useAppData } from "../../context/AppDataContext";
 
 const ROLE_LABELS = { regular_officer:"Regular Officer", traffic_officer:"Traffic Officer", cid_officer:"CID Officer", forensic_officer:"Forensic Officer", ocs:"OCS", ocd:"OCD", rpc:"RPC", igp:"IGP", admin_officer:"Admin Officer" };
@@ -9,12 +10,13 @@ const ROLE_LABELS = { regular_officer:"Regular Officer", traffic_officer:"Traffi
 export default function AdminDashboard() {
   const nav = useNavigate();
   const { officers, stations, regions, loading } = useAppData();
+  const officerTrend = useTrendData("profiles", "created_at");
   const roleData = Object.entries(
     officers.reduce((acc, o) => { acc[o.role] = (acc[o.role]||0)+1; return acc; }, {})
   ).map(([role, count]) => ({ role: role.replace(/_/g," ").replace(/\b\w/g, c=>c.toUpperCase()), count }));
 
   const kpis = [
-    { label:"Total Officers",  sw:"Maafisa Wote",       color:"#0D3477", icon:Users,        v: officers.length },
+    { label:"Total Officers",  sw:"Maafisa Wote",       color:"#0D3477", icon:Users,        v: officers.length, spark: officerTrend.trend },
     { label:"Police Stations", sw:"Vituo vya Polisi",   color:"#082A63", icon:Building2,    v: stations.length },
     { label:"Regions",         sw:"Mikoa",              color:"#059669", icon:MapPin,        v: regions.length },
     { label:"Active Roles",    sw:"Majukumu",           color:"#D97706", icon:Shield,        v: 9 },
@@ -51,11 +53,16 @@ export default function AdminDashboard() {
           {kpis.map(k => {
             const Icon = k.icon;
             return (
-              <div key={k.label} className="glass-card is-light" style={{ borderTop:`3px solid ${k.color}`, textAlign:"center", padding:"18px 16px" }}>
-                <Icon size={22} color={k.color} style={{ marginBottom:8 }} />
-                <div style={{ fontSize:"clamp(28px,4vw,36px)", fontWeight:700, color:k.color, lineHeight:1, marginBottom:5, fontFamily:"var(--font-mono, monospace)" }}>{k.v}</div>
+              <div key={k.label} className="glass-card is-light" style={{ borderTop:`3px solid ${k.color}`, textAlign:"center", padding:"16px 14px" }}>
+                <Icon size={20} color={k.color} style={{ marginBottom:6 }} />
+                <div style={{ fontSize:"clamp(26px,4vw,32px)", fontWeight:700, color:k.color, lineHeight:1, marginBottom:4, fontFamily:"var(--font-mono, monospace)" }}>{k.v}</div>
                 <div style={{ fontSize:12, fontWeight:700, color:"var(--ink-900, #0F172A)" }}>{k.label}</div>
                 <div style={{ fontSize:10, color:"var(--ink-500, #64748B)", marginTop:2 }}>{k.sw}</div>
+                {k.spark && (
+                  <div style={{ height:22, marginTop:6, opacity:0.7 }}>
+                    <Sparkline data={k.spark} color={k.color} height={22} />
+                  </div>
+                )}
               </div>
             );
           })}

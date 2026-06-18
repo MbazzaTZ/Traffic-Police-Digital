@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import CIDLayout from "../../layouts/CIDLayout";
 import { FolderOpen, Users, Shield, FileText } from "lucide-react";
-import { StatusPieChart, TrendBarChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
+import { StatusPieChart, TrendBarChart, Sparkline, CHART_COLORS } from "../../components/charts/ChartAtoms";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ export default function CIDDashboard() {
   const [stats, setStats] = useState({ cases:0, open:0, suspects:0, wanted:0, evidence:0 });
   const [caseTypeData, setCaseTypeData] = useState([]);
   const [dangerData, setDangerData] = useState([]);
+  const [sparkData, setSparkData] = useState({});
 
   useEffect(()=>{
     async function load() {
@@ -34,6 +35,25 @@ export default function CIDDashboard() {
       (allWanted.data||[]).forEach(w => { dangerCounts[w.danger_level] = (dangerCounts[w.danger_level]||0)+1; });
       const dangerColors = { low:CHART_COLORS.muted, medium:CHART_COLORS.gold, high:CHART_COLORS.danger, armed:CHART_COLORS.critical };
       setDangerData(Object.entries(dangerCounts).map(([level,count]) => ({ level: level.toUpperCase(), count, color: dangerColors[level] || CHART_COLORS.navy })));
+      // Sparkline data (7-day trends)
+      const sevenDaysAgo = new Date(Date.now()-7*86400000).toISOString();
+      const [caseSpark, wantSpark, evSpark] = await Promise.all([
+        supabase.from("cases").select("created_at").gte("created_at", sevenDaysAgo),
+        supabase.from("wanted_persons").select("created_at").gte("created_at", sevenDaysAgo),
+        supabase.from("evidence").select("collected_at").gte("collected_at", sevenDaysAgo),
+      ]);
+      const buildSpark = (recs, col) => {
+        const d = {};
+        for (let i=6;i>=0;i--) { const dt=new Date(Date.now()-i*86400000); d[dt.toLocaleDateString("en-GB",{weekday:"short"})]=0; }
+        (recs||[]).forEach(r => { if(r[col]){const k=new Date(r[col]).toLocaleDateString("en-GB",{weekday:"short"}); if(k in d) d[k]++;} });
+        return Object.entries(d).map(([date,v])=>({date,v}));
+      };
+      setSparkData({
+        cases: buildSpark(caseSpark.data, "created_at"),
+        open: buildSpark((caseSpark.data||[]).filter(c=>c.status==="open"), "created_at"),
+        wanted: buildSpark(wantSpark.data, "created_at"),
+        evidence: buildSpark(evSpark.data, "collected_at"),
+      });
     }
     load();
   },[]);
@@ -57,18 +77,23 @@ export default function CIDDashboard() {
 
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
         {[
-          { label:"Total Cases",   sw:"Kesi Zote",    v:stats.cases,    c:"#0D3477", icon:FolderOpen },
-          { label:"Open Cases",    sw:"Kesi Wazi",    v:stats.open,     c:"#DC2626", icon:FolderOpen },
-          { label:"Wanted",        sw:"Watuhumiwa",   v:stats.wanted,   c:"#D97706", icon:Shield },
-          { label:"Evidence Items",sw:"Ushahidi",     v:stats.evidence, c:"#059669", icon:FileText },
+          { label:"Total Cases",   sw:"Kesi Zote",    v:stats.cases,    c:"#0D3477", icon:FolderOpen, sk:"cases" },
+          { label:"Open Cases",    sw:"Kesi Wazi",    v:stats.open,     c:"#DC2626", icon:FolderOpen, sk:"open" },
+          { label:"Wanted",        sw:"Watuhumiwa",   v:stats.wanted,   c:"#D97706", icon:Shield, sk:"wanted" },
+          { label:"Evidence Items",sw:"Ushahidi",     v:stats.evidence, c:"#059669", icon:FileText, sk:"evidence" },
         ].map(k=>{
           const Icon = k.icon;
           return (
-            <div key={k.label} style={{ background:"white", borderRadius:14, padding:"16px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
-              <Icon size={20} color={k.c} style={{ marginBottom:8 }}/>
-              <div style={{ fontSize:30, fontWeight:900, color:k.c }}>{k.v}</div>
-              <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
-              <div style={{ fontSize:10, color:"#94A3B8" }}>{k.sw}</div>
+            <div key={k.label} className="glass-card is-light" style={{ borderTop:`3px solid ${k.c}`, textAlign:"center", padding:"16px 14px" }}>
+              <Icon size={20} color={k.c} style={{ marginBottom:6 }}/>
+              <div style={{ fontSize:"clamp(26px,4vw,30px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
+              <div style={{ fontSize:12, fontWeight:700, color:"var(--ink-900,#0F172A)" }}>{k.label}</div>
+              <div style={{ fontSize:10, color:"var(--ink-500,#64748B)" }}>{k.sw}</div>
+              {sparkData[k.sk] && sparkData[k.sk].length > 0 && (
+                <div style={{ height:22, marginTop:6, opacity:0.7 }}>
+                  <Sparkline data={sparkData[k.sk]} color={k.c} height={22} />
+                </div>
+              )}
             </div>
           );
         })}

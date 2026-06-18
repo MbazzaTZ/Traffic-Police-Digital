@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import CommandLayout from "../../layouts/CommandLayout";
 import { Users, AlertTriangle, Shield, Activity, FileText, Bell, MapPin, TrendingUp } from "lucide-react";
-import { TrendAreaChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
+import { TrendAreaChart, Sparkline, CHART_COLORS } from "../../components/charts/ChartAtoms";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,7 @@ export default function CommandCenter() {
   const [patrols,   setPatrols]   = useState([]);
   const [time,      setTime]      = useState(new Date());
   const [incidentTrend, setIncidentTrend] = useState([]);
+  const [sparkData, setSparkData] = useState({});
 
   useEffect(() => { const t = setInterval(()=>setTime(new Date()),1000); return ()=>clearInterval(t); }, []);
 
@@ -56,6 +57,28 @@ export default function CommandCenter() {
       if (key in days) days[key]++;
     });
     setIncidentTrend(Object.entries(days).map(([date,count]) => ({ date, count })));
+
+    // Fetch 7-day sparkline data for KPI tiles
+    const sevenDaysAgo = new Date(Date.now() - 7*86400000).toISOString();
+    const [arrestTrend, patrolTrend, alertTrend] = await Promise.all([
+      supabase.from("arrests").select("created_at").gte("created_at", sevenDaysAgo).order("created_at",{ascending:true}),
+      supabase.from("patrols").select("start_time").gte("start_time", sevenDaysAgo).order("start_time",{ascending:true}),
+      supabase.from("alerts").select("created_at").gte("created_at", sevenDaysAgo).order("created_at",{ascending:true}),
+    ]);
+    const buildSpark = (recs, col) => {
+      const d = {};
+      for (let i=6;i>=0;i--) { const dt=new Date(Date.now()-i*86400000); d[dt.toLocaleDateString("en-GB",{weekday:"short"})]=0; }
+      (recs||[]).forEach(r => { if(r[col]){const k=new Date(r[col]).toLocaleDateString("en-GB",{weekday:"short"}); if(k in d) d[k]++;} });
+      return Object.entries(d).map(([date,v])=>({date,v}));
+    };
+    setSparkData({
+      officers: buildSpark((await supabase.from("profiles").select("created_at").gte("created_at", sevenDaysAgo)).data, "created_at"),
+      incidents: incidentTrend.length > 0 ? incidentTrend.map(d=>({date:d.date,v:d.count})) : [],
+      arrests: buildSpark(arrestTrend.data, "created_at"),
+      patrols: buildSpark(patrolTrend.data, "start_time"),
+      alerts: buildSpark(alertTrend.data, "created_at"),
+      cases: buildSpark((await supabase.from("cases").select("created_at").gte("created_at", sevenDaysAgo)).data, "created_at"),
+    });
   }
 
   useEffect(() => {
@@ -90,20 +113,22 @@ export default function CommandCenter() {
       {/* KPI Grid */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:12, marginBottom:20 }}>
         {[
-          { label:"Active Officers",  sw:"Maafisa",        v:stats.officers,  c:"#0D3477", icon:Users },
-          { label:"Open Incidents",   sw:"Matukio Wazi",   v:stats.incidents, c:"#DC2626", icon:AlertTriangle },
-          { label:"Detained",         sw:"Vizuizini",      v:stats.arrests,   c:"#D97706", icon:Shield },
-          { label:"Active Patrols",   sw:"Doria Zinazoendelea", v:stats.patrols, c:"#16A34A", icon:Activity },
-          { label:"Open Cases",       sw:"Kesi CID",       v:stats.cases,     c:"#7C3AED", icon:FileText },
-          { label:"Alerts Issued",    sw:"Tahadhari",      v:stats.alerts,    c:"#0891B2", icon:Bell },
+          { label:"Active Officers",  sw:"Maafisa",        v:stats.officers,  c:"#0D3477", icon:Users, sparkKey:"officers" },
+          { label:"Open Incidents",   sw:"Matukio Wazi",   v:stats.incidents, c:"#DC2626", icon:AlertTriangle, sparkKey:"incidents" },
+          { label:"Detained",         sw:"Vizuizini",      v:stats.arrests,   c:"#D97706", icon:Shield, sparkKey:"arrests" },
+          { label:"Active Patrols",   sw:"Doria Zinazoendelea", v:stats.patrols, c:"#16A34A", icon:Activity, sparkKey:"patrols" },
+          { label:"Open Cases",       sw:"Kesi CID",       v:stats.cases,     c:"#7C3AED", icon:FileText, sparkKey:"cases" },
+          { label:"Alerts Issued",    sw:"Tahadhari",      v:stats.alerts,    c:"#0891B2", icon:Bell, sparkKey:"alerts" },
         ].map(k=>{
           const Icon = k.icon;
           return (
-            <div key={k.label} className="glass-card-dark" style={{ borderTop:`3px solid ${k.c}`, textAlign:"center", boxShadow:`0 0 20px ${k.c}30, var(--glass-shadow-dark)` }}>
-              <Icon size={18} color={k.c} style={{ marginBottom:8, opacity:.9 }}/>
-              <div style={{ fontSize:"clamp(24px,4vw,30px)", fontWeight:700, color:k.c, lineHeight:1, fontFamily:"var(--font-mono, monospace)" }}>{k.v}</div>
-              <div style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,.7)", marginTop:5 }}>{k.label}</div>
-              <div style={{ fontSize:10, color:"rgba(255,255,255,.3)" }}>{k.sw}</div>
+            <div key={k.label} className="glass-card-dark" style={{ borderTop:`3px solid ${k.c}`, textAlign:"center", boxShadow:`0 0 20px ${k.c}30, var(--glass-shadow-dark)`, padding:"14px 12px" }}>
+              <Icon size={18} color={k.c} style={{ marginBottom:6, opacity:.9 }}/>
+              <div style={{ fontSize:"clamp(22px,3.5vw,28px)", fontWeight:700, color:k.c, lineHeight:1, fontFamily:"var(--font-mono, monospace)" }}>{k.v}</div>
+              <div style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,.7)", marginTop:4 }}>{k.label}</div>
+              <div style={{ height:24, marginTop:6, opacity:0.8 }}>
+                {sparkData[k.sparkKey] && sparkData[k.sparkKey].length > 0 && <Sparkline data={sparkData[k.sparkKey]} color={k.c} height={24} />}
+              </div>
             </div>
           );
         })}
