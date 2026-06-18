@@ -12,9 +12,9 @@ const SEVERITY = [{ v:"low",c:"#64748B" },{ v:"medium",c:"#D97706" },{ v:"high",
 const STATUS_COLORS = { open:"#DC2626", investigating:"#D97706", resolved:"#059669", closed:"#94A3B8" };
 
 const S = {
-  inp: { width:"100%", height:42, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", fontSize:13, outline:"none", boxSizing:"border-box" },
-  sel: { width:"100%", height:42, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", fontSize:13, outline:"none", background:"white", boxSizing:"border-box" },
-  lbl: { display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:5 },
+  inp: { width:"100%", height:44, border:"1.5px solid var(--border-strong,#CBD5E1)", borderRadius:10, padding:"0 14px", fontSize:14, outline:"none", boxSizing:"border-box", color:"var(--ink-900,#0F172A)", background:"rgba(255,255,255,0.85)", fontFamily:"inherit", transition:"border-color 180ms, box-shadow 180ms" },
+  sel: { width:"100%", height:44, border:"1.5px solid var(--border-strong,#CBD5E1)", borderRadius:10, padding:"0 14px", fontSize:14, outline:"none", background:"white", boxSizing:"border-box", color:"var(--ink-900,#0F172A)", fontFamily:"inherit" },
+  lbl: { display:"block", fontSize:11, fontWeight:700, color:"var(--ink-700,#334155)", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 },
 };
 
 export default function IncidentReportsPage() {
@@ -98,7 +98,7 @@ export default function IncidentReportsPage() {
           { label:"Critical",      v:incidents.filter(i=>i.severity==="critical").length,     c:"#7C3AED" },
         ].map(k => (
           <div key={k.label} style={{ background:"white", borderRadius:12, padding:"14px 16px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
-            <div style={{ fontSize:26, fontWeight:900, color:k.c }}>{k.v}</div>
+            <div style={{ fontSize:"clamp(24px,4vw,28px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
           </div>
         ))}

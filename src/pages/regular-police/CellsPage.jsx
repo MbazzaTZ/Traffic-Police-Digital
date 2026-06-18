@@ -74,7 +74,7 @@ export default function CellsPage() {
           { label:"Occupancy %",  v:totalCapacity?Math.round((totalOcc/totalCapacity)*100)+"%":"0%", c:"#7C3AED" },
         ].map(k=>(
           <div key={k.label} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
-            <div style={{ fontSize:26, fontWeight:900, color:k.c }}>{k.v}</div>
+            <div style={{ fontSize:"clamp(24px,4vw,28px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
           </div>
         ))}

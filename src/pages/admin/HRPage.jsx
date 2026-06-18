@@ -174,14 +174,14 @@ export default function HRPage() {
     <AdminLayout pageTitle="HR Records" pageTitle2="Rekodi za Wafanyakazi">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20, flexWrap:"wrap", gap:10 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#03102B", margin:0 }}>Human Resources <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Wafanyakazi</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-900,#03102B)", margin:0, fontFamily:"var(--font-serif,Georgia,serif)" }}>Human Resources <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Wafanyakazi</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>Officer leave, transfers, training, disciplinary, and performance records</p>
         </div>
         <div style={{ display:"flex", gap:8 }}>
           <button onClick={load} disabled={loading} style={{ padding:"9px 14px", borderRadius:10, border:"1px solid #E2E8F0", background:"white", color:"#0D3477", fontWeight:700, fontSize:13, cursor:"pointer", display:"flex", alignItems:"center", gap:7, opacity:loading?.6:1 }}>
             <RefreshCw size={14}/> Refresh
           </button>
-          <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#0D3477", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+          <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"var(--gold-600,#B45309)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13, boxShadow:"0 1px 2px rgba(180,83,9,0.25)" }}>
             <Plus size={15}/> New Record
           </button>
         </div>
@@ -203,7 +203,7 @@ export default function HRPage() {
           { label:"Disciplinary",     v:records.filter(r=>r.type==="disciplinary").length,       c:"#DC2626" },
         ].map(k=>(
           <div key={k.label} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
-            <div style={{ fontSize:26, fontWeight:900, color:k.c }}>{k.v}</div>
+            <div style={{ fontSize:"clamp(24px,4vw,28px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
           </div>
         ))}

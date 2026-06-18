@@ -88,10 +88,10 @@ export default function WantedPage() {
     <CIDLayout pageTitle="Wanted Persons" pageTitle2="Watuhumiwa Wanaotafutwa">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#DC2626", margin:0 }}>Wanted Persons <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Watuhumiwa</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"#DC2626", margin:0, fontFamily:"var(--font-serif,Georgia,serif)" }}>Wanted Persons <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Watuhumiwa</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{wanted.filter(w=>w.status==="wanted").length} active · {wanted.filter(w=>w.danger_level==="armed").length} armed & dangerous</p>
         </div>
-        <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#DC2626", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+        <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"var(--gold-600,#B45309)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13, boxShadow:"0 1px 2px rgba(180,83,9,0.25)" }}>
           <Plus size={15}/> Add Wanted Person
         </button>
       </div>
@@ -104,7 +104,7 @@ export default function WantedPage() {
           {label:"Captured",        v:wanted.filter(w=>w.status==="captured").length,     c:"#059669"},
         ].map(k=>(
           <div key={k.label} style={{ background:"white", borderRadius:12, padding:"14px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
-            <div style={{ fontSize:26, fontWeight:900, color:k.c }}>{k.v}</div>
+            <div style={{ fontSize:"clamp(24px,4vw,28px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
             <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
           </div>
         ))}

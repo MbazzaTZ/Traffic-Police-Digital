@@ -172,14 +172,14 @@ export default function IntelligencePage() {
 
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20, flexWrap:"wrap", gap:10 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"white", margin:0 }}>Intelligence Files <span style={{ color:"rgba(255,255,255,.4)", fontWeight:400, fontSize:16 }}>· Faili za Ujasusi</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"white", margin:0, fontFamily:"var(--font-serif,Georgia,serif)" }}>Intelligence Files <span style={{ color:"rgba(255,255,255,.4)", fontWeight:400, fontSize:16 }}>· Faili za Ujasusi</span></h1>
           <p style={{ color:"rgba(255,255,255,.5)", fontSize:13, marginTop:3 }}>{files.length} files · {files.filter(f=>f.status==="active").length} active · {files.filter(f=>f.threat_level==="critical").length} critical threats</p>
         </div>
         <div style={{ display:"flex", gap:8 }}>
           <button onClick={load} disabled={loading} style={{ padding:"9px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,.15)", background:"rgba(255,255,255,.04)", color:"white", fontWeight:700, fontSize:13, cursor:"pointer", display:"flex", alignItems:"center", gap:7, opacity:loading?.6:1 }}>
             <RefreshCw size={14}/> Refresh
           </button>
-          <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#DC2626", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+          <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"var(--gold-600,#B45309)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13, boxShadow:"0 1px 2px rgba(180,83,9,0.25)" }}>
             <Plus size={15}/> File Intel · Faili
           </button>
         </div>

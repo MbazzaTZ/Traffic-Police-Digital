@@ -115,7 +115,7 @@ export default function PersonProfilePage() {
               return (
                 <div key={k.label} style={{ background:"white", borderRadius:14, padding:"16px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.c}`, textAlign:"center" }}>
                   <Icon size={18} color={k.c} style={{ marginBottom:6 }}/>
-                  <div style={{ fontSize:26, fontWeight:900, color:k.c }}>{k.v}</div>
+                  <div style={{ fontSize:"clamp(24px,4vw,28px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
                   <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
                 </div>
               );
@@ -135,7 +135,7 @@ export default function PersonProfilePage() {
                     const sc=STATUS_C[a.status]||"#94A3B8";
                     return (
                       <tr key={a.id} style={{ borderBottom:"1px solid #F1F5F9" }}>
-                        <td style={{ padding:"9px 14px", fontFamily:"monospace", fontWeight:700, color:"#D97706", fontSize:12 }}>{a.ref_number}</td>
+                        <td style={{ padding:"9px 14px", fontFamily:"var(--font-mono,monospace)", fontWeight:600, color:"var(--gold-600,#B45309)", fontSize:12 }}>{a.ref_number}</td>
                         <td style={{ padding:"9px 14px", fontSize:13 }}>{a.charge}</td>
                         <td style={{ padding:"9px 14px", fontSize:12, color:"#64748B" }}>{a.location_text||"—"}</td>
                         <td style={{ padding:"9px 14px" }}><span style={{ background:`${sc}18`, color:sc, padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700, textTransform:"capitalize" }}>{a.status}</span></td>

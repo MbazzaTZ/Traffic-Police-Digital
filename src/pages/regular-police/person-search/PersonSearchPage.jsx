@@ -156,7 +156,7 @@ export default function PersonSearchPage() {
   return (
     <DashboardLayout pageTitle="Person Search" pageTitle2="Tafuta Mtu">
       <div style={{ marginBottom:20 }}>
-        <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Person & Vehicle Search <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Tafuta</span></h1>
+        <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", margin:0, fontFamily:"var(--font-serif,Georgia,serif)" }}>Person & Vehicle Search <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Tafuta</span></h1>
         <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>9 search methods: Name · NIDA · Plate · Driver License · TIN · Passport · Phone · Fingerprint · Face</p>
       </div>
 
@@ -250,7 +250,7 @@ export default function PersonSearchPage() {
                   <tbody>
                     {results.citations.map(c=>(
                       <tr key={c.id} style={{ borderBottom:"1px solid #F1F5F9" }}>
-                        <td style={{ padding:"10px 14px", fontFamily:"monospace", fontWeight:700, color:"#D97706", fontSize:12 }}>{c.ref_number}</td>
+                        <td style={{ padding:"10px 14px", fontFamily:"var(--font-mono,monospace)", fontWeight:600, color:"var(--gold-600,#B45309)", fontSize:12 }}>{c.ref_number}</td>
                         <td style={{ padding:"10px 14px", fontSize:13 }}>{c.offense_type}</td>
                         <td style={{ padding:"10px 14px", fontWeight:700 }}>{(c.fine_amount||0).toLocaleString()}</td>
                         <td style={{ padding:"10px 14px" }}><span style={{ background:c.status==="paid"?"#F0FDF4":"#FEF2F2", color:c.status==="paid"?"#16A34A":"#DC2626", padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700 }}>{c.status}</span></td>

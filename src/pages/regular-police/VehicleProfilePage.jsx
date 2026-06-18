@@ -166,7 +166,7 @@ export default function VehicleProfilePage() {
                 <tbody>
                   {citations.map(c=>(
                     <tr key={c.id} style={{ borderBottom:"1px solid #F1F5F9" }}>
-                      <td style={{ padding:"9px 14px", fontFamily:"monospace", fontWeight:700, color:"#D97706", fontSize:12 }}>{c.ref_number}</td>
+                      <td style={{ padding:"9px 14px", fontFamily:"var(--font-mono,monospace)", fontWeight:600, color:"var(--gold-600,#B45309)", fontSize:12 }}>{c.ref_number}</td>
                       <td style={{ padding:"9px 14px", fontSize:13 }}>{c.offense_type}</td>
                       <td style={{ padding:"9px 14px", fontWeight:700, fontSize:12 }}>{(c.fine_amount||0).toLocaleString()}</td>
                       <td style={{ padding:"9px 14px" }}><span style={{ background:c.status==="paid"?"#F0FDF4":"#FEF2F2", color:c.status==="paid"?"#16A34A":"#DC2626", padding:"2px 9px", borderRadius:999, fontSize:11, fontWeight:700 }}>{c.status}</span></td>

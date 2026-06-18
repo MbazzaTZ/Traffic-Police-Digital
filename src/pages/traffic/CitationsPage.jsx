@@ -9,9 +9,9 @@ import { logAction } from "../../lib/audit";
 import ResponsiveTable from "../../components/mobile/ResponsiveTable";
 
 const S = {
-  inp: { width:"100%", height:42, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", fontSize:13, outline:"none", boxSizing:"border-box" },
-  sel: { width:"100%", height:42, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", fontSize:13, outline:"none", background:"white", boxSizing:"border-box" },
-  lbl: { display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:5 },
+  inp: { width:"100%", height:44, border:"1.5px solid var(--border-strong,#CBD5E1)", borderRadius:10, padding:"0 14px", fontSize:14, outline:"none", boxSizing:"border-box", color:"var(--ink-900,#0F172A)", background:"rgba(255,255,255,0.85)", fontFamily:"inherit", transition:"border-color 180ms, box-shadow 180ms" },
+  sel: { width:"100%", height:44, border:"1.5px solid var(--border-strong,#CBD5E1)", borderRadius:10, padding:"0 14px", fontSize:14, outline:"none", background:"white", boxSizing:"border-box", color:"var(--ink-900,#0F172A)", fontFamily:"inherit" },
+  lbl: { display:"block", fontSize:11, fontWeight:700, color:"var(--ink-700,#334155)", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 },
 };
 
 export default function CitationsPage() {
@@ -76,7 +76,7 @@ export default function CitationsPage() {
     <TrafficLayout pageTitle="Citations" pageTitle2="Faini za Trafiki">
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:800, color:"#0D3477", margin:0 }}>Traffic Citations <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Faini</span></h1>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"var(--navy-700,#0D3477)", margin:0, fontFamily:"var(--font-serif,Georgia,serif)" }}>Traffic Citations <span style={{ color:"#94A3B8", fontWeight:400, fontSize:16 }}>· Faini</span></h1>
           <p style={{ color:"#64748B", fontSize:13, marginTop:3 }}>{citations.length} total · TZS {citations.reduce((a,c)=>a+(c.fine_paid?0:c.fine_amount||0),0).toLocaleString()} unpaid</p>
         </div>
         <div style={{ display:"flex", gap:8 }}>
@@ -85,10 +85,10 @@ export default function CitationsPage() {
             filtered.map(c=>[c.ref_number,c.driver_name,c.vehicle_plate,c.offense_type,(c.fine_amount||0).toLocaleString(),c.status,new Date(c.created_at).toLocaleDateString("en-GB")]),
             `${filtered.length} citations`)}
             disabled={filtered.length===0}
-            style={{ padding:"9px 16px", borderRadius:10, border:"1px solid #E2E8F0", background:"white", color:"#0D3477", fontWeight:700, cursor:filtered.length===0?"not-allowed":"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13, opacity:filtered.length===0?.5:1 }}>
+            style={{ padding:"9px 16px", borderRadius:10, border:"1px solid var(--navy-700,#0D3477)", background:"var(--glass-bg-light,rgba(255,255,255,0.72))", color:"var(--navy-700,#0D3477)", fontWeight:700, cursor:filtered.length===0?"not-allowed":"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13, opacity:filtered.length===0?.5:1 }}>
             <FileText size={15}/> Export PDF
           </button>
-          <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"#D97706", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13 }}>
+          <button onClick={()=>{setErr("");setModal(true);}} style={{ padding:"9px 18px", borderRadius:10, border:"none", background:"var(--gold-600,#B45309)", color:"white", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontSize:13, boxShadow:"0 1px 2px rgba(180,83,9,0.25)" }}>
             <Plus size={15}/> Issue Citation · Toa Faini
           </button>
         </div>

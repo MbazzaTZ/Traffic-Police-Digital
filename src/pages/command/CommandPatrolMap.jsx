@@ -94,7 +94,7 @@ export default function CommandPatrolMap() {
           return (
             <div key={k.label} style={{ ...card, borderRadius:14, padding:"14px", textAlign:"center", borderTop:`3px solid ${k.c}` }}>
               <Icon size={18} color={k.c} style={{ marginBottom:6 }}/>
-              <div style={{ fontSize:26, fontWeight:900, color:k.c }}>{k.v}</div>
+              <div style={{ fontSize:"clamp(24px,4vw,28px)", fontWeight:700, color:k.c, fontFamily:"var(--font-mono,monospace)" }}>{k.v}</div>
               <div style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,.7)" }}>{k.label}</div>
             </div>
           );

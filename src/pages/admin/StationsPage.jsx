@@ -8,7 +8,7 @@ const PAGE_SIZE = 25;
 const S = {
   inp: { width:"100%", height:40, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 12px", fontSize:13, outline:"none", boxSizing:"border-box" },
   sel: { height:40, border:"1.5px solid #E2E8F0", borderRadius:9, padding:"0 28px 0 10px", fontSize:13, outline:"none", background:"white", appearance:"none", WebkitAppearance:"none", cursor:"pointer" },
-  lbl: { display:"block", fontSize:11, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:.4, marginBottom:5 },
+  lbl: { display:"block", fontSize:11, fontWeight:700, color:"var(--ink-700,#334155)", textTransform:"uppercase", letterSpacing:.4, marginBottom:6 },
 };
 
 const TYPE_COLOR = {
