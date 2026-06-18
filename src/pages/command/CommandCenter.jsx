@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useNavigate } from "react-router-dom";
 
+// .glass-card-dark class replaces this inline pattern (kept for backwards compat with ...card spreads below)
 const card = { background:"rgba(255,255,255,.04)", borderRadius:14, border:"1px solid rgba(255,255,255,.08)", padding:"18px" };
 const glow = (c) => ({ boxShadow:`0 0 20px ${c}30` });
 
@@ -58,11 +59,11 @@ export default function CommandCenter() {
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
         <div>
           <div style={{ fontSize:11, color:"rgba(255,255,255,.4)", fontWeight:700, letterSpacing:1, textTransform:"uppercase" }}>Tanzania Police Force · Command Authority</div>
-          <h1 style={{ fontSize:26, fontWeight:900, color:"white", margin:"4px 0" }}>Command Center</h1>
+          <h1 style={{ fontSize:"clamp(22px,3vw,26px)", fontWeight:700, color:"white", margin:"4px 0", fontFamily:"var(--font-serif, Georgia, serif)", letterSpacing:"-0.01em" }}>Command Center</h1>
           <div style={{ fontSize:13, color:"rgba(255,255,255,.5)" }}>{fullName} · {badge} · {role?.replace(/_/g," ").toUpperCase()}</div>
         </div>
         <div style={{ textAlign:"right" }}>
-          <div style={{ fontSize:32, fontWeight:900, color:"white", fontFamily:"monospace", letterSpacing:2 }}>{time.toLocaleTimeString("en-GB")}</div>
+          <div style={{ fontSize:"clamp(24px,3vw,32px)", fontWeight:500, color:"white", fontFamily:"var(--font-mono, monospace)", letterSpacing:2 }}>{time.toLocaleTimeString("en-GB")}</div>
           <div style={{ fontSize:12, color:"rgba(255,255,255,.4)" }}>{time.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
         </div>
       </div>
@@ -79,9 +80,9 @@ export default function CommandCenter() {
         ].map(k=>{
           const Icon = k.icon;
           return (
-            <div key={k.label} style={{ ...card, ...glow(k.c), borderTop:`3px solid ${k.c}`, textAlign:"center" }}>
+            <div key={k.label} className="glass-card-dark" style={{ borderTop:`3px solid ${k.c}`, textAlign:"center", boxShadow:`0 0 20px ${k.c}30, var(--glass-shadow-dark)` }}>
               <Icon size={18} color={k.c} style={{ marginBottom:8, opacity:.9 }}/>
-              <div style={{ fontSize:30, fontWeight:900, color:k.c, lineHeight:1 }}>{k.v}</div>
+              <div style={{ fontSize:"clamp(24px,4vw,30px)", fontWeight:700, color:k.c, lineHeight:1, fontFamily:"var(--font-mono, monospace)" }}>{k.v}</div>
               <div style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,.7)", marginTop:5 }}>{k.label}</div>
               <div style={{ fontSize:10, color:"rgba(255,255,255,.3)" }}>{k.sw}</div>
             </div>
@@ -99,7 +100,7 @@ export default function CommandCenter() {
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
               <span style={{ width:7, height:7, borderRadius:"50%", background:"#DC2626", display:"inline-block" }}/>
-              <span style={{ fontSize:11, color:"#FCA5A5", fontWeight:700 }}>LIVE</span>
+              <span style={{ fontSize:11, color:"#FCD34D", fontWeight:700, letterSpacing:0.5 }}>LIVE</span>
             </div>
           </div>
           {incidents.length===0 ? (

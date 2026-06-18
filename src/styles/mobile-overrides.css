@@ -88,3 +88,56 @@ button {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   TPDOP — MOBILE LAYER (extends existing mobile-overrides.css)
+   Glass + responsive refinements for the new design system.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Glass on mobile: less blur, more solid bg (performance) ── */
+@media (max-width: 767px) {
+  :root {
+    --glass-blur: var(--glass-blur-mobile);
+    --glass-hover-lift: var(--glass-hover-lift-mobile);
+    --glass-shadow-hover: var(--glass-shadow);
+  }
+}
+
+/* ── Tables on mobile: allow long-text cells to wrap inside scroll ── */
+/* Only ref-number / numeric cells stay nowrap. Less aggressive than the
+   existing global white-space: nowrap on all cells. */
+@media (max-width: 767px) {
+  .table-glass tbody td { white-space: normal; }
+  .table-glass tbody td.ref,
+  .table-glass tbody td.num { white-space: nowrap; }
+}
+
+/* ── Nav bar: tighter padding on mobile ── */
+@media (max-width: 767px) {
+  .nav-glass { padding: 0 12px; }
+}
+
+/* ── Sidebar overlay: glass-dark tint for consistency ── */
+@media (max-width: 767px) {
+  .sidebar-overlay {
+    position: fixed; inset: 0; z-index: 49;
+    background: rgba(3, 16, 43, 0.55);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+  }
+}
+
+/* ── Section titles: slightly smaller on mobile ── */
+@media (max-width: 767px) {
+  .section-title { font-size: 16px; margin-bottom: 10px; }
+}
+
+/* ── Glass cards: tighter padding on mobile ── */
+@media (max-width: 767px) {
+  .glass-card, .glass-card-dark { padding: 14px; }
+}
+
+/* ── Buttons: full-width on mobile when in a flex row ── */
+@media (max-width: 767px) {
+  .btn-gold, .btn-navy, .btn-ghost-glass { width: 100%; }
+}

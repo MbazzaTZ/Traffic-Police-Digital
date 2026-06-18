@@ -1,36 +1,145 @@
 /* =====================================================
-   TPDOP – Global Styles
+   TPDOP — Global Styles
    ----------------------------------------------------
-   Only essentials that must be globally available:
-   - CSS reset (box-sizing, margins, font defaults)
-   - #root overrides (override Vite template defaults)
-   - @keyframes spin (used by LoginPage + CreateUserPage
-     inline animation:"spin 1s linear infinite" — those
-     two files don't define the keyframe inline, so it must
-     live here. AppRoutes, PhotoUpload, ResetPasswordPage
-     all define the keyframe inline in their own <style> tags.)
+   Glassy navy + gold design system for the Tanzania
+   Police Digital Operations Platform.
 
-   Everything else (auth-page, .btn, .card, .tbl, .form-input,
-   .modal-box, .badge-*, .filter-tab, .panel, .task-card) was
-   dead CSS — pages use inline `style={{}}` everywhere, never
-   className. Removed in this cleanup to slim the bundle.
+   Sections:
+   1. Design tokens (colors, type, glass, motion)
+   2. Accessibility preference overrides
+   3. CSS reset
+   4. Shared UI atoms (glass cards, buttons, KPI tiles,
+      status badges, inputs, tables, nav)
+   5. Spinner keyframe
 
-   mobile-overrides.css handles all mobile layout rescue via
-   attribute selectors on inline styles.
-===================================================== */
+   Security note: no external resources loaded here.
+   All fonts come from index.html <link>. No CSS
+   expressions, no JS in CSS, no remote URLs.
 
+   mobile-overrides.css handles all mobile layout rescue.
+   ===================================================== */
+
+/* ════════════════════════════════════════════════════
+   1. DESIGN TOKENS
+   ════════════════════════════════════════════════════ */
+:root {
+  /* ── Type ── */
+  --font-sans:  'IBM Plex Sans', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', 'Source Serif Pro', Georgia, 'Times New Roman', serif;
+  --font-mono:  'IBM Plex Mono', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* ── Glass: light variant (admin / traffic / light theme) ── */
+  --glass-bg-light:        rgba(255, 255, 255, 0.72);
+  --glass-bg-light-solid:  rgba(255, 255, 255, 0.94);
+  --glass-border-light:    rgba(13, 52, 119, 0.14);
+  --glass-text-light:      #0F172A;
+
+  /* ── Glass: dark variant (command center) ── */
+  --glass-bg-dark:        rgba(255, 255, 255, 0.05);
+  --glass-bg-dark-solid:  rgba(255, 255, 255, 0.08);
+  --glass-border-dark:    rgba(255, 255, 255, 0.10);
+  --glass-text-dark:      #F8FAFC;
+
+  /* ── Blur ── */
+  --glass-blur:        14px;
+  --glass-blur-mobile: 8px;
+  --glass-blur-none:   0px;
+
+  /* ── Shadows (subtle, premium, not "glow-y") ── */
+  --glass-shadow:        0 1px 2px rgba(3, 16, 43, 0.06), 0 8px 24px rgba(3, 16, 43, 0.08);
+  --glass-shadow-hover:  0 2px 4px rgba(3, 16, 43, 0.08), 0 14px 32px rgba(3, 16, 43, 0.12);
+  --glass-shadow-dark:       0 1px 2px rgba(0, 0, 0, 0.40), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --glass-shadow-dark-hover: 0 2px 4px rgba(0, 0, 0, 0.45), 0 14px 32px rgba(0, 0, 0, 0.45);
+
+  /* ── Radius ── */
+  --glass-radius:    14px;
+  --glass-radius-sm: 10px;
+  --glass-radius-pill: 999px;
+
+  /* ── Interaction states ── */
+  --glass-hover-lift:    -2px;
+  --glass-hover-lift-mobile: 0px;
+  --glass-active-scale:  0.998;
+  --glass-disabled-opacity: 0.45;
+  --glass-transition:   180ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Focus ring (keyboard a11y — critical for gov) ── */
+  --focus-ring:      0 0 0 2px #FFFFFF, 0 0 0 4px var(--navy-700);
+  --focus-ring-gold: 0 0 0 2px var(--navy-900), 0 0 0 4px var(--gold-500);
+
+  /* ── Navy scale (primary brand) ── */
+  --navy-950:#050D22; --navy-900:#03102B; --navy-800:#082A63;
+  --navy-700:#0D3477; --navy-600:#1A4A9A; --navy-500:#2E66C4;
+
+  /* ── Gold scale (accent — keep scarce) ── */
+  --gold-600:#B45309; --gold-500:#D97706; --gold-400:#F59E0B; --gold-300:#FCD34D;
+
+  /* ── Status colors (AA-text-safe) ── */
+  --success:#15803D; --success-bg:#F0FDF4;
+  --danger:#B91C1C;  --danger-bg:#FEF2F2;
+  --warning:#B45309; --warning-bg:#FFFBEB;
+  --info:#075985;    --info-bg:#F0F9FF;
+  --critical:#7C3AED; --muted:#64748B;
+
+  /* ── Neutrals (slate) ── */
+  --ink-900:#0F172A; --ink-700:#334155; --ink-500:#64748B; --ink-400:#94A3B8;
+  --border:#E2E8F0; --border-strong:#CBD5E1;
+  --surface:#F4F7FC; --surface-2:#FFFFFF;
+}
+
+/* ════════════════════════════════════════════════════
+   2. ACCESSIBILITY PREFERENCE OVERRIDES
+   ════════════════════════════════════════════════════ */
+
+/* Backdrop-filter fallback: low-end Android / older browsers */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass-bg-light: var(--glass-bg-light-solid);
+    --glass-bg-dark:  var(--glass-bg-dark-solid);
+    --glass-blur:     var(--glass-blur-none);
+  }
+}
+
+/* Windows High Contrast / "Reduce transparency" */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-bg-light:   #FFFFFF;
+    --glass-bg-dark:    #0A1530;
+    --glass-blur:       var(--glass-blur-none);
+    --glass-shadow:     none;
+    --glass-shadow-hover: none;
+  }
+}
+
+/* Increased contrast preference */
+@media (prefers-contrast: more) {
+  :root {
+    --glass-border-light: rgba(13, 52, 119, 0.55);
+    --glass-border-dark:  rgba(255, 255, 255, 0.35);
+    --glass-shadow-hover: var(--glass-shadow);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  :root { --glass-transition: 0ms; --glass-hover-lift: 0px; }
+}
+
+/* ════════════════════════════════════════════════════
+   3. CSS RESET
+   ════════════════════════════════════════════════════ */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
   height: 100%;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
-  color: #0F172A;
-  background: #F4F7FC;
+  color: var(--ink-900);
+  background: var(--surface);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Override Vite defaults */
 #root {
   width: 100% !important;
   max-width: 100% !important;
@@ -40,5 +149,309 @@ html, body {
   display: block !important;
 }
 
+/* Improve tap feedback on iOS (already in mobile-overrides.css, kept here as core) */
+button { -webkit-tap-highlight-color: rgba(13, 52, 119, 0.1); }
+
 /* Spinner keyframe — used by LoginPage + CreateUserPage inline */
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ════════════════════════════════════════════════════
+   4. SHARED UI ATOMS (glass navy + gold)
+   ════════════════════════════════════════════════════ */
+
+/* ── .glass-card — light glass surface (admin/traffic theme) ── */
+.glass-card {
+  background: var(--glass-bg-light);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border-light);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+  color: var(--glass-text-light);
+  padding: 18px;
+  transition: transform var(--glass-transition), box-shadow var(--glass-transition);
+}
+.glass-card:hover { transform: translateY(var(--glass-hover-lift)); box-shadow: var(--glass-shadow-hover); }
+.glass-card:active { transform: translateY(0) scale(var(--glass-active-scale)); }
+.glass-card[aria-disabled="true"], .glass-card.is-disabled { opacity: var(--glass-disabled-opacity); pointer-events: none; }
+
+/* ── .glass-card-dark — dark variant (command center) ── */
+.glass-card-dark {
+  background: var(--glass-bg-dark);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border-dark);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow-dark);
+  color: var(--glass-text-dark);
+  padding: 18px;
+  transition: transform var(--glass-transition), box-shadow var(--glass-transition);
+}
+.glass-card-dark:hover { transform: translateY(var(--glass-hover-lift)); box-shadow: var(--glass-shadow-dark-hover); }
+
+/* ── .glass-card-gold-accent — premium card with gold top border ── */
+.glass-card-gold-accent { border-top: 3px solid var(--gold-500); }
+.glass-card-dark.glass-card-gold-accent { border-top: 3px solid var(--gold-400); }
+
+/* ── .btn-gold — primary CTA (gold, AA-safe white text) ── */
+.btn-gold {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 44px; padding: 0 20px;
+  font-family: var(--font-sans); font-size: 14px; font-weight: 600;
+  color: #FFFFFF; background: var(--gold-600);
+  border: 1px solid var(--gold-600);
+  border-radius: var(--glass-radius-sm);
+  cursor: pointer;
+  transition: background var(--glass-transition), transform var(--glass-transition), box-shadow var(--glass-transition);
+  box-shadow: 0 1px 2px rgba(180, 83, 9, 0.25);
+}
+.btn-gold:hover  { background: var(--gold-500); border-color: var(--gold-500); }
+.btn-gold:active { background: #92400E; transform: scale(0.99); }
+.btn-gold:focus-visible { outline: none; box-shadow: var(--focus-ring-gold); }
+.btn-gold:disabled, .btn-gold[aria-disabled="true"] {
+  background: var(--ink-400); border-color: var(--ink-400); color: #FFFFFF; cursor: not-allowed; opacity: 0.7; box-shadow: none;
+}
+
+/* ── .btn-navy — navy primary button ── */
+.btn-navy {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 44px; padding: 0 20px;
+  font-family: var(--font-sans); font-size: 14px; font-weight: 600;
+  color: #FFFFFF; background: var(--navy-700);
+  border: 1px solid var(--navy-700);
+  border-radius: var(--glass-radius-sm);
+  cursor: pointer;
+  transition: background var(--glass-transition), transform var(--glass-transition);
+}
+.btn-navy:hover  { background: var(--navy-600); border-color: var(--navy-600); }
+.btn-navy:active { background: var(--navy-800); transform: scale(0.99); }
+.btn-navy:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.btn-navy:disabled { background: var(--ink-400); border-color: var(--ink-400); cursor: not-allowed; opacity: 0.7; }
+
+/* ── .btn-ghost-glass — glass outlined button (secondary actions) ── */
+.btn-ghost-glass {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 44px; padding: 0 18px;
+  font-family: var(--font-sans); font-size: 14px; font-weight: 600;
+  color: var(--navy-700); background: var(--glass-bg-light);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--navy-700);
+  border-radius: var(--glass-radius-sm);
+  cursor: pointer;
+  transition: background var(--glass-transition), color var(--glass-transition);
+}
+.btn-ghost-glass:hover  { background: var(--navy-700); color: #FFFFFF; }
+.btn-ghost-glass:active { background: var(--navy-800); color: #FFFFFF; transform: scale(0.99); }
+.btn-ghost-glass:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.btn-ghost-glass:disabled { opacity: var(--glass-disabled-opacity); cursor: not-allowed; }
+.btn-ghost-glass.on-dark { color: #FFFFFF; border-color: var(--glass-border-dark); background: var(--glass-bg-dark); }
+.btn-ghost-glass.on-dark:hover { background: rgba(255,255,255,0.12); color: #FFFFFF; }
+
+/* ── .kpi-tile — KPI stat card ── */
+.kpi-tile {
+  background: var(--glass-bg-dark);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border-dark);
+  border-top-width: 3px;
+  border-top-color: var(--kpi-accent, var(--gold-500));
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow-dark);
+  padding: 18px;
+  text-align: center;
+  color: var(--glass-text-dark);
+}
+.kpi-tile__icon  { margin-bottom: 8px; opacity: 0.9; }
+.kpi-tile__value {
+  font-family: var(--font-mono);
+  font-size: clamp(24px, 4vw, 30px);
+  font-weight: 700; line-height: 1;
+  color: var(--kpi-accent, var(--gold-500));
+}
+.kpi-tile__label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.75); margin-top: 5px; }
+.kpi-tile__sub   { font-size: 10px; color: rgba(255,255,255,0.40); }
+.kpi-tile.is-navy      { --kpi-accent: var(--navy-500); }
+.kpi-tile.is-gold      { --kpi-accent: var(--gold-500); }
+.kpi-tile.is-success   { --kpi-accent: var(--success); }
+.kpi-tile.is-danger    { --kpi-accent: var(--danger);  }
+.kpi-tile.is-critical  { --kpi-accent: var(--critical); }
+.kpi-tile.is-info      { --kpi-accent: var(--info); }
+/* light variant for admin/traffic dashboards */
+.kpi-tile.is-light {
+  background: var(--glass-bg-light);
+  border-color: var(--glass-border-light);
+  color: var(--glass-text-light);
+  box-shadow: var(--glass-shadow);
+}
+.kpi-tile.is-light .kpi-tile__label { color: var(--ink-700); }
+.kpi-tile.is-light .kpi-tile__sub   { color: var(--ink-500); }
+
+/* ── .kpi-grid — responsive KPI grid ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media (min-width: 768px)  { .kpi-grid { grid-template-columns: repeat(4, 1fr); gap: 12px; } }
+@media (min-width: 1440px) { .kpi-grid { grid-template-columns: repeat(6, 1fr); } }
+
+/* ── .section-title — heading with small gold underline ── */
+.section-title {
+  font-family: var(--font-sans);
+  font-size: clamp(16px, 2.2vw, 20px);
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--gold-500);
+  display: inline-block;
+}
+.section-title.on-dark { color: #FFFFFF; }
+.section-title__sub {
+  display: block;
+  font-size: 11px; font-weight: 600;
+  color: var(--ink-500);
+  letter-spacing: 0.5px; text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* ── .status-badge — pill badge with status modifiers ── */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 10px;
+  font-family: var(--font-sans); font-size: 11px; font-weight: 700;
+  border-radius: var(--glass-radius-pill);
+  border: 1px solid transparent;
+  line-height: 1; white-space: nowrap;
+}
+.status-badge::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; flex-shrink: 0;
+}
+.status-badge.is-success  { color: var(--success);  background: var(--success-bg);  border-color: rgba(21,128,61,0.25); }
+.status-badge.is-danger   { color: var(--danger);   background: var(--danger-bg);   border-color: rgba(185,28,28,0.25); }
+.status-badge.is-warning  { color: var(--warning);  background: var(--warning-bg);  border-color: rgba(180,83,9,0.25); }
+.status-badge.is-info     { color: var(--info);     background: var(--info-bg);     border-color: rgba(7,89,133,0.25); }
+.status-badge.is-critical { color: #FFFFFF;         background: var(--critical);    border-color: var(--critical); }
+.status-badge.is-neutral  { color: var(--ink-700);  background: #F1F5F9;            border-color: var(--border-strong); }
+.status-badge.on-dark { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.85); }
+.status-badge.on-dark.is-danger   { color: #FCA5A5; background: rgba(220,38,38,0.18); border-color: rgba(220,38,38,0.40); }
+.status-badge.on-dark.is-warning  { color: var(--gold-300); background: rgba(217,119,6,0.18); border-color: rgba(217,119,6,0.40); }
+.status-badge.on-dark.is-success  { color: #86EFAC; background: rgba(21,128,61,0.18); border-color: rgba(21,128,61,0.40); }
+
+/* ── .input-glass — form input on glass surface ── */
+.input-glass {
+  width: 100%; height: 44px;
+  padding: 0 14px;
+  font-family: var(--font-sans); font-size: 14px;
+  color: var(--ink-900);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--glass-radius-sm);
+  outline: none; box-sizing: border-box;
+  transition: border-color var(--glass-transition), box-shadow var(--glass-transition);
+}
+.input-glass::placeholder { color: var(--ink-400); }
+.input-glass:hover { border-color: var(--navy-500); }
+.input-glass:focus { border-color: var(--navy-700); box-shadow: var(--focus-ring); }
+.input-glass:disabled { background: #F8FAFC; color: var(--ink-400); cursor: not-allowed; }
+.input-glass[aria-invalid="true"] { border-color: var(--danger); }
+.input-glass[aria-invalid="true"]:focus { box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--danger); }
+.input-glass.on-dark {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--glass-border-dark);
+  color: #FFFFFF;
+}
+.input-glass.on-dark::placeholder { color: rgba(255,255,255,0.45); }
+.input-glass.on-dark:focus { border-color: var(--gold-500); box-shadow: var(--focus-ring-gold); }
+
+/* ── .table-glass — table on glass surface ── */
+.table-glass {
+  width: 100%;
+  border-collapse: separate; border-spacing: 0;
+  font-family: var(--font-sans); font-size: 13px;
+  color: var(--ink-900);
+}
+.table-glass thead th {
+  position: sticky; top: 0;
+  background: var(--navy-700);
+  color: #FFFFFF; text-align: left;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--navy-800);
+}
+.table-glass tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.table-glass tbody tr:nth-child(even) td { background: rgba(13, 52, 119, 0.03); }
+.table-glass tbody tr:hover td { background: rgba(217, 119, 6, 0.06); }
+.table-glass tbody td.ref { font-family: var(--font-mono); font-size: 12px; color: var(--ink-700); }
+.table-glass tbody td.num { font-family: var(--font-mono); text-align: right; }
+.table-glass.on-dark { color: rgba(255,255,255,0.92); }
+.table-glass.on-dark thead th { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); border-bottom-color: var(--glass-border-dark); }
+.table-glass.on-dark tbody td { border-bottom-color: var(--glass-border-dark); }
+.table-glass.on-dark tbody tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
+.table-glass.on-dark tbody tr:hover td { background: rgba(217,119,6,0.10); }
+
+/* ── .table-wrapper — horizontal scroll with edge fade ── */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── .nav-glass — top navigation bar with glass effect ── */
+.nav-glass {
+  position: fixed; top: 0; left: 0; right: 0; height: 64px;
+  z-index: 40;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  background: var(--glass-bg-light);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  border-bottom: 1px solid var(--glass-border-light);
+  box-shadow: 0 1px 8px rgba(3, 16, 43, 0.06);
+  color: var(--navy-700);
+}
+.nav-glass.is-dark {
+  background: var(--glass-bg-dark);
+  border-bottom-color: var(--glass-border-dark);
+  color: #FFFFFF;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.30);
+}
+
+/* ── .glass-panel — generic glass panel (for modals, drawers) ── */
+.glass-panel {
+  background: var(--surface-2);
+  border-radius: var(--glass-radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.20);
+  border: 1px solid var(--border);
+}
+
+/* ── .ref-mono — reference number / badge styling ── */
+.ref-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* ── .form-label — accessible form label ── */
+.form-label {
+  display: block;
+  font-size: 11px; font-weight: 700;
+  color: var(--ink-700);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+}
+
+/* ── .focus-ring-only — apply focus ring to non-input focusable elements ── */
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--glass-radius-sm);
+}

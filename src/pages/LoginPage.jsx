@@ -70,15 +70,21 @@ export default function LoginPage() {
     }
   }
 
+  // Form input style — uses design-system tokens (glass navy + gold)
   const inp = {
-    width:"100%", height:48, border:"1.5px solid #D1D5DB",
+    width:"100%", height:48,
+    border:"1.5px solid var(--border-strong, #CBD5E1)",
     borderRadius:10, fontSize:14, outline:"none",
-    boxSizing:"border-box", color:"#1E293B",
-    padding:"0 14px", fontFamily:"inherit",
+    boxSizing:"border-box", color:"var(--ink-900, #0F172A)",
+    padding:"0 14px",
+    fontFamily:"var(--font-sans, 'IBM Plex Sans', sans-serif)",
+    background:"rgba(255,255,255,0.85)",
+    transition:"border-color 180ms, box-shadow 180ms",
   };
+  const inpFocus = "border-color:#0D3477; box-shadow:0 0 0 2px #fff, 0 0 0 4px #0D3477;";
 
   return (
-    <div style={{ minHeight:"100vh", width:"100vw", display:"flex", flexDirection: isMobile ? "column" : "row", fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
+    <div style={{ minHeight:"100vh", width:"100vw", display:"flex", flexDirection: isMobile ? "column" : "row", fontFamily:"var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif)" }}>
 
       {/* LEFT (branding) */}
       <div style={{ flex: isMobile ? "0 0 auto" : 1, background:"white", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding: isMobile ? "24px 20px 18px" : "60px 80px", borderRight: isMobile ? "none" : "1px solid #E2E8F0", borderBottom: isMobile ? "1px solid #E2E8F0" : "none" }}>
@@ -98,12 +104,12 @@ export default function LoginPage() {
         <p style={{ fontSize: isMobile ? 11 : 14, color:"#64748B", textAlign:"center", marginBottom:0 }}>
           {isMobile ? "TPDOP" : "Tanzania Police Digital Operations Platform"}
         </p>
-        {!isMobile && <div style={{ width:56, height:3, background:"#082A63", borderRadius:2, marginTop:28 }} />}
+        {!isMobile && <div style={{ width:56, height:3, background:"linear-gradient(90deg, #082A63, #D97706)", borderRadius:2, marginTop:28 }} />}
       </div>
 
       {/* RIGHT (form) */}
       <div style={{ width: isMobile ? "100%" : "42%", minWidth: isMobile ? "auto" : 480, flex: isMobile ? 1 : "none", background:"#EEF2F7", display:"flex", alignItems: isMobile ? "flex-start" : "center", justifyContent:"center", padding: isMobile ? "18px 14px 24px" : "48px 60px" }}>
-        <div style={{ width:"100%", maxWidth:420, background:"white", borderRadius: isMobile ? 16 : 20, padding: isMobile ? "28px 22px" : "44px 40px", boxShadow:"0 8px 32px rgba(8,42,99,.10),0 2px 8px rgba(0,0,0,.06)", border:"1px solid #E2E8F0" }}>
+        <div style={{ width:"100%", maxWidth:420, background:"rgba(255,255,255,0.85)", backdropFilter:"blur(14px) saturate(140%)", WebkitBackdropFilter:"blur(14px) saturate(140%)", borderRadius: isMobile ? 16 : 20, padding: isMobile ? "28px 22px" : "44px 40px", boxShadow:"0 8px 32px rgba(8,42,99,.10),0 2px 8px rgba(0,0,0,.06)", border:"1px solid rgba(13,52,119,0.14)", borderTop:"3px solid #D97706" }}>
 
           <div style={{ textAlign:"center", marginBottom:16 }}>
             <img src="/Coat of Arms.png" alt="Coat of Arms" style={{ width:76, height:76, objectFit:"contain" }} />
@@ -169,7 +175,9 @@ export default function LoginPage() {
             </div>
 
             <button type="submit" disabled={loading}
-              style={{ width:"100%", height:50, background:loading?"#94A3B8":"#082A63", color:"white", border:"none", borderRadius:10, fontSize:15, fontWeight:700, cursor:loading?"not-allowed":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:10, transition:"background .2s", fontFamily:"inherit" }}>
+              style={{ width:"100%", height:50, background:loading?"#94A3B8":"var(--gold-600, #B45309)", color:"white", border:"none", borderRadius:10, fontSize:15, fontWeight:700, cursor:loading?"not-allowed":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:10, transition:"background .2s, transform .15s", fontFamily:"inherit", boxShadow:"0 1px 2px rgba(180,83,9,0.25)" }}
+              onMouseEnter={e=>{ if(!loading) e.currentTarget.style.background = "var(--gold-500, #D97706)"; }}
+              onMouseLeave={e=>{ if(!loading) e.currentTarget.style.background = "var(--gold-600, #B45309)"; }}>
               {loading
                 ? <><span style={{ width:18, height:18, border:"2px solid rgba(255,255,255,.3)", borderTopColor:"white", borderRadius:"50%", animation:"spin 1s linear infinite", display:"inline-block" }}/> Inaingia...</>
                 : <>⊙ Login · Ingia</>}
@@ -224,8 +232,8 @@ export default function LoginPage() {
                 <form onSubmit={sendReset}>
                   <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#374151", marginBottom:7 }}>Email Address · Barua Pepe</label>
                   <input type="email" value={resetEmail} onChange={e=>setResetEmail(e.target.value)} required placeholder="officer@polisi.go.tz"
-                    style={{ width:"100%", height:48, border:"1.5px solid #D1D5DB", borderRadius:10, fontSize:14, outline:"none", boxSizing:"border-box", padding:"0 14px", marginBottom:20 }}
-                    onFocus={e=>e.target.style.borderColor="#082A63"} onBlur={e=>e.target.style.borderColor="#D1D5DB"}/>
+                    style={{ width:"100%", height:48, border:"1.5px solid var(--border-strong, #CBD5E1)", borderRadius:10, fontSize:14, outline:"none", boxSizing:"border-box", padding:"0 14px", marginBottom:20, fontFamily:"inherit", color:"var(--ink-900, #0F172A)", background:"rgba(255,255,255,0.85)" }}
+                    onFocus={e=>e.target.style.cssText += inpFocus} onBlur={e=>{e.target.style.borderColor="var(--border-strong, #CBD5E1)"; e.target.style.boxShadow="none";}}/>
                   <button type="submit" disabled={resetLoad}
                     style={{ width:"100%", height:48, background:resetLoad?"#94A3B8":"#082A63", color:"white", border:"none", borderRadius:10, fontSize:15, fontWeight:700, cursor:resetLoad?"not-allowed":"pointer" }}>
                     {resetLoad ? "Sending..." : "Send Reset Link · Tuma Kiunga"}

@@ -24,17 +24,17 @@ export default function AdminDashboard() {
       <div style={{ background:"linear-gradient(135deg,#03102B,#05193E,#082A63)", borderRadius:18, padding:"22px 28px", color:"white", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16, marginBottom:22, boxShadow:"0 8px 28px rgba(3,16,43,.35)", position:"relative", overflow:"hidden" }}>
         <div style={{ position:"absolute", top:-80, right:-80, width:220, height:220, borderRadius:"50%", background:"rgba(255,255,255,.03)" }} />
         <div style={{ display:"flex", alignItems:"center", gap:16, zIndex:1 }}>
-          <div style={{ width:64, height:64, borderRadius:"50%", background:"linear-gradient(135deg,#FFD700,#FFA500)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+          <div style={{ width:64, height:64, borderRadius:"50%", background:"linear-gradient(135deg, #D97706, #B45309)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:"0 4px 12px rgba(180,83,9,0.3)" }}>
             <span style={{ fontSize:26, fontWeight:900, color:"#03102B" }}>A</span>
           </div>
           <div>
             <div style={{ fontSize:11, opacity:.55, fontWeight:700, letterSpacing:1, marginBottom:3, textTransform:"uppercase" }}>System Administrator · Msimamizi wa Mfumo</div>
-            <div style={{ fontSize:22, fontWeight:800 }}>Admin Officer</div>
+            <div style={{ fontSize:22, fontWeight:700, fontFamily:"var(--font-serif, Georgia, serif)" }}>Admin Officer</div>
             <div style={{ fontSize:13, opacity:.7, marginTop:3 }}>TZP-ADMIN-001 · National HQ · Full System Access</div>
           </div>
         </div>
         <div style={{ display:"flex", gap:10, zIndex:1 }}>
-          <button onClick={() => nav("/admin/create-user")} style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"#FFD700", color:"#03102B", fontWeight:800, fontSize:13, cursor:"pointer" }}>+ Create Officer</button>
+          <button onClick={() => nav("/admin/create-user")} style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"var(--gold-600, #B45309)", color:"white", fontWeight:700, fontSize:13, cursor:"pointer", boxShadow:"0 1px 2px rgba(180,83,9,0.25)", display:"flex", alignItems:"center", gap:6 }}>+ Create Officer</button>
           <button onClick={() => nav("/admin/stations")} style={{ padding:"10px 20px", borderRadius:10, border:"none", background:"rgba(255,255,255,.15)", color:"white", fontWeight:700, fontSize:13, cursor:"pointer" }}>+ Add Station</button>
         </div>
       </div>
@@ -47,11 +47,11 @@ export default function AdminDashboard() {
           {kpis.map(k => {
             const Icon = k.icon;
             return (
-              <div key={k.label} style={{ background:"white", borderRadius:16, padding:"18px 16px", border:"1px solid #E2E8F0", borderTop:`4px solid ${k.color}`, textAlign:"center" }}>
+              <div key={k.label} className="glass-card is-light" style={{ borderTop:`3px solid ${k.color}`, textAlign:"center", padding:"18px 16px" }}>
                 <Icon size={22} color={k.color} style={{ marginBottom:8 }} />
-                <div style={{ fontSize:36, fontWeight:900, color:k.color, lineHeight:1, marginBottom:5 }}>{k.v}</div>
-                <div style={{ fontSize:12, fontWeight:700, color:"#1E293B" }}>{k.label}</div>
-                <div style={{ fontSize:10, color:"#94A3B8", marginTop:2 }}>{k.sw}</div>
+                <div style={{ fontSize:"clamp(28px,4vw,36px)", fontWeight:700, color:k.color, lineHeight:1, marginBottom:5, fontFamily:"var(--font-mono, monospace)" }}>{k.v}</div>
+                <div style={{ fontSize:12, fontWeight:700, color:"var(--ink-900, #0F172A)" }}>{k.label}</div>
+                <div style={{ fontSize:10, color:"var(--ink-500, #64748B)", marginTop:2 }}>{k.sw}</div>
               </div>
             );
           })}
