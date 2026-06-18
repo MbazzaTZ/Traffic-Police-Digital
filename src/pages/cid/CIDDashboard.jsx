@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import CIDLayout from "../../layouts/CIDLayout";
 import { FolderOpen, Users, Shield, FileText } from "lucide-react";
+import { StatusPieChart, TrendBarChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +10,8 @@ export default function CIDDashboard() {
   const { fullName, badge } = useCurrentUser();
   const nav = useNavigate();
   const [stats, setStats] = useState({ cases:0, open:0, suspects:0, wanted:0, evidence:0 });
+  const [caseTypeData, setCaseTypeData] = useState([]);
+  const [dangerData, setDangerData] = useState([]);
 
   useEffect(()=>{
     async function load() {
@@ -19,6 +22,18 @@ export default function CIDDashboard() {
         supabase.from("evidence").select("id",{count:"exact"}).then(r=>r.count||0),
       ]);
       setStats({ cases, open, wanted, evidence });
+      // Cases by type (for pie chart)
+      const allCases = await supabase.from("cases").select("type");
+      const typeCounts = {};
+      (allCases.data||[]).forEach(c => { typeCounts[c.type] = (typeCounts[c.type]||0)+1; });
+      const typeColors = [CHART_COLORS.navy, CHART_COLORS.gold, CHART_COLORS.danger, CHART_COLORS.success, CHART_COLORS.critical, CHART_COLORS.info, CHART_COLORS.muted];
+      setCaseTypeData(Object.entries(typeCounts).map(([name,value],i) => ({ name, value, color: typeColors[i % typeColors.length] })));
+      // Wanted by danger level (for bar chart)
+      const allWanted = await supabase.from("wanted_persons").select("danger_level");
+      const dangerCounts = {};
+      (allWanted.data||[]).forEach(w => { dangerCounts[w.danger_level] = (dangerCounts[w.danger_level]||0)+1; });
+      const dangerColors = { low:CHART_COLORS.muted, medium:CHART_COLORS.gold, high:CHART_COLORS.danger, armed:CHART_COLORS.critical };
+      setDangerData(Object.entries(dangerCounts).map(([level,count]) => ({ level: level.toUpperCase(), count, color: dangerColors[level] || CHART_COLORS.navy })));
     }
     load();
   },[]);
@@ -58,6 +73,24 @@ export default function CIDDashboard() {
           );
         })}
       </div>
+
+      {/* Charts */}
+      {(caseTypeData.length > 0 || dangerData.length > 0) && (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
+          {caseTypeData.length > 0 && (
+            <div className="glass-card" style={{ padding:18 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:"var(--navy-700,#0D3477)", marginBottom:12, fontFamily:"var(--font-serif,Georgia,serif)" }}>Cases by Type · Kesi kwa Aina</div>
+              <StatusPieChart data={caseTypeData} height={200} dark={false} />
+            </div>
+          )}
+          {dangerData.length > 0 && (
+            <div className="glass-card" style={{ padding:18 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:"var(--navy-700,#0D3477)", marginBottom:12, fontFamily:"var(--font-serif,Georgia,serif)" }}>Wanted by Danger Level · Watuhumiwa</div>
+              <TrendBarChart data={dangerData} xKey="level" yKey="count" color={CHART_COLORS.danger} height={200} dark={false} />
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
         {[

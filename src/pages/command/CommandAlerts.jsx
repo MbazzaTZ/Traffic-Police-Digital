@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import CommandLayout from "../../layouts/CommandLayout";
 import { Bell, Siren, AlertTriangle, Info, Shield, Plus, X, CheckCircle } from "lucide-react";
+import { StatusPieChart } from "../../components/charts/ChartAtoms";
 import { supabase } from "../../lib/supabase";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 

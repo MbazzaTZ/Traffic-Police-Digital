@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import CommandLayout from "../../layouts/CommandLayout";
 import { FileText, TrendingUp, Download, BarChart3 } from "lucide-react";
+import { TrendBarChart, TrendAreaChart, StatusPieChart, CHART_COLORS } from "../../components/charts/ChartAtoms";
 import { exportReport } from "../../lib/pdfExport";
 import { supabase } from "../../lib/supabase";
 
@@ -76,39 +77,21 @@ export default function CommandReports() {
       </div>
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
-        {/* Incident types breakdown */}
-        <div style={{ ...card, padding:"20px" }}>
+        {/* Incident types breakdown — Recharts bar chart */}
+        <div className="glass-card-dark" style={{ padding:20 }}>
           <div style={{ fontSize:14, fontWeight:700, color:"white", marginBottom:16, display:"flex", alignItems:"center", gap:8 }}>
             <BarChart3 size={16} color="#93C5FD"/> Top Incident Types
           </div>
           {topIncidents.length===0 ? <div style={{ color:"rgba(255,255,255,.3)", textAlign:"center", padding:"20px" }}>No data yet</div>
-          : topIncidents.map(([type,count])=>(
-            <div key={type} style={{ marginBottom:12 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                <span style={{ fontSize:12, color:"rgba(255,255,255,.8)" }}>{type}</span>
-                <span style={{ fontSize:12, fontWeight:700, color:"white" }}>{count}</span>
-              </div>
-              <div style={{ height:8, background:"rgba(255,255,255,.06)", borderRadius:4, overflow:"hidden" }}>
-                <div style={{ width:`${(count/maxInc)*100}%`, height:"100%", background:"linear-gradient(90deg,#0D3477,#3B82F6)", borderRadius:4 }}/>
-              </div>
-            </div>
-          ))}
+          : <TrendBarChart data={topIncidents.map(([type,count])=>({ type, count }))} xKey="type" yKey="count" color={CHART_COLORS.navy} height={220} dark={true} />}
         </div>
 
-        {/* Monthly trend */}
-        <div style={{ ...card, padding:"20px" }}>
+        {/* Monthly trend — Recharts area chart */}
+        <div className="glass-card-dark" style={{ padding:20 }}>
           <div style={{ fontSize:14, fontWeight:700, color:"white", marginBottom:16, display:"flex", alignItems:"center", gap:8 }}>
             <TrendingUp size={16} color="#86EFAC"/> Incident Trend (6 months)
           </div>
-          <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", height:160, gap:10, paddingTop:10 }}>
-            {months.map(m=>(
-              <div key={m.key} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
-                <div style={{ fontSize:12, fontWeight:700, color:"white" }}>{m.count}</div>
-                <div style={{ width:"100%", height:`${(m.count/maxMonth)*120}px`, minHeight:4, background:"linear-gradient(180deg,#16A34A,#065F46)", borderRadius:"6px 6px 0 0" }}/>
-                <div style={{ fontSize:11, color:"rgba(255,255,255,.4)" }}>{m.key}</div>
-              </div>
-            ))}
-          </div>
+          <TrendAreaChart data={months} xKey="key" yKey="count" color={CHART_COLORS.success} height={200} dark={true} />
         </div>
       </div>
 
