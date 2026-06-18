@@ -57,7 +57,7 @@ export default function CitationsPage() {
   const [form, setForm] = useState({
     driver_name:"", driver_license:"", driver_nida:"", driver_phone:"",
     vehicle_plate:"", vehicle_type:"Car", vehicle_make:"", vehicle_color:"",
-    offense_type:"", fine_amount:0, fine_schedule_id:"",
+    offense_type:"", offense_code:"", fine_amount:0, fine_schedule_id:"",
     region_id:"", district_id:"", ward_id:"", location_text:"",
     photo_urls:[],
   });
@@ -75,7 +75,13 @@ export default function CitationsPage() {
     const v = e.target.value;
     if (k==="fine_schedule_id") {
       const it = schedule.find(s=>s.id===v);
-      return setForm(f=>({ ...f, fine_schedule_id:v, offense_type: it?.offense_name||"", fine_amount: it?.fine_amount||0 }));
+      return setForm(f=>({
+        ...f,
+        fine_schedule_id: v,
+        offense_type: it?.offense_name || "",
+        offense_code: it?.code         || "",   // for citations.offense_code + .offence_code
+        fine_amount:  it?.fine_amount  || 0,
+      }));
     }
     setForm(f=>({...f,[k]:v}));
   };
@@ -239,15 +245,20 @@ export default function CitationsPage() {
       // AFTER, with no coordinated deploy.
       const baseInsert = {
         ...payload,
-        fine_amount: parseInt(form.fine_amount) || 0,
+        fine_amount:   parseInt(form.fine_amount) || 0,
         fine_currency: "TZS",
-        station_id:  stationId || null,
-        region_id:   finalRegionId,
-        district_id: finalDistrictId,
-        officer_id:  profile?.id || null,  // RLS policy checks officer_id = auth.uid()
-        issued_by:   profile?.id || null,  // downstream queries read this
-        status:      "unpaid",
-        due_date:    new Date(Date.now() + 30*86400000).toISOString(),
+        // Some installations have offense_code (American), others offence_code
+        // (British, the original from 00001). Send BOTH - the retry loop will
+        // strip whichever the schema cache doesn't know.
+        offense_code:  form.offense_code || null,
+        offence_code:  form.offense_code || null,
+        station_id:    stationId || null,
+        region_id:     finalRegionId,
+        district_id:   finalDistrictId,
+        officer_id:    profile?.id || null,  // RLS policy checks officer_id = auth.uid()
+        issued_by:     profile?.id || null,  // downstream queries read this
+        status:        "unpaid",
+        due_date:      new Date(Date.now() + 30*86400000).toISOString(),
       };
 
       // Retry loop: each iteration strips one missing-column at a time.
@@ -285,7 +296,7 @@ export default function CitationsPage() {
         setForm({
           driver_name:"", driver_license:"", driver_nida:"", driver_phone:"",
           vehicle_plate:"", vehicle_type:"Car", vehicle_make:"", vehicle_color:"",
-          offense_type:"", fine_amount:0, fine_schedule_id:"",
+          offense_type:"", offense_code:"", fine_amount:0, fine_schedule_id:"",
           region_id:"", district_id:"", ward_id:"", location_text:"",
           photo_urls:[],
         });
